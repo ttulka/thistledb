@@ -1,0 +1,17 @@
+ 
+               ooooooo
+        ooooooooooooooooooo
+    oooooooooooooooooooooooooo
+ ooooooooooooooooooooooooooooooo           (c) 2017 Tomas Tulka - http://github.com/ttulka/thistledb
+ooooooooooooooooooooooooooooooooo
+ooooooooooooooooooooooooooooooooo
+ oooooooooooooooooooooooooooooo
+  oooo###############ooooooo
+    ####################       @@@@@@@@@@@ @@      @@              @@         ########    ########
+  *****#############******         @@      @@                 @@   @@         ##    ####  ##     ###
+ **************************        @@      @@ @@@  @@  @@@@@ @@@@  @@  @@@@@  ##       ## #########
+ **************************        @@      @@@  @@ @@ @@@     @@   @@ @@@ @@@ ##       ## ##      ##
+  ************************         @@      @@   @@ @@    @@@  @@   @@ @@      ##    ####  ##     ###
+    *******************            @@      @@   @@ @@ @@@@@    @@@ @@  @@@@@  ########    ########
+        ***********
+ 
