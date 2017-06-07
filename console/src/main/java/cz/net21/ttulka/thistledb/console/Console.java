@@ -69,6 +69,8 @@ public class Console implements AutoCloseable {
                 err.println("Invalid user input!");
             }
         } while (command != null);
+
+        out.println("\nBye!");
     }
 
     @Override
