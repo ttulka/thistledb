@@ -1,66 +1,86 @@
 package cz.net21.ttulka.thistledb.console;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
+
+import cz.net21.ttulka.thistledb.client.Client;
+import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Created by ttulka
  * <p>
  * The admin console.
  */
+@CommonsLog
 public class Console implements AutoCloseable {
 
-    public static final String DEFAULT_HOST = "localhost";
-    public static final int DEFAULT_PORT = 9658;
+    private final Client client;
 
-    private final String host;
-    private final int port;
+    private final InputStream in;
+    private final PrintStream out;
+    private final PrintStream err;
 
     public Console() {
-        this(DEFAULT_HOST, DEFAULT_PORT);
+        this(Client.DEFAULT_HOST, Client.DEFAULT_PORT);
     }
 
     public Console(String host) {
-        this(host, DEFAULT_PORT);
+        this(host, Client.DEFAULT_PORT);
     }
 
     public Console(int port) {
-        this(DEFAULT_HOST, port);
+        this(Client.DEFAULT_HOST, port);
     }
 
     public Console(String host, int port) {
-        this.host = host;
-        this.port = port;
+        this(host, port, System.in, System.out, System.err);
+    }
+
+    public Console(String host, int port, InputStream in, PrintStream out, PrintStream err) {
+        this.in = in;
+        this.out = out;
+        this.err = err;
+
+        this.client = new Client(host, port);
     }
 
     public void start() {
         printLogo();
 
-        // TODO
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
         String s = null;
-        System.out.println("\nType 'quit' to stop the server and exit the console.");
+        out.println("\nType 'quit' to stop the server and exit the console.");
         do {
             try {
-                System.out.print("$ ");
+                out.print("$ ");
                 s = br.readLine();
+
+                // TODO call the client to execute the query
+
             } catch (Exception e) {
-                System.err.println("Invalid user input!");
+                err.println("Invalid user input!");
             }
         } while (s == null || !s.equals("quit"));
     }
 
     @Override
     public void close() {
-        // TODO
+        try {
+            client.close();
+        } catch (Exception e) {
+            err.println("Exception by closing the client: " + e.getMessage());
+            log.error(e);
+        }
     }
 
-    private static void printLogo() {
+    private void printLogo() {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(Console.class.getResourceAsStream("/logo.txt")))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+                out.println(line);
             }
         } catch (Throwable t) {
             // ignore
