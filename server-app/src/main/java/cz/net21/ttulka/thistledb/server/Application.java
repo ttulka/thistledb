@@ -66,6 +66,8 @@ public final class Application {
         server.startAndWait(5000);
 
         startCommandConsole();
+
+        server.stop();
     }
 
     private static void startCommandConsole() {
