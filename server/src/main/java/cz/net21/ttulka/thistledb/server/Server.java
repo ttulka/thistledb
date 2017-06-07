@@ -97,7 +97,7 @@ public class Server implements Runnable, AutoCloseable {
                 while (listening()) {
                     Socket clientSocket = socket.accept();
 
-                    ServerThread serverThread = new ServerThread(clientSocket, dataSource, this::stop, this::listening);
+                    ServerThread serverThread = new ServerThread(clientSocket, dataSource, this::listening);
                     executor.execute(serverThread);
                 }
                 executor.shutdown();
