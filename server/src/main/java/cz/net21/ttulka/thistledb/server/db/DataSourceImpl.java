@@ -21,7 +21,7 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
-    public Collection<JSONObject> select(@NonNull String collectionName, JSONObject condition) {
+    public Collection<JSONObject> select(@NonNull String collectionName, @NonNull String columns, String where) {
         return null;
     }
 

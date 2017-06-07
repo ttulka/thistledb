@@ -15,10 +15,11 @@ public interface DataSource {
      * Selects from a collection by the condition.
      *
      * @param collectionName the collection name
-     * @param condition      the condition to search
+     * @param columns the columns to select
+     * @param where the condition
      * @return a collection of found documents
      */
-    Collection<JSONObject> select(String collectionName, JSONObject condition);
+    Collection<JSONObject> select(String collectionName, String columns, String where);
 
     /**
      * Inserts into a collection.
