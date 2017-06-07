@@ -1,12 +1,12 @@
 package cz.net21.ttulka.thistledb.server.db;
 
 import java.nio.file.Path;
-import java.util.Collection;
 
 import org.json.JSONObject;
 
 import lombok.NonNull;
 import lombok.extern.apachecommons.CommonsLog;
+import reactor.core.publisher.Flux;
 
 /**
  * Created by ttulka
@@ -18,10 +18,11 @@ import lombok.extern.apachecommons.CommonsLog;
 public class DataSourceImpl implements DataSource {
 
     public DataSourceImpl(Path dataDir) {
+        // TODO
     }
 
     @Override
-    public Collection<JSONObject> select(@NonNull String collectionName, @NonNull String columns, String where) {
+    public Flux<JSONObject> select(@NonNull String collectionName, @NonNull String columns, String where) {
         return null;
     }
 

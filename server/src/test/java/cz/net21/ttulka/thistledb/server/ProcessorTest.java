@@ -16,6 +16,7 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import cz.net21.ttulka.thistledb.server.db.DataSource;
+import reactor.core.publisher.Flux;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -41,8 +42,8 @@ public class ProcessorTest {
 
     @Before
     public void setUp() {
-        when(dataSource.select(eq("test"), anyString(), any())).thenReturn(Collections.singleton(json));
-        when(dataSource.select(eq("test_multiple"), anyString(), any())).thenReturn(Arrays.asList(json, json));
+        when(dataSource.select(eq("test"), anyString(), any())).thenReturn(Flux.just(json));
+        when(dataSource.select(eq("test_multiple"), anyString(), any())).thenReturn(Flux.just(json, json));
     }
 
     @Test
@@ -90,6 +91,8 @@ public class ProcessorTest {
         PrintWriter writer = mockPrintWriter(out);
 
         processor.process("SELECT * FROM test", writer);
+
+        assertThat(out.size(), is(2));
         assertThat(out.get(0), is(Processor.ACCEPTED));
         assertThat(out.get(1), is(json.toString()));
     }
@@ -100,8 +103,11 @@ public class ProcessorTest {
         PrintWriter writer = mockPrintWriter(out);
 
         processor.process("SELECT * FROM test_multiple", writer);
+
+        assertThat(out.size(), is(3));
         assertThat(out.get(0), is(Processor.ACCEPTED));
-        assertThat(out.get(1), is("{[" + json + "," + json + "]}"));
+        assertThat(out.get(1), is(json.toString()));
+        assertThat(out.get(2), is(json.toString()));
     }
 
     private PrintWriter mockPrintWriter(List<String> out) {

@@ -1,8 +1,8 @@
 package cz.net21.ttulka.thistledb.server.db;
 
-import java.util.Collection;
-
 import org.json.JSONObject;
+
+import reactor.core.publisher.Flux;
 
 /**
  * Created by ttulka
@@ -15,11 +15,11 @@ public interface DataSource {
      * Selects from a collection by the condition.
      *
      * @param collectionName the collection name
-     * @param columns the columns to select
-     * @param where the condition
+     * @param columns        the columns to select
+     * @param where          the condition
      * @return a collection of found documents
      */
-    Collection<JSONObject> select(String collectionName, String columns, String where);
+    Flux<JSONObject> select(String collectionName, String columns, String where);
 
     /**
      * Inserts into a collection.

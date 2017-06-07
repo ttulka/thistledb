@@ -8,6 +8,7 @@ import org.json.JSONObject;
 import cz.net21.ttulka.thistledb.server.db.DataSource;
 import lombok.NonNull;
 import lombok.extern.apachecommons.CommonsLog;
+import reactor.core.publisher.Flux;
 
 /**
  * Created by ttulka
@@ -31,10 +32,11 @@ public class Processor {
         try {
             out.println(ACCEPTED);
 
-            String result = processCommand(input);
-            out.println(result);
-
-            out.flush();
+            processCommand(input).subscribe(
+                    result -> out.println(result),
+                    error -> log.error("Error by executing a command: " + input + ".", error),
+                    () -> out.flush()
+            );
 
         } catch (Exception e) {
             log.error("Error by processing a command: " + input + ".", e);
@@ -51,29 +53,30 @@ public class Processor {
         return ACCEPTED + " " + command;
     }
 
-    protected String processCommand(@NonNull String input) {
+    protected Flux<String> processCommand(@NonNull String input) {
         try {
             Commands command = parseCommand(input);
 
             switch (command) {
                 case SELECT:
                     return processSelect(input);
+                // TODO next commands
                 default:
-                    return ERROR + " invalid command: " + command;
+                    return Flux.just(ERROR + " invalid command: " + command);
             }
         } catch (Exception e) {
             log.error("Error by processing a command [" + input + "].", e);
-            return ERROR;
+            return Flux.just(ERROR);
         }
     }
 
-    String processSelect(String input) {
+    Flux<String> processSelect(String input) {
         String collection = parseCollection(input);
         String columns = parseColumns(input);
         String where = parseWhere(input);
 
-        Collection<JSONObject> res = dataSource.select(collection, columns, where);
-        return serialize(res);
+        return dataSource.select(collection, columns, where)
+                .map(this::serialize);
     }
 
     String parseCollection(String input) {
@@ -90,6 +93,7 @@ public class Processor {
     }
 
     String parseWhere(String input) {
+        // TODO
         return null;
     }
 
