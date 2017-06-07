@@ -93,8 +93,8 @@ public class Processor {
     }
 
     String parseWhere(String input) {
-        // TODO
-        return null;
+        input = input.substring(input.toLowerCase().indexOf("where") + 5).trim();
+        return input;
     }
 
     private String serialize(JSONObject json) {

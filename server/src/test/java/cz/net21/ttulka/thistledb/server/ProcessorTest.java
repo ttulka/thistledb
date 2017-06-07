@@ -86,6 +86,15 @@ public class ProcessorTest {
     }
 
     @Test
+    public void parseWhereTest() {
+        String result = processor.parseWhere("SELECT * FROM test WHERE 1=1");
+        assertThat(result, is("1=1"));
+
+        result = processor.parseWhere("SELECT col1, col2 FROM test wHeRe 1=1 AND 2=2");
+        assertThat(result, is("1=1 AND 2=2"));
+    }
+
+    @Test
     public void selectSingleResultTest() {
         List<String> out = new ArrayList<>();
         PrintWriter writer = mockPrintWriter(out);
