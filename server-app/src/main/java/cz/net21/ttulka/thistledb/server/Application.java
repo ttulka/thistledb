@@ -62,13 +62,13 @@ public final class Application {
 
         server.startAndWait(5000);
 
-        startCommandConsole();
+        startCommandConsole(server.getPort());
 
         server.stop();
     }
 
-    private static void startCommandConsole() {
-        try (Console console = new Console()) {
+    private static void startCommandConsole(int port) {
+        try (Console console = new Console(port)) {
             console.start();
 
         } catch (Throwable t) {

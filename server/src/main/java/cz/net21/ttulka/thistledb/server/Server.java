@@ -55,10 +55,6 @@ public class Server implements Runnable, AutoCloseable {
         return port;
     }
 
-    public DataSource getDataSource() {
-        return dataSource;
-    }
-
     /**
      * Starts the server listener.
      */
