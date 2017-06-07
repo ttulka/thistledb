@@ -73,7 +73,7 @@ public final class Application {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         String s = null;
-        System.out.println("\nType 'quit' to exit the console.");
+        System.out.println("\nType 'quit' to stop the server and exit the console.");
         do {
             try {
                 System.out.print("$ ");
