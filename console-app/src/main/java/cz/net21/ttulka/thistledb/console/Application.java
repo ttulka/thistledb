@@ -1,7 +1,4 @@
-package cz.net21.ttulka.thistledb.server;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
+package cz.net21.ttulka.thistledb.console;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
@@ -9,7 +6,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import cz.net21.ttulka.thistledb.console.Console;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
@@ -22,59 +18,45 @@ public final class Application {
 
     public static void main(String[] args) {
         Options cmdOptions = new Options();
+        cmdOptions.addOption("h", "host", true, "Host to listen on.");
         cmdOptions.addOption("p", "port", true, "Port to listen on.");
-        cmdOptions.addOption("d", "dataDir", true, "Data directory to store DB files into.");
 
         try {
             CommandLine cmdLine = new DefaultParser().parse(cmdOptions, args);
 
-            startServer(cmdLine);
-
+            try (Console console = createConsole(cmdLine)) {
+                console.start();
+            }
         } catch (NumberFormatException | ParseException e) {
             System.err.println("Cannot parse the user input: " + e.getMessage());
             log.error(e);
             printHelp(cmdOptions);
             System.exit(-1);
         } catch (Throwable t) {
-            System.err.println("Error by server running: " + t.getMessage());
+            System.err.println("Error by console running: " + t.getMessage());
             log.error(t);
             System.exit(-1);
         }
         System.exit(0);
     }
 
-    private static void startServer(CommandLine cmdLine) {
-        Server server;
+    private static Console createConsole(CommandLine cmdLine) {
+        Console console;
 
-        if (cmdLine.hasOption("p") && cmdLine.hasOption("d")) {
+        if (cmdLine.hasOption("h") && cmdLine.hasOption("p")) {
+            String host = cmdLine.getOptionValue("h");
             int port = Integer.parseInt(cmdLine.getOptionValue("p"));
-            Path dataDir = Paths.get(cmdLine.getOptionValue("d"));
-            server = new Server(port, dataDir);
+            console = new Console(host, port);
+        } else if (cmdLine.hasOption("h")) {
+            String host = cmdLine.getOptionValue("h");
+            console = new Console(host);
         } else if (cmdLine.hasOption("p")) {
             int port = Integer.parseInt(cmdLine.getOptionValue("p"));
-            server = new Server(port);
-        } else if (cmdLine.hasOption("d")) {
-            Path dataDir = Paths.get(cmdLine.getOptionValue("d"));
-            server = new Server(dataDir);
+            console = new Console(port);
         } else {
-            server = new Server();
+            console = new Console();
         }
-
-        server.startAndWait(5000);
-
-        startCommandConsole();
-
-        server.stop();
-    }
-
-    private static void startCommandConsole() {
-        try (Console console = new Console()) {
-            console.start();
-
-        } catch (Throwable t) {
-            System.err.println("Error by console running: " + t.getMessage());
-            log.error(t);
-        }
+        return console;
     }
 
     private static void printHelp(Options cmdOptions) {
