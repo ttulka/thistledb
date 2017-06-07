@@ -1,5 +1,6 @@
 package cz.net21.ttulka.thistledb.client;
 
+import java.io.PrintWriter;
 import java.net.Socket;
 
 /**
@@ -35,8 +36,15 @@ public class Client implements AutoCloseable {
         }
     }
 
-    // TODO this is just an inspiration
-    protected void executeCommand() {
+    public JsonPublisher executeQuery(Query query) {
+        checkQuery(query);
+        return executeQuery(query.getNativeQuery());
+    }
+
+    public JsonPublisher executeQuery(String nativeQuery) {
+        checkQuery(nativeQuery);
+
+        // TODO this is just an inspiration
 //        try (PrintWriter out = new PrintWriter(socket.getOutputStream())
 //        ) {
 //            out.println(command);
@@ -44,6 +52,38 @@ public class Client implements AutoCloseable {
 //        } catch (Exception e) {
 //            throw new ClientException("Cannot send a command to socket.", e);
 //        }
+        return null;
+    }
+
+    public void executeCommand(Query query) {
+        checkQuery(query);
+        executeCommand(query.getNativeQuery());
+    }
+
+    public void executeCommand(String nativeQuery) {
+        checkQuery(nativeQuery);
+
+        try (PrintWriter out = new PrintWriter(socket.getOutputStream())) {
+            out.println(nativeQuery);
+
+        } catch (Exception e) {
+            throw new ClientException("Cannot send a command [" + nativeQuery + "] to socket.", e);
+        }
+    }
+
+    private void checkQuery(Query query) {
+        if (query == null) {
+            throw new NullPointerException("Query cannot be null.");
+        }
+    }
+
+    private void checkQuery(String query) {
+        if (query == null) {
+            throw new NullPointerException("Query cannot be null.");
+        }
+        if (query.isEmpty()) {
+            throw new IllegalArgumentException("Query cannot be empty.");
+        }
     }
 
     @Override

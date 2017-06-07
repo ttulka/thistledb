@@ -11,4 +11,9 @@ public class Query {
     private Query() {
         // access only via builder
     }
+
+    public String getNativeQuery() {
+        // TODO
+        return null;
+    }
 }

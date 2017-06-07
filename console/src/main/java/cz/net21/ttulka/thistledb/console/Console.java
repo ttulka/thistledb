@@ -51,19 +51,24 @@ public class Console implements AutoCloseable {
 
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
-        String s = null;
+        String command = null;
         out.println("\nType 'quit' to stop the server and exit the console.");
         do {
             try {
                 out.print("$ ");
-                s = br.readLine();
+                command = br.readLine();
+
+                if (command.equals("quit")) {
+                    break;
+                }
 
                 // TODO call the client to execute the query
+                // client.executeQuery(command);
 
             } catch (Exception e) {
                 err.println("Invalid user input!");
             }
-        } while (s == null || !s.equals("quit"));
+        } while (command == null);
     }
 
     @Override
