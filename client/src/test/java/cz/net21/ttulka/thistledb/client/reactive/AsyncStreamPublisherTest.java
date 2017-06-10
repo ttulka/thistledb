@@ -41,7 +41,6 @@ public class AsyncStreamPublisherTest extends PublisherVerification<Integer> {
         assert (elements <= maxElementsFromPublisher());
         return new AsyncStreamPublisher(new Supplier<Integer>() {
             private int at;
-
             @Override
             public Integer get() {
                 return at < elements ? at++ : null;

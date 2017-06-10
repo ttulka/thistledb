@@ -91,6 +91,10 @@ abstract class SyncSubscriber<T> implements Subscriber<T> {
   // Returns whether more elements are desired or not, and if no more elements are desired
   protected abstract boolean foreach(final T element);
 
+  // This method is invoked when the OnComplete signal arrives
+  // override this method to implement your own custom onComplete logic.
+  protected void whenComplete() { }
+
   @Override public void onError(final Throwable t) {
     if (subscription == null) { // Technically this check is not needed, since we are expecting Publishers to conform to the spec
       (new IllegalStateException("Publisher violated the Reactive Streams rule 1.09 signalling onError prior to onSubscribe.")).printStackTrace(System.err);
@@ -108,6 +112,7 @@ abstract class SyncSubscriber<T> implements Subscriber<T> {
     } else {
       // Here we are not allowed to call any methods on the `Subscription` or the `Publisher`, as per rule 2.3
       // And anyway, the `Subscription` is considered to be cancelled if this method gets called, as per rule 2.4
+      whenComplete();
     }
   }
 }
