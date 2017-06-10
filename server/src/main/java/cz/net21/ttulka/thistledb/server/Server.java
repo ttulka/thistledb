@@ -79,6 +79,11 @@ public class Server implements Runnable, AutoCloseable {
         }
     }
 
+    /**
+     * Run method of the server listening.
+     *
+     * @throws ServerException when something goes wrong
+     */
     @Override
     public void run() {
         if (listening.compareAndSet(false, true)) {
@@ -101,7 +106,7 @@ public class Server implements Runnable, AutoCloseable {
                 }
             } catch (Exception e) {
                 if (listening()) {
-                    throw new RuntimeException("Cannot listen on port " + port + ".", e);
+                    throw new ServerException("Cannot listen on port " + port + ".", e);
                 }
             } finally {
                 if (socket != null) {

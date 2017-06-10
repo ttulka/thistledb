@@ -3,6 +3,8 @@ package cz.net21.ttulka.thistledb.client;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import cz.net21.ttulka.thistledb.client.reactive.JsonPublisher;
+
 /**
  * Created by ttulka
  * <p>
@@ -15,18 +17,30 @@ public class Client implements AutoCloseable {
 
     private final Socket socket;
 
+    /**
+     * @throws ClientException if a socket cannot be opened
+     */
     public Client() {
         this(DEFAULT_HOST, DEFAULT_PORT);
     }
 
+    /**
+     * @throws ClientException if a socket cannot be opened
+     */
     public Client(String host) {
         this(host, DEFAULT_PORT);
     }
 
+    /**
+     * @throws ClientException if a socket cannot be opened
+     */
     public Client(int port) {
         this(DEFAULT_HOST, port);
     }
 
+    /**
+     * @throws ClientException if a socket cannot be opened
+     */
     public Client(String host, int port) {
         try {
             this.socket = new Socket(host, port);
@@ -60,6 +74,9 @@ public class Client implements AutoCloseable {
         executeCommand(query.getNativeQuery());
     }
 
+    /**
+     * @throws ClientException if a command cannot be sent to socket
+     */
     public void executeCommand(String nativeQuery) {
         checkQuery(nativeQuery);
 
@@ -86,6 +103,9 @@ public class Client implements AutoCloseable {
         }
     }
 
+    /**
+     * @throws ClientException if a socket cannot be closed
+     */
     @Override
     public void close() {
         try {

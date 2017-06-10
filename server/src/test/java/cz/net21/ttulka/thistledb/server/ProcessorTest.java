@@ -68,11 +68,17 @@ public class ProcessorTest {
     }
 
     @Test
-    public void parseCollectionTest() {
+    public void parseCollectionForSelectTest() {
         String result = processor.parseCollection("SELECT * FROM test");
         assertThat(result, is("test"));
 
         result = processor.parseCollection("SELECT col1, col2 FROM test WHERE person.name = 'John'");
+        assertThat(result, is("test"));
+    }
+
+    @Test
+    public void parseCollectionForInsertTest() {
+        String result = processor.parseCollection("INSERT INTO test VALUES " + json);
         assertThat(result, is("test"));
     }
 
@@ -92,6 +98,12 @@ public class ProcessorTest {
 
         result = processor.parseWhere("SELECT col1, col2 FROM test wHeRe 1=1 AND 2=2");
         assertThat(result, is("1=1 AND 2=2"));
+    }
+
+    @Test
+    public void parseValues() {
+        String result = processor.parseValues("INSERT INTO test VALUES " + json);
+        assertThat(result, is(json));
     }
 
     @Test
