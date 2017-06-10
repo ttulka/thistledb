@@ -12,7 +12,7 @@ import org.json.JSONObject;
  * <p>
  * Processing a query.
  */
-class Processor {
+class QueryExecutor {
 
     public static final String ACCEPTED = "ACCEPTED";
     public static final String ERROR = "ERROR";
@@ -22,56 +22,48 @@ class Processor {
     private final Socket socket;
     private final String query;
 
-    private BufferedReader in;  // TODO could be only Reader?
+    BufferedReader in;
 
-    public Processor(Socket socket, String nativeQuery) {
+    public QueryExecutor(Socket socket, String nativeQuery) {
         this.socket = socket;
         this.query = nativeQuery;
     }
 
     public void executeQuery() {
-        try (PrintWriter out = new PrintWriter(socket.getOutputStream())) {
+        try {
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             out.println(query);
 
         } catch (Exception e) {
             throw new ClientException("Cannot send a query to socket: " + query, e);
-        }
-
-        try {
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        } catch (Exception e) {
-            throw new ClientException("Cannot read from socket: " + query, e);
         }
     }
 
     public JSONObject getNextResult() {
         try {
             String result = in.readLine();
+
             if (result != null && !result.isEmpty()) {
 
                 if (result.startsWith(ACCEPTED)) {
-                    close();
                     return getNextResult();
                 }
                 if (result.startsWith(ERROR)) {
-                    close();
                     return error(result);
                 }
                 if (result.startsWith(INVALID)) {
-                    close();
                     return invalid(result);
                 }
                 if (result.startsWith(OKAY)) {
-                    close();
                     return okay();
                 }
                 return new JSONObject(result);
             }
-            close();
             return null;
 
         } catch (Exception e) {
-            close();
             throw new ClientException("Error by receiving results from server.", e);
         }
     }
@@ -88,15 +80,5 @@ class Processor {
 
     private JSONObject okay() {
         return new JSONObject("{\"status\":\"okay\"}");
-    }
-
-    private void close() {
-        if (in != null) {
-            try {
-                in.close();
-            } catch (Exception e) {
-                // ignore
-            }
-        }
     }
 }

@@ -2,8 +2,6 @@ package cz.net21.ttulka.thistledb.server;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.json.JSONObject;
@@ -62,8 +60,8 @@ public class ProcessorTest {
     }
 
     @Test
-    public void acceptCommandTest() {
-        String result = processor.acceptCommand(Commands.SELECT);
+    public void acceptQueryTest() {
+        String result = processor.acceptQuery(Commands.SELECT);
         assertThat(result, is(Processor.ACCEPTED + " " + Commands.SELECT));
     }
 
@@ -135,5 +133,10 @@ public class ProcessorTest {
         PrintWriter writer = mock(PrintWriter.class);
         Mockito.doAnswer((s) -> out.add(s.getArgumentAt(0, String.class))).when(writer).println(anyString());
         return writer;
+    }
+
+    @Test
+    public void validateInputTest() {
+        // TODO
     }
 }

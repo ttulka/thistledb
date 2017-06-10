@@ -30,22 +30,31 @@ public class Processor {
     }
 
     public void process(@NonNull String input, @NonNull PrintWriter out) {
+        if (log.isDebugEnabled()) {
+            log.debug("Processing a client request: " + input);
+        }
         try {
             out.println(ACCEPTED);
 
             if (validateInput(input)) {
 
-                processCommand(input).subscribe(
+                processQuery(input).subscribe(
                         result -> out.println(result),
-                        error -> log.error("Error by executing a command: " + input + ".", error)
+                        error -> log.error("Error by executing a query: " + input + ".", error)
                 );
             } else {
                 out.println(INVALID);
             }
-            out.flush();
 
         } catch (Exception e) {
             log.error("Error by processing a command: " + input + ".", e);
+        } finally {
+            try {
+                out.println();
+                out.flush();
+            } catch (Throwable t) {
+                // ignore
+            }
         }
     }
 
@@ -60,11 +69,11 @@ public class Processor {
         return Commands.valueOf(command.toUpperCase());
     }
 
-    protected String acceptCommand(@NonNull Commands command) {
+    protected String acceptQuery(@NonNull Commands command) {
         return ACCEPTED + " " + command;
     }
 
-    protected Flux<String> processCommand(@NonNull String input) {
+    protected Flux<String> processQuery(@NonNull String input) {
         try {
             Commands command = parseCommand(input);
 
@@ -78,7 +87,7 @@ public class Processor {
                     return Flux.just(ERROR + " invalid command: " + command);
             }
         } catch (Exception e) {
-            log.error("Error by processing a command [" + input + "].", e);
+            log.error("Cannot process a command [" + input + "].", e);
             return Flux.just(ERROR + " " + e.getMessage());
         }
     }

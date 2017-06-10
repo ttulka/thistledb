@@ -3,7 +3,7 @@ package cz.net21.ttulka.thistledb.client;
 /**
  * Created by ttulka
  */
-public class ProcessorTest {
+public class QueryExecutorTest {
 
     // TODO
 }

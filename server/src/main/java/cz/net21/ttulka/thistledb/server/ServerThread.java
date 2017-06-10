@@ -34,11 +34,12 @@ class ServerThread implements Runnable {
 
     @Override
     public void run() {
+        log.debug("Serving a client request...");
+
         try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
         ) {
             String input;
-
             while (serverListening.listening() && (input = in.readLine()) != null) {
                 processor.process(input.trim(), out);
             }

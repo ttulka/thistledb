@@ -22,28 +22,25 @@ public class JsonPublisher implements Publisher<JSONObject> {
     private final CountDownLatch started = new CountDownLatch(1);
     private final CountDownLatch finished = new CountDownLatch(1);
 
-    // TODO put executeQuery and next to an object - QueryExecutor
-
     /**
      * @throws ClientException when something goes wrong
      */
-    JsonPublisher(Processor processor) {
-        this.publisher = createPublisher(() -> processor.getNextResult());
-        init(() -> processor.executeQuery());
+    JsonPublisher(QueryExecutor queryExecutor) {
+        this.publisher = createPublisher(() -> queryExecutor.getNextResult());
+        init(() -> queryExecutor.executeQuery());
     }
 
     private Publisher<JSONObject> createPublisher(Supplier<JSONObject> supplier) {
         return new AsyncStreamPublisher<>(
                 new Supplier<JSONObject>() {
-                    {
-                        System.out.println("started.countDown();");
-                        // start a socket initialization
+                    {   // start a socket initialization
                         started.countDown();
                     }
+
                     @Override
                     public JSONObject get() {
                         JSONObject json = supplier.get();
-                        return json != null ? json : null;  // TODO close processor here?
+                        return json != null ? json : null;
                     }
                 },
                 Executors.newCachedThreadPool()
@@ -53,10 +50,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
     private void init(Runnable init) {
         new Thread(() -> {
             try {
-                System.out.println("started.await();");
                 started.await();
-
-                System.out.println("executeQuery.run();");
                 init.run();
 
             } catch (InterruptedException e) {
@@ -70,27 +64,29 @@ public class JsonPublisher implements Publisher<JSONObject> {
     boolean parallel = false;
 
     /**
-     * A parallel, we use the AsyncSubscriber, otherwise the SyncSubscriber
+     * Changes the publisher to parallel processing.
      */
     public final JsonPublisher parallel() {
         parallel = true;
         return this;
     }
 
+    /**
+     * Subscribes a subscriber.
+     * Recommended convenient alternative: {{@link #subscribe(Consumer)}}.
+     *
+     * @param subscriber the subscriber
+     */
     @Override
     public void subscribe(Subscriber<? super JSONObject> subscriber) {
-        System.out.println("subscribe(Subscriber<? super JSONObject> subscriber) " + subscriber);
-        if (subscriber == null) {
-            throw null;
-        }
         started.countDown();
         publisher.subscribe(subscriber);
     }
 
     /**
-     * A convenient method.
+     * Subscribes a consumer.
      *
-     * @param onNext
+     * @param onNext the consumer
      */
     public void subscribe(Consumer<JSONObject> onNext) {
         Predicate<JSONObject> onNextWithEmptyTest = json -> {
@@ -132,7 +128,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
     }
 
     /**
-     * Wait for the publisher finished.
+     * Waits for the publisher finished publishing.
      *
      * @throws IllegalStateException when no subscription done yet
      */
@@ -140,12 +136,10 @@ public class JsonPublisher implements Publisher<JSONObject> {
         if (started.getCount() == 1) {
             throw new IllegalStateException("No subscription done yet.");
         }
-        System.out.println("await()");
         try {
             finished.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("await() finished");
     }
 }

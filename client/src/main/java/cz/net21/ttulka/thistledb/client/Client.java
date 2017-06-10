@@ -52,59 +52,96 @@ public class Client implements AutoCloseable {
         }
     }
 
+    /**
+     * Executes a query, in the reactive style.
+     *
+     * @param query the query to be executed
+     * @return the reactive result publisher
+     * @throws ClientException if the query cannot be sent to socket
+     */
     public JsonPublisher executeQuery(Query query) {
         return executeQuery(query.getNativeQuery());
     }
 
+    /**
+     * Executes a query, wait for a response.
+     *
+     * @param query the query to be executed
+     * @return the result
+     * @throws ClientException if the query cannot be sent to server
+     */
     public List<JSONObject> executeQueryBlocking(Query query) {
         return executeQueryBlocking(query.getNativeQuery());
     }
 
+    /**
+     * Executes a query, in the reactive style.
+     *
+     * @param nativeQuery the native query to be executed
+     * @return the reactive result publisher
+     * @throws ClientException if the query cannot be sent to server
+     */
     public JsonPublisher executeQuery(String nativeQuery) {
         checkQuery(nativeQuery);
-        return new JsonPublisher(new Processor(socket, nativeQuery));
+        return new JsonPublisher(new QueryExecutor(socket, nativeQuery));
     }
 
+    /**
+     * Executes a query, wait for a response.
+     *
+     * @param nativeQuery the native query to be executed
+     * @return the result
+     * @throws ClientException if the query cannot be sent to server
+     */
     public List<JSONObject> executeQueryBlocking(String nativeQuery) {
         checkQuery(nativeQuery);
-        return executeProcessorBlocking(new Processor(socket, nativeQuery));
+        return executeProcessorBlocking(new QueryExecutor(socket, nativeQuery));
     }
 
+    /**
+     * Executes a command, doesn't wait for a response.
+     *
+     * @param query the query command to be executed
+     * @throws ClientException if the command cannot be sent to socket
+     */
     public void executeCommand(Query query) {
         checkQuery(query);
         executeCommand(query.getNativeQuery());
     }
 
-    private void executeProcessor(Processor processor) {
-        new Thread(() -> {
-            processor.executeQuery();
-            processor.getNextResult();
-        }).start();
-    }
-
-    private List<JSONObject> executeProcessorBlocking(Processor processor) {
-        processor.executeQuery();
-
-        List<JSONObject> toReturn = new ArrayList<>();
-        JSONObject json;
-        while ((json = processor.getNextResult()) != null) {
-            toReturn.add(json);
-        }
-        return toReturn;
-    }
-
     /**
-     * @throws ClientException if a command cannot be sent to socket
+     * Sends a command to the server, doesn't wait for a response.
+     *
+     * @param nativeQuery the native query command to be executed
+     * @throws ClientException if the command cannot be sent to socket
      */
     public void executeCommand(String nativeQuery) {
         checkQuery(nativeQuery);
-
-        try (PrintWriter out = new PrintWriter(socket.getOutputStream())) {
+        try {
+            PrintWriter out = new PrintWriter(socket.getOutputStream());
             out.println(nativeQuery);
 
         } catch (Exception e) {
             throw new ClientException("Cannot send a command [" + nativeQuery + "] to socket.", e);
         }
+    }
+
+    private void executeProcessor(QueryExecutor queryExecutor) {
+        new Thread(() -> {
+            queryExecutor.executeQuery();
+            queryExecutor.getNextResult();
+        }).start();
+    }
+
+    private List<JSONObject> executeProcessorBlocking(QueryExecutor queryExecutor) {
+        queryExecutor.executeQuery();
+
+        List<JSONObject> toReturn = new ArrayList<>();
+        JSONObject json;
+        while ((json = queryExecutor.getNextResult()) != null) {
+            toReturn.add(json);
+        }
+        return toReturn;
     }
 
     private void checkQuery(Query query) {
@@ -123,6 +160,8 @@ public class Client implements AutoCloseable {
     }
 
     /**
+     * Close the client connection to the server.
+     *
      * @throws ClientException if a socket cannot be closed
      */
     @Override

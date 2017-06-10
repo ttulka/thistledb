@@ -1,6 +1,7 @@
 package cz.net21.ttulka.thistledb.console;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -9,6 +10,7 @@ import java.util.List;
 import org.json.JSONObject;
 
 import cz.net21.ttulka.thistledb.client.Client;
+import cz.net21.ttulka.thistledb.client.ClientException;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
@@ -67,26 +69,27 @@ public class Console implements AutoCloseable {
                         break;
                     }
 
-                    executeCommand(command);
+                    executeQuery(command);
                 }
-
-            } catch (Exception e) {
+            } catch (IOException e) {
                 err.println("Invalid user input!");
+            } catch (ClientException e) {
+                err.println("Client error: " + e.getMessage());
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         } while (command != null);
 
         out.println("\nBye!");
     }
 
-    void executeCommand(String command) {
-        if (command.toLowerCase().startsWith("select")) {
-            List<JSONObject> result = client.executeQueryBlocking(command);
+    void executeQuery(String query) {
+        List<JSONObject> result = client.executeQueryBlocking(query);
 
-            out.println("Result(s):");
-            result.forEach(out::println);
-        } else {
-            client.executeCommand(command);
-        }
+        out.println("\nResult(s):");
+        result.forEach(out::println);
+        out.println();
     }
 
     @Override
