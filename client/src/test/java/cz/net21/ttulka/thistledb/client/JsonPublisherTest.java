@@ -35,10 +35,8 @@ public class JsonPublisherTest {
 
     @Before
     public void setUp() {
-
         when(queryExecutor.getNextResult()).thenAnswer(new Answer<JSONObject>() {
             private int i;
-
             @Override
             public JSONObject answer(InvocationOnMock invocation) {
                 return i < ELEMENTS ? new JSONObject("{\"value\":\"" + i++ + "\"}") : null;
