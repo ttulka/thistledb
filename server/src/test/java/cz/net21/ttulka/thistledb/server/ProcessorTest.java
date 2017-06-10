@@ -103,7 +103,7 @@ public class ProcessorTest {
     @Test
     public void parseValues() {
         String result = processor.parseValues("INSERT INTO test VALUES " + json);
-        assertThat(result, is(json));
+        assertThat(result, is(json.toString()));
     }
 
     @Test

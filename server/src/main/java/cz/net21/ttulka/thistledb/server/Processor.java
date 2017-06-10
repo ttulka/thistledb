@@ -133,8 +133,8 @@ public class Processor {
     }
 
     String parseValues(String input) {
-        // TODO
-        return null;
+        input = input.substring(input.toLowerCase().indexOf("values") + 6).trim();
+        return input;
     }
 
     private String serialize(JSONObject json) {
