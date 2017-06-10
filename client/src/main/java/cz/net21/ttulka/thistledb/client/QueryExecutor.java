@@ -22,26 +22,41 @@ class QueryExecutor {
     private final Socket socket;
     private final String query;
 
-    BufferedReader in;
+    private BufferedReader in;
 
     public QueryExecutor(Socket socket, String nativeQuery) {
         this.socket = socket;
         this.query = nativeQuery;
     }
 
+    /**
+     * Executes a query.
+     *
+     * @throws ClientException when execution goes wrong
+     */
     public void executeQuery() {
         try {
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             out.println(query);
+
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
         } catch (Exception e) {
             throw new ClientException("Cannot send a query to socket: " + query, e);
         }
     }
 
+    /**
+     * Retrieves a result of the query.
+     *
+     * @return the result
+     * @throws ClientException       when retrieving goes wrong
+     * @throws IllegalStateException when the query was not executed yet
+     */
     public JSONObject getNextResult() {
+        if (in == null) {
+            throw new IllegalStateException("Query was not executed yet.");
+        }
         try {
             String result = in.readLine();
 
