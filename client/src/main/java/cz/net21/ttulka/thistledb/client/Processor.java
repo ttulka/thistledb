@@ -90,7 +90,7 @@ class Processor {
         return new JSONObject("{\"status\":\"okay\"}");
     }
 
-    public void close() {
+    private void close() {
         if (in != null) {
             try {
                 in.close();
