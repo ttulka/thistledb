@@ -1,11 +1,7 @@
-package cz.net21.ttulka.thistledb.client.reactive;
+package cz.net21.ttulka.thistledb.client;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -14,8 +10,6 @@ import org.json.JSONObject;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
-import cz.net21.ttulka.thistledb.client.ClientException;
-
 /**
  * Created by ttulka
  * <p>
@@ -23,45 +17,46 @@ import cz.net21.ttulka.thistledb.client.ClientException;
  */
 public class JsonPublisher implements Publisher<JSONObject> {
 
-    //public static final JSONObject EMPTY = new JSONObject();
-
     private final Publisher<JSONObject> publisher;
 
     private final CountDownLatch started = new CountDownLatch(1);
     private final CountDownLatch finished = new CountDownLatch(1);
 
-    // TODO put init and next to an object - QueryExecutor
+    // TODO put executeQuery and next to an object - QueryExecutor
 
     /**
      * @throws ClientException when something goes wrong
      */
-    JsonPublisher(Runnable init, Supplier<JSONObject> next) {
-        this.publisher = new AsyncStreamPublisher<>(
+    JsonPublisher(Processor processor) {
+        this.publisher = createPublisher(() -> processor.getNextResult());
+        init(() -> processor.executeQuery());
+    }
+
+    private Publisher<JSONObject> createPublisher(Supplier<JSONObject> supplier) {
+        return new AsyncStreamPublisher<>(
                 new Supplier<JSONObject>() {
                     {
                         System.out.println("started.countDown();");
                         // start a socket initialization
                         started.countDown();
                     }
-
                     @Override
                     public JSONObject get() {
-                        JSONObject json = next.get();
-                        return json != null ? json : null;
+                        JSONObject json = supplier.get();
+                        return json != null ? json : null;  // TODO close processor here?
                     }
                 },
                 Executors.newCachedThreadPool()
         );
-        init(init, next);
     }
 
-    private void init(Runnable init, Supplier<JSONObject> next) {
+    private void init(Runnable init) {
         new Thread(() -> {
             try {
                 System.out.println("started.await();");
                 started.await();
 
-                System.out.println("init.run();");
+                System.out.println("executeQuery.run();");
                 init.run();
 
             } catch (InterruptedException e) {

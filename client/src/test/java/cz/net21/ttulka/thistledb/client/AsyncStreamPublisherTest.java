@@ -1,4 +1,4 @@
-package cz.net21.ttulka.thistledb.client.reactive;
+package cz.net21.ttulka.thistledb.client;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

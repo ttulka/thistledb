@@ -2,8 +2,10 @@ package cz.net21.ttulka.thistledb.client;
 
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
-import cz.net21.ttulka.thistledb.client.reactive.JsonPublisher;
+import org.json.JSONObject;
 
 /**
  * Created by ttulka
@@ -51,27 +53,44 @@ public class Client implements AutoCloseable {
     }
 
     public JsonPublisher executeQuery(Query query) {
-        checkQuery(query);
         return executeQuery(query.getNativeQuery());
+    }
+
+    public List<JSONObject> executeQueryBlocking(Query query) {
+        return executeQueryBlocking(query.getNativeQuery());
     }
 
     public JsonPublisher executeQuery(String nativeQuery) {
         checkQuery(nativeQuery);
+        return new JsonPublisher(new Processor(socket, nativeQuery));
+    }
 
-        // TODO this is just an inspiration
-//        try (PrintWriter out = new PrintWriter(socket.getOutputStream())
-//        ) {
-//            out.println(command);
-//
-//        } catch (Exception e) {
-//            throw new ClientException("Cannot send a command to socket.", e);
-//        }
-        return null;
+    public List<JSONObject> executeQueryBlocking(String nativeQuery) {
+        checkQuery(nativeQuery);
+        return executeProcessorBlocking(new Processor(socket, nativeQuery));
     }
 
     public void executeCommand(Query query) {
         checkQuery(query);
         executeCommand(query.getNativeQuery());
+    }
+
+    private void executeProcessor(Processor processor) {
+        new Thread(() -> {
+            processor.executeQuery();
+            processor.getNextResult();
+        }).start();
+    }
+
+    private List<JSONObject> executeProcessorBlocking(Processor processor) {
+        processor.executeQuery();
+
+        List<JSONObject> toReturn = new ArrayList<>();
+        JSONObject json;
+        while ((json = processor.getNextResult()) != null) {
+            toReturn.add(json);
+        }
+        return toReturn;
     }
 
     /**

@@ -1,4 +1,4 @@
-package cz.net21.ttulka.thistledb.client.reactive;
+package cz.net21.ttulka.thistledb.client;
 
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;

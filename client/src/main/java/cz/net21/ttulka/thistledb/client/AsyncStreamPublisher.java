@@ -1,4 +1,4 @@
-package cz.net21.ttulka.thistledb.client.reactive;
+package cz.net21.ttulka.thistledb.client;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
@@ -181,7 +181,7 @@ class AsyncStreamPublisher<T> implements Publisher<T> {
                     signal(Send.Instance);
                 }
             } catch (final Throwable t) {
-                // We can only get here if `onNext` or `onComplete` threw, and they are not allowed to according to 2.13, so we can only cancel and log here.
+                // We can only getNextResult here if `onNext` or `onComplete` threw, and they are not allowed to according to 2.13, so we can only cancel and log here.
                 doCancel(); // Make sure that we are cancelled, since we cannot do anything else since the `Subscriber` is faulty.
                 (new IllegalStateException(subscriber + " violated the Reactive Streams rule 2.13 by throwing an exception from onNext or onComplete.", t)).printStackTrace(System.err);
             }
@@ -265,7 +265,7 @@ class AsyncStreamPublisher<T> implements Publisher<T> {
             signal(Cancel.Instance);
         }
 
-        // The reason for the `init` method is that we want to ensure the `SubscriptionImpl`
+        // The reason for the `executeQuery` method is that we want to ensure the `SubscriptionImpl`
         // is completely constructed before it is exposed to the thread pool, therefor this
         // method is only intended to be invoked once, and immediately after the constructor has
         // finished.
