@@ -12,7 +12,7 @@ import org.json.JSONObject;
  * <p>
  * Processing a query.
  */
-class Processor implements AutoCloseable {
+class Processor {
 
     public static final String ACCEPTED = "ACCEPTED";
     public static final String ERROR = "ERROR";
@@ -50,22 +50,28 @@ class Processor implements AutoCloseable {
             if (result != null && !result.isEmpty()) {
 
                 if (result.startsWith(ACCEPTED)) {
+                    close();
                     return getNextResult();
                 }
                 if (result.startsWith(ERROR)) {
+                    close();
                     return error(result);
                 }
                 if (result.startsWith(INVALID)) {
+                    close();
                     return invalid(result);
                 }
                 if (result.startsWith(OKAY)) {
+                    close();
                     return okay();
                 }
                 return new JSONObject(result);
             }
+            close();
             return null;
 
         } catch (Exception e) {
+            close();
             throw new ClientException("Error by receiving results from server.", e);
         }
     }
@@ -84,8 +90,7 @@ class Processor implements AutoCloseable {
         return new JSONObject("{\"status\":\"okay\"}");
     }
 
-    @Override
-    public void close() throws Exception {
+    public void close() {
         if (in != null) {
             try {
                 in.close();
