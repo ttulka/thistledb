@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.List;
+
+import org.json.JSONObject;
 
 import cz.net21.ttulka.thistledb.client.Client;
 import lombok.extern.apachecommons.CommonsLog;
@@ -57,13 +60,15 @@ public class Console implements AutoCloseable {
             try {
                 out.print("$ ");
                 command = br.readLine();
+                if (command != null && !command.trim().isEmpty()) {
+                    command = command.trim();
 
-                if (command.equals("quit")) {
-                    break;
+                    if ("quit".equals(command)) {
+                        break;
+                    }
+
+                    executeCommand(command);
                 }
-
-                // TODO call the client to execute the query
-                // client.executeQuery(command);
 
             } catch (Exception e) {
                 err.println("Invalid user input!");
@@ -71,6 +76,17 @@ public class Console implements AutoCloseable {
         } while (command != null);
 
         out.println("\nBye!");
+    }
+
+    void executeCommand(String command) {
+        if (command.toLowerCase().startsWith("select")) {
+            List<JSONObject> result = client.executeQueryBlocking(command);
+
+            out.println("Result(s):");
+            result.forEach(out::println);
+        } else {
+            client.executeCommand(command);
+        }
     }
 
     @Override
