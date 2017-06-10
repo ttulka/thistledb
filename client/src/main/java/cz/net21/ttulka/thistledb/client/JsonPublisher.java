@@ -21,6 +21,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
 
     private final CountDownLatch started = new CountDownLatch(1);
     private final CountDownLatch finished = new CountDownLatch(1);
+    private final CountDownLatch initialized = new CountDownLatch(1);
 
     /**
      * @throws ClientException when something goes wrong
@@ -31,20 +32,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
     }
 
     private Publisher<JSONObject> createPublisher(Supplier<JSONObject> supplier) {
-        return new AsyncStreamPublisher<>(
-                new Supplier<JSONObject>() {
-                    {   // start a socket initialization
-                        started.countDown();
-                    }
-
-                    @Override
-                    public JSONObject get() {
-                        JSONObject json = supplier.get();
-                        return json != null ? json : null;
-                    }
-                },
-                Executors.newCachedThreadPool()
-        );
+        return new AsyncStreamPublisher<>(supplier, Executors.newCachedThreadPool());
     }
 
     private void init(Runnable init) {
@@ -52,6 +40,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
             try {
                 started.await();
                 init.run();
+                initialized.countDown();
 
             } catch (InterruptedException e) {
                 throw new ClientException("Publisher was interrupted.", e);
@@ -79,7 +68,13 @@ public class JsonPublisher implements Publisher<JSONObject> {
      */
     @Override
     public void subscribe(Subscriber<? super JSONObject> subscriber) {
+        // start initialization with the first subscription
         started.countDown();
+        try {
+            initialized.await();    // wait until is initialization finished
+        } catch (InterruptedException e) {
+            // ignore
+        }
         publisher.subscribe(subscriber);
     }
 
@@ -88,7 +83,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
      *
      * @param onNext the consumer
      */
-    public void subscribe(Consumer<JSONObject> onNext) {
+    public JsonPublisher subscribe(Consumer<JSONObject> onNext) {
         Predicate<JSONObject> onNextWithEmptyTest = json -> {
             if (json != null) {
                 onNext.accept(json);
@@ -108,7 +103,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
 
                 @Override
                 protected void whenComplete() {
-                    finished.getCount();
+                    finished.countDown();
                 }
             };
         } else {
@@ -120,11 +115,12 @@ public class JsonPublisher implements Publisher<JSONObject> {
 
                 @Override
                 protected void whenComplete() {
-                    finished.getCount();
+                    finished.countDown();
                 }
             };
         }
         subscribe(subscriber);
+        return this;
     }
 
     /**
