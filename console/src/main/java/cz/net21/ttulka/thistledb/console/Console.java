@@ -88,8 +88,13 @@ public class Console implements AutoCloseable {
         List<JSONObject> result = client.executeQueryBlocking(query);
 
         out.println("\nResult(s):");
-        result.forEach(out::println);
+        result.forEach(this::formatJsonResult);
         out.println();
+    }
+
+    void formatJsonResult(JSONObject json) {
+        // TODO
+        out.println(json);
     }
 
     @Override
