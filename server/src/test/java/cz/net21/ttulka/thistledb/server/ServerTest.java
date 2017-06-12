@@ -109,6 +109,11 @@ public class ServerTest {
                 in.readLine();
                 in.readLine();
 
+                out.println("SELECT * FROM test");
+                in.readLine();
+                in.readLine();
+                in.readLine();
+
                 fail("Client socket cannot exceed the timeout.");
 
             } catch (SocketException e){
