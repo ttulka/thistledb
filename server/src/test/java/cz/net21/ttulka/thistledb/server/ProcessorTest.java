@@ -134,9 +134,4 @@ public class ProcessorTest {
         Mockito.doAnswer((s) -> out.add(s.getArgumentAt(0, String.class))).when(writer).println(anyString());
         return writer;
     }
-
-    @Test
-    public void validateInputTest() {
-        // TODO
-    }
 }

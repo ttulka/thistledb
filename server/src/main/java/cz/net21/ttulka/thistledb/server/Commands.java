@@ -5,7 +5,7 @@ package cz.net21.ttulka.thistledb.server;
  * <p>
  * Command to send to a server.
  */
-public enum Commands {
+enum Commands {
 
     SERVER_STOP,
 

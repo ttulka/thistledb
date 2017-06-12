@@ -16,7 +16,7 @@ import reactor.core.publisher.Flux;
  * Processing a request.
  */
 @CommonsLog
-public class Processor {
+class Processor {
 
     public static final String ACCEPTED = "ACCEPTED";
     public static final String ERROR = "ERROR";
@@ -58,9 +58,8 @@ public class Processor {
         }
     }
 
-    protected boolean validateInput(String input) {
-        // TODO validate input as a QL template
-        return true;
+    private boolean validateInput(String input) {
+        return new Validator(input).validate();
     }
 
     protected Commands parseCommand(@NonNull String input) {
