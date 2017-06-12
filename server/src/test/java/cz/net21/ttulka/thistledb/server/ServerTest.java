@@ -104,10 +104,7 @@ public class ServerTest {
                 Thread.sleep(500);
 
                 out.println("SELECT * FROM test");
-                assertThat("Connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
-                assertThat("Result shouldn't be null.", in.readLine(), notNullValue());
-
-                fail("Client socket cannot exceed the timeout.");
+                assertThat("Result should be null.", in.readLine(), nullValue());
 
             } catch (SocketException e){
                 // ignore
