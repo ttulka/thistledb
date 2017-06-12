@@ -89,7 +89,6 @@ public class ServerTest {
                  BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 Thread.sleep(500);
 
-
                 out.println("SELECT * FROM test");
                 assertThat("Connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
                 assertThat("Result shouldn't be null.", in.readLine(), notNullValue());
@@ -105,14 +104,8 @@ public class ServerTest {
                 Thread.sleep(500);
 
                 out.println("SELECT * FROM test");
-                in.readLine();
-                in.readLine();
-                in.readLine();
-
-                out.println("SELECT * FROM test");
-                in.readLine();
-                in.readLine();
-                in.readLine();
+                assertThat("Connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
+                assertThat("Result shouldn't be null.", in.readLine(), notNullValue());
 
                 fail("Client socket cannot exceed the timeout.");
 
