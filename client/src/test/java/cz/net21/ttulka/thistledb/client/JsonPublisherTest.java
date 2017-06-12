@@ -1,7 +1,11 @@
 package cz.net21.ttulka.thistledb.client;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
 
 import org.json.JSONObject;
@@ -37,9 +41,11 @@ public class JsonPublisherTest {
     public void setUp() {
         when(queryExecutor.getNextResult()).thenAnswer(new Answer<JSONObject>() {
             private int i;
+
             @Override
             public JSONObject answer(InvocationOnMock invocation) {
-                return i < ELEMENTS ? new JSONObject("{\"value\":\"" + i++ + "\"}") : null;
+                String formattedNumber = String.format("%03d", i++);
+                return i <= ELEMENTS ? new JSONObject("{\"value\":\"" + formattedNumber + "\"}") : null;
             }
         });
     }
@@ -47,40 +53,93 @@ public class JsonPublisherTest {
     @Test
     public void subscribeTest() throws Exception {
         List<JSONObject> results = new ArrayList<>();
-        publisher.subscribe(json -> {
-            results.add(json);
+        publisher.serial().subscribe(json -> {
             try {
-                Thread.sleep(100);
+                Thread.sleep(new Random().nextInt(100));
             } catch (InterruptedException e) {
             }
+            results.add(json);
         });
 
         assertThat("It's too early to have all the elements.", results.size(), not(is(ELEMENTS)));
 
         Thread.sleep(ELEMENTS * 100);
 
-        testResults(results);
+        testOrderedResults(results);
+    }
+
+    @Test
+    public void subscribeParallelTest() throws Exception {
+        List<JSONObject> results = new CopyOnWriteArrayList<>();
+        publisher.parallel().subscribe(json -> {
+            try {
+                Thread.sleep(new Random().nextInt(100));
+            } catch (InterruptedException e) {
+            }
+            results.add(json);
+        });
+
+        assertThat("It's too early to have all the elements.", results.size(), not(is(ELEMENTS)));
+
+        Thread.sleep(ELEMENTS * 100);
+
+        testUnorderedResults(results);
     }
 
     @Test
     public void awaitTest() throws Exception {
+        long start = System.currentTimeMillis();
+
         List<JSONObject> results = new ArrayList<>();
-        publisher.subscribe(json -> {
-            results.add(json);
+        publisher.serial().subscribe(json -> {
             try {
-                Thread.sleep(100);
+                Thread.sleep(new Random().nextInt(100));
             } catch (InterruptedException e) {
             }
+            results.add(json);
         }).await();
 
-        testResults(results);
+        System.out.println("awaitTest: " + (System.currentTimeMillis() - start));
+
+        testOrderedResults(results);
     }
 
-    private void testResults(List<JSONObject> results) {
+    @Test
+    public void awaitParallelTest() throws Exception {
+        long start = System.currentTimeMillis();
+
+        List<JSONObject> results = new CopyOnWriteArrayList<>();
+        publisher.parallel().subscribe(json -> {
+            try {
+                Thread.sleep(new Random().nextInt(100));
+            } catch (InterruptedException e) {
+            }
+            results.add(json);
+        }).await();
+
+        System.out.println("awaitParallelTest: " + (System.currentTimeMillis() - start));
+
+        testUnorderedResults(results);
+    }
+
+    private void testOrderedResults(List<JSONObject> results) {
         assertThat("We should have all the elements.", results.size(), is(ELEMENTS));
 
         IntStream.range(0, ELEMENTS).forEach(i -> {
-            JSONObject json = new JSONObject("{\"value\":\"" + i + "\"}");
+            String formattedNumber = String.format("%03d", i);
+            JSONObject json = new JSONObject("{\"value\":\"" + formattedNumber + "\"}");
+            assertThat("The elements must be ordered.", results.get(i).toString(), is(json.toString()));
+        });
+    }
+
+    private void testUnorderedResults(List<JSONObject> results) {
+        assertThat("We should have all the elements.", results.size(), is(ELEMENTS));
+
+        Collections.sort(results, Comparator.comparing(JSONObject::toString));
+
+        IntStream.range(0, ELEMENTS).forEach(i -> {
+            String formattedNumber = String.format("%03d", i);
+            JSONObject json = new JSONObject("{\"value\":\"" + formattedNumber + "\"}");
             assertThat("The elements must be ordered.", results.get(i).toString(), is(json.toString()));
         });
     }

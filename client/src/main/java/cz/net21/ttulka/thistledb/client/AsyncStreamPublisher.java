@@ -117,14 +117,13 @@ class AsyncStreamPublisher<T> implements Publisher<T> {
         // we execute it asynchronously, this is to avoid executing the user code (`Iterable.iterator`) on the calling thread.
         // It also makes it easier to follow rule 1.9
         private void doSubscribe() {
+            // Deal with setting up the subscription with the subscriber
+            try {
+                subscriber.onSubscribe(this);
+            } catch (final Throwable t) { // Due diligence to obey 2.13
+                terminateDueTo(new IllegalStateException(subscriber + " violated the Reactive Streams rule 2.13 by throwing an exception from onSubscribe.", t));
+            }
             if (!cancelled) {
-                // Deal with setting up the subscription with the subscriber
-                try {
-                    subscriber.onSubscribe(this);
-                } catch (final Throwable t) { // Due diligence to obey 2.13
-                    terminateDueTo(new IllegalStateException(subscriber + " violated the Reactive Streams rule 2.13 by throwing an exception from onSubscribe.", t));
-                }
-
                 // Deal with already complete iterators promptly
                 boolean hasElements = false;
                 try {

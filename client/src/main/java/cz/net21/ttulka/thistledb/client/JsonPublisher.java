@@ -1,9 +1,10 @@
 package cz.net21.ttulka.thistledb.client;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.json.JSONObject;
@@ -61,6 +62,14 @@ public class JsonPublisher implements Publisher<JSONObject> {
     }
 
     /**
+     * Changes the publisher to serial processing.
+     */
+    public final JsonPublisher serial() {
+        parallel = false;
+        return this;
+    }
+
+    /**
      * Subscribes a subscriber.
      * Recommended convenient alternative: {{@link #subscribe(Consumer)}}.
      *
@@ -84,41 +93,37 @@ public class JsonPublisher implements Publisher<JSONObject> {
      * @param onNext the consumer
      */
     public JsonPublisher subscribe(Consumer<JSONObject> onNext) {
-        Predicate<JSONObject> onNextWithEmptyTest = json -> {
-            if (json != null) {
-                onNext.accept(json);
-                return true;
-            } else {
-                return false;
+        final ExecutorService executor = Executors.newCachedThreadPool();
+
+        Subscriber<JSONObject> subscriber = new AsyncSubscriber<JSONObject>(Executors.newCachedThreadPool()) {
+            @Override
+            protected boolean whenNext(JSONObject json) {
+                if (json != null) {
+                    if (parallel) {
+                        executor.execute(() -> onNext.accept(json));
+                    } else {
+                        onNext.accept(json);
+                    }
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            protected void whenComplete() {
+                if (parallel) {
+                    executor.shutdown();
+                    try {
+                        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
+                    } catch (InterruptedException e) {
+                        throw new IllegalThreadStateException("Executor interrupted.");
+                    }
+                }
+                finished.countDown();
             }
         };
-
-        Subscriber<JSONObject> subscriber;
-        if (parallel) {
-            subscriber = new AsyncSubscriber<JSONObject>(Executors.newCachedThreadPool()) {
-                @Override
-                protected boolean whenNext(JSONObject element) {
-                    return onNextWithEmptyTest.test(element);
-                }
-
-                @Override
-                protected void whenComplete() {
-                    finished.countDown();
-                }
-            };
-        } else {
-            subscriber = new SyncSubscriber<JSONObject>() {
-                @Override
-                protected boolean foreach(JSONObject element) {
-                    return onNextWithEmptyTest.test(element);
-                }
-
-                @Override
-                protected void whenComplete() {
-                    finished.countDown();
-                }
-            };
-        }
         subscribe(subscriber);
         return this;
     }
