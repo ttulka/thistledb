@@ -92,9 +92,8 @@ public class Console {
         out.println();
     }
 
-    void formatJsonResult(JSONObject json) {
-        // TODO
-        out.println(json);
+    private void formatJsonResult(JSONObject json) {
+        new JsonFormatter(json, out).formatJsonResult();
     }
 
     private void printLogo() {

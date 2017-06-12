@@ -9,7 +9,8 @@ import java.util.regex.Pattern;
 class Validator {
 
     private static final Pattern SELECT = Pattern.compile("SELECT\\s(\\*|[\\w\\d,\\s]+)\\sFROM\\s([\\w\\d]+)(\\sWHERE\\s([\\(\\)\\w\\d\\=\\s\\']+))?");
-    private static final Pattern INSERT = Pattern.compile("INSERT INTO\\s([\\w\\d]+)\\sVALUES\\s(\\{.+\\})");
+    private static final Pattern INSERT = Pattern.compile("INSERT\\sINTO\\s([\\w\\d]+)\\sVALUES\\s(\\{.+\\})");
+    // TODO
 
     private final String ql;
 
