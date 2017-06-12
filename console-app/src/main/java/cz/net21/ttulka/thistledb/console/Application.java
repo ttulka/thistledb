@@ -24,9 +24,9 @@ public final class Application {
         try {
             CommandLine cmdLine = new DefaultParser().parse(cmdOptions, args);
 
-            try (Console console = createConsole(cmdLine)) {
-                console.start();
-            }
+            Console console = createConsole(cmdLine);
+            console.start();
+
         } catch (NumberFormatException | ParseException e) {
             System.err.println("Cannot parse the user input: " + e.getMessage());
             log.error(e);

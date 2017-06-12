@@ -1,6 +1,6 @@
 package cz.net21.ttulka.thistledb.client;
 
-import java.io.PrintWriter;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,44 +12,29 @@ import org.json.JSONObject;
  * <p>
  * Client driver.
  */
-public class Client implements AutoCloseable {
+public class Client {
 
     public static final String DEFAULT_HOST = "localhost";
     public static final int DEFAULT_PORT = 9658;
 
-    private final Socket socket;
+    private final String host;
+    private final int port;
 
-    /**
-     * @throws ClientException if a socket cannot be opened
-     */
     public Client() {
         this(DEFAULT_HOST, DEFAULT_PORT);
     }
 
-    /**
-     * @throws ClientException if a socket cannot be opened
-     */
     public Client(String host) {
         this(host, DEFAULT_PORT);
     }
 
-    /**
-     * @throws ClientException if a socket cannot be opened
-     */
     public Client(int port) {
         this(DEFAULT_HOST, port);
     }
 
-    /**
-     * @throws ClientException if a socket cannot be opened
-     */
     public Client(String host, int port) {
-        try {
-            this.socket = new Socket(host, port);
-
-        } catch (Exception e) {
-            throw new ClientException("Cannot open a socket on " + host + ":" + port + ".", e);
-        }
+        this.host = host;
+        this.port = port;
     }
 
     /**
@@ -83,7 +68,12 @@ public class Client implements AutoCloseable {
      */
     public JsonPublisher executeQuery(String nativeQuery) {
         checkQuery(nativeQuery);
-        return new JsonPublisher(new QueryExecutor(socket, nativeQuery));
+        try (Socket socket = new Socket(host, port)) {
+            return new JsonPublisher(new QueryExecutor(socket, nativeQuery));
+
+        } catch (IOException e) {
+            throw new ClientException("Cannot open a socket on " + host + ":" + port + ".", e);
+        }
     }
 
     /**
@@ -95,7 +85,12 @@ public class Client implements AutoCloseable {
      */
     public List<JSONObject> executeQueryBlocking(String nativeQuery) {
         checkQuery(nativeQuery);
-        return executeProcessorBlocking(new QueryExecutor(socket, nativeQuery));
+        try (Socket socket = new Socket(host, port)) {
+            return executeProcessorBlocking(new QueryExecutor(socket, nativeQuery));
+
+        } catch (IOException e) {
+            throw new ClientException("Cannot open a socket on " + host + ":" + port + ".", e);
+        }
     }
 
     /**
@@ -117,20 +112,29 @@ public class Client implements AutoCloseable {
      */
     public void executeCommand(String nativeQuery) {
         checkQuery(nativeQuery);
-        try {
-            PrintWriter out = new PrintWriter(socket.getOutputStream());
-            out.println(nativeQuery);
-
+        try (Socket socket = new Socket(host, port)) {
+            new Thread(() -> {
+                new QueryExecutor(socket, nativeQuery).executeQuery();
+            }).start();
+        } catch (IOException e) {
+            throw new ClientException("Cannot open a socket on " + host + ":" + port + ".", e);
         } catch (Exception e) {
             throw new ClientException("Cannot send a command [" + nativeQuery + "] to socket.", e);
         }
     }
 
-    private void executeProcessor(QueryExecutor queryExecutor) {
-        new Thread(() -> {
-            queryExecutor.executeQuery();
-            queryExecutor.getNextResult();
-        }).start();
+    /**
+     * Tests a connection.
+     *
+     * @return true if connection successfully created, otherwise false
+     */
+    public boolean test() {
+        try (Socket socket = new Socket(host, port)) {
+            return true;
+
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     private List<JSONObject> executeProcessorBlocking(QueryExecutor queryExecutor) {
@@ -156,20 +160,6 @@ public class Client implements AutoCloseable {
         }
         if (query.isEmpty()) {
             throw new IllegalArgumentException("Query cannot be empty.");
-        }
-    }
-
-    /**
-     * Close the client connection to the server.
-     *
-     * @throws ClientException if a socket cannot be closed
-     */
-    @Override
-    public void close() {
-        try {
-            socket.close();
-        } catch (Throwable t) {
-            throw new ClientException("Cannot close a socket.", t);
         }
     }
 }

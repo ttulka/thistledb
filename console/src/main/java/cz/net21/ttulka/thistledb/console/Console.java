@@ -19,7 +19,7 @@ import lombok.extern.apachecommons.CommonsLog;
  * The admin console.
  */
 @CommonsLog
-public class Console implements AutoCloseable {
+public class Console {
 
     private final Client client;
 
@@ -95,16 +95,6 @@ public class Console implements AutoCloseable {
     void formatJsonResult(JSONObject json) {
         // TODO
         out.println(json);
-    }
-
-    @Override
-    public void close() {
-        try {
-            client.close();
-        } catch (Exception e) {
-            err.println("Exception by closing the client: " + e.getMessage());
-            log.error(e);
-        }
     }
 
     private void printLogo() {

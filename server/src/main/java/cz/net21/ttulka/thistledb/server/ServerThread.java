@@ -21,13 +21,16 @@ class ServerThread implements Runnable {
     private final Socket socket;
 
     private final Listening serverListening;
+    private final Runnable onFinished;
 
     private final Processor processor;
 
-    public ServerThread(@NonNull Socket socket, @NonNull DataSource dataSource, Listening serverListening) {
+    public ServerThread(@NonNull Socket socket, @NonNull DataSource dataSource,
+                        Listening serverListening, Runnable onFinished) {
         super();
         this.socket = socket;
         this.serverListening = serverListening;
+        this.onFinished = onFinished;
 
         this.processor = new Processor(dataSource);
     }
@@ -45,6 +48,8 @@ class ServerThread implements Runnable {
             }
         } catch (IOException e) {
             log.error("Error while serving a client socket.", e);
+        } finally {
+            onFinished.run();
         }
     }
 }

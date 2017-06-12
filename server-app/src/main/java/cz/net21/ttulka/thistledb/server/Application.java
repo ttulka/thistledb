@@ -68,7 +68,8 @@ public final class Application {
     }
 
     private static void startCommandConsole(int port) {
-        try (Console console = new Console(port)) {
+        try {
+            Console console = new Console(port);
             console.start();
 
         } catch (Throwable t) {
