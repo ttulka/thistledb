@@ -1,5 +1,6 @@
 package cz.net21.ttulka.thistledb.client;
 
+import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
@@ -15,7 +16,7 @@ import org.testng.annotations.Test;
  * Created by ttulka
  */
 @Test // Must be here for TestNG to find and run this, do not remove
-public class AsyncStreamPublisherTest extends PublisherVerification<Integer> {
+public class AsyncSupplierPublisherTest extends PublisherVerification<Integer> {
 
     private ExecutorService e;
 
@@ -31,7 +32,7 @@ public class AsyncStreamPublisherTest extends PublisherVerification<Integer> {
         }
     }
 
-    public AsyncStreamPublisherTest() {
+    public AsyncSupplierPublisherTest() {
         super(new TestEnvironment());
     }
 
@@ -39,7 +40,7 @@ public class AsyncStreamPublisherTest extends PublisherVerification<Integer> {
     @Override
     public Publisher<Integer> createPublisher(final long elements) {
         assert (elements <= maxElementsFromPublisher());
-        return new AsyncStreamPublisher(new Supplier<Integer>() {
+        return new AsyncSupplierPublisher<>(new Supplier<Integer>() {
             private int at;
             @Override
             public Integer get() {
@@ -50,9 +51,9 @@ public class AsyncStreamPublisherTest extends PublisherVerification<Integer> {
 
     @Override
     public Publisher<Integer> createFailedPublisher() {
-        return new AsyncStreamPublisher<>(new Supplier<Integer>() {
+        return new AsyncIterablePublisher<Integer>(new Iterable<Integer>() {
             @Override
-            public Integer get() {
+            public Iterator<Integer> iterator() {
                 throw new RuntimeException("Error state signal!");
             }
         }, e);

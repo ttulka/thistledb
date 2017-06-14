@@ -33,7 +33,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
     }
 
     private Publisher<JSONObject> createPublisher(Supplier<JSONObject> supplier) {
-        return new AsyncStreamPublisher<>(supplier, Executors.newCachedThreadPool());
+        return new AsyncSupplierPublisher<>(supplier, Executors.newCachedThreadPool());
     }
 
     private void init(Runnable init) {
