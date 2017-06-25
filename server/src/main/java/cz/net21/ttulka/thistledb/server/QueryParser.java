@@ -168,7 +168,6 @@ class QueryParser {
         String setClause = getMatchingGroup(UPDATE, ql, 2).trim();
         List<String> columns = new ArrayList<>();
         Arrays.stream(setClause.split(","))
-                .peek(s -> System.out.println(s))
                 .map(mapper)
                 .map(String::trim)
                 .forEach(columns::add);

@@ -51,7 +51,7 @@ public class QueryProcessorTest {
     }
 
     @Test
-    public void selectSingleResultTest() {
+    public void selectTest() {
         List<String> out = new ArrayList<>();
         PrintWriter writer = mockPrintWriter(out);
 
@@ -75,11 +75,81 @@ public class QueryProcessorTest {
         assertThat(out.get(2), is(json.toString()));
     }
 
+    @Test
+    public void updateTest() {
+        List<String> out = new ArrayList<>();
+        PrintWriter writer = mockPrintWriter(out);
+
+        queryProcessor.process("UPDATE test SET a=1", writer);
+
+        assertThat(out.size(), is(2));
+        assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
+        assertThat(out.get(1), is(QueryProcessor.OKAY));
+    }
+
+    @Test
+    public void deleteTest() {
+        List<String> out = new ArrayList<>();
+        PrintWriter writer = mockPrintWriter(out);
+
+        queryProcessor.process("DELETE FROM test", writer);
+
+        assertThat(out.size(), is(2));
+        assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
+        assertThat(out.get(1), is(QueryProcessor.OKAY));
+    }
+
+    @Test
+    public void createTest() {
+        List<String> out = new ArrayList<>();
+        PrintWriter writer = mockPrintWriter(out);
+
+        queryProcessor.process("CREATE test", writer);
+
+        assertThat(out.size(), is(2));
+        assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
+        assertThat(out.get(1), is(QueryProcessor.OKAY));
+    }
+
+    @Test
+    public void dropTest() {
+        List<String> out = new ArrayList<>();
+        PrintWriter writer = mockPrintWriter(out);
+
+        queryProcessor.process("DROP test", writer);
+
+        assertThat(out.size(), is(2));
+        assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
+        assertThat(out.get(1), is(QueryProcessor.OKAY));
+    }
+
+    @Test
+    public void createIndexTest() {
+        List<String> out = new ArrayList<>();
+        PrintWriter writer = mockPrintWriter(out);
+
+        queryProcessor.process("CREATE INDEX a ON test", writer);
+
+        assertThat(out.size(), is(2));
+        assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
+        assertThat(out.get(1), is(QueryProcessor.OKAY));
+    }
+
+    @Test
+    public void dropIndexTest() {
+        List<String> out = new ArrayList<>();
+        PrintWriter writer = mockPrintWriter(out);
+
+        queryProcessor.process("DROP INDEX a ON test", writer);
+
+        assertThat(out.size(), is(2));
+        assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
+        assertThat(out.get(1), is(QueryProcessor.OKAY));
+    }
+
     private PrintWriter mockPrintWriter(List<String> out) {
         PrintWriter writer = mock(PrintWriter.class);
         Mockito.doAnswer((s) -> out.add(s.getArgumentAt(0, String.class))).when(writer).println(anyString());
         return writer;
     }
-
-    // TODO test all the methods process*()
 }
