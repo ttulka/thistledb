@@ -26,6 +26,16 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
+    public void createCollection(String collectionName) {
+        // TODO
+    }
+
+    @Override
+    public void dropCollection(String collectionName) {
+        // TODO
+    }
+
+    @Override
     public Flux<JSONObject> select(@NonNull String collectionName, @NonNull String columns, String where) {
         return Flux.fromIterable(db);
     }
@@ -33,5 +43,25 @@ public class DataSourceImpl implements DataSource {
     @Override
     public void insert(@NonNull String collectionName, @NonNull JSONObject data) {
         db.add(data);
+    }
+
+    @Override
+    public void update(String collectionName, String[] columns, String[] values, String where) {
+        // TODO
+    }
+
+    @Override
+    public void delete(String collectionName, String where) {
+        // TODO
+    }
+
+    @Override
+    public void createIndex(String collectionName, String column) {
+        // TODO
+    }
+
+    @Override
+    public void dropIndex(String collectionName, String column) {
+        // TODO
     }
 }
