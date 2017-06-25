@@ -14,8 +14,8 @@ class JsonFormatter {
     private final JSONObject json;
     private final PrintStream out;
 
-    public JsonFormatter(JSONObject json, PrintStream out) {
-        this.json = json;
+    public JsonFormatter(String json, PrintStream out) {
+        this.json = new JSONObject(json);
         this.out = out;
     }
 

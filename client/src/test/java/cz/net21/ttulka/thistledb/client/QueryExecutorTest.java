@@ -8,11 +8,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.json.JSONObject;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static junit.framework.TestCase.fail;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
@@ -33,6 +32,7 @@ public class QueryExecutorTest {
         try {
             when(socket.getInputStream()).thenReturn(new InputStream() {
                 private int index, position;
+
                 @Override
                 public int read() throws IOException {
                     if (in.size() <= index) {
@@ -49,6 +49,7 @@ public class QueryExecutorTest {
             });
             when(socket.getOutputStream()).thenReturn(new OutputStream() {
                 StringBuilder sb = new StringBuilder();
+
                 @Override
                 public void write(int b) throws IOException {
                     if (b == '\n') {
@@ -85,10 +86,10 @@ public class QueryExecutorTest {
         QueryExecutor queryExecutor = new QueryExecutor(socket, QUERY);
         queryExecutor.executeQuery();
 
-        JSONObject result = queryExecutor.getNextResult();
+        String result = queryExecutor.getNextResult();
 
         assertThat(out.get(0), startsWith(QUERY));
-        assertThat(result.toString(), containsString("\"status\":\"" + RESULT.toLowerCase() + "\""));
+        assertThat(result, containsString("\"status\":\"" + RESULT.toLowerCase() + "\""));
     }
 
     @Test(expected = IllegalStateException.class)

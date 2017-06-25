@@ -85,14 +85,14 @@ public class Console {
     }
 
     void executeQuery(String query) {
-        List<JSONObject> result = client.executeQueryBlocking(query);
+        List<String> result = client.executeQueryBlocking(query);
 
         out.println("\nResult(s):");
         result.forEach(this::formatJsonResult);
         out.println();
     }
 
-    private void formatJsonResult(JSONObject json) {
+    private void formatJsonResult(String json) {
         new JsonFormatter(json, out).formatJsonResult();
     }
 

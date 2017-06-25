@@ -5,8 +5,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-import org.json.JSONObject;
-
 /**
  * Created by ttulka
  * <p>
@@ -53,7 +51,7 @@ class QueryExecutor {
      * @throws ClientException       when retrieving goes wrong
      * @throws IllegalStateException when the query was not executed yet
      */
-    public JSONObject getNextResult() {
+    public String getNextResult() {
         if (in == null) {
             throw new IllegalStateException("Query was not executed yet.");
         }
@@ -74,7 +72,7 @@ class QueryExecutor {
                 if (result.startsWith(OKAY)) {
                     return okay();
                 }
-                return new JSONObject(result);
+                return result;
             }
             return null;
 
@@ -83,17 +81,17 @@ class QueryExecutor {
         }
     }
 
-    private JSONObject error(String result) {
+    private String error(String result) {
         String msg = result.substring(ERROR.length());
-        return new JSONObject("{\"status\":\"error\", \"message\":\"" + msg + "\"}");
+        return "{\"status\":\"error\", \"message\":\"" + msg + "\"}";
     }
 
-    private JSONObject invalid(String result) {
+    private String invalid(String result) {
         String msg = result.substring(INVALID.length());
-        return new JSONObject("{\"status\":\"invalid\", \"message\":\"" + msg + "\"}");
+        return "{\"status\":\"invalid\", \"message\":\"" + msg + "\"}";
     }
 
-    private JSONObject okay() {
-        return new JSONObject("{\"status\":\"okay\"}");
+    private String okay() {
+        return "{\"status\":\"okay\"}";
     }
 }

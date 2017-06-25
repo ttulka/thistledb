@@ -3,7 +3,6 @@ package cz.net21.ttulka.thistledb.client;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.json.JSONObject;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.reactivestreams.Publisher;
@@ -20,7 +19,7 @@ import static org.mockito.Mockito.when;
  * Created by ttulka
  */
 @Test
-public class JsonPublisherReactiveStreamsTest extends PublisherVerification<JSONObject> {
+public class JsonPublisherReactiveStreamsTest extends PublisherVerification<String> {
 
     private ExecutorService executorService;
 
@@ -42,22 +41,23 @@ public class JsonPublisherReactiveStreamsTest extends PublisherVerification<JSON
 
     @SuppressWarnings("unchecked")
     @Override
-    public Publisher<JSONObject> createPublisher(final long elements) {
+    public Publisher<String> createPublisher(final long elements) {
         assert (elements <= maxElementsFromPublisher());
 
         QueryExecutor queryExecutor = mock(QueryExecutor.class);
-        when(queryExecutor.getNextResult()).thenAnswer(new Answer<JSONObject>() {
+        when(queryExecutor.getNextResult()).thenAnswer(new Answer<String>() {
             private int i;
+
             @Override
-            public JSONObject answer(InvocationOnMock invocation) {
-                return i < elements ? new JSONObject("{\"value\":\"" + i++ + "\"}") : null;
+            public String answer(InvocationOnMock invocation) {
+                return i < elements ? "{\"value\":\"" + i++ + "\"}" : null;
             }
         });
         return new JsonPublisher(queryExecutor);
     }
 
     @Override
-    public Publisher<JSONObject> createFailedPublisher() {
+    public Publisher<String> createFailedPublisher() {
         QueryExecutor queryExecutor = mock(QueryExecutor.class);
         when(queryExecutor.getNextResult()).thenThrow(new RuntimeException("Error state signal!"));
         return new JsonPublisher(queryExecutor);

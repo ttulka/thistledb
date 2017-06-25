@@ -2,13 +2,11 @@ package cz.net21.ttulka.thistledb.client;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
 
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,20 +37,20 @@ public class JsonPublisherTest {
 
     @Before
     public void setUp() {
-        when(queryExecutor.getNextResult()).thenAnswer(new Answer<JSONObject>() {
+        when(queryExecutor.getNextResult()).thenAnswer(new Answer<String>() {
             private int i;
 
             @Override
-            public JSONObject answer(InvocationOnMock invocation) {
+            public String answer(InvocationOnMock invocation) {
                 String formattedNumber = String.format("%03d", i++);
-                return i <= ELEMENTS ? new JSONObject("{\"value\":\"" + formattedNumber + "\"}") : null;
+                return i <= ELEMENTS ? new String("{\"value\":\"" + formattedNumber + "\"}") : null;
             }
         });
     }
 
     @Test
     public void subscribeTest() throws Exception {
-        List<JSONObject> results = new ArrayList<>();
+        List<String> results = new ArrayList<>();
         publisher.serial().subscribe(json -> {
             try {
                 Thread.sleep(new Random().nextInt(100));
@@ -70,7 +68,7 @@ public class JsonPublisherTest {
 
     @Test
     public void subscribeParallelTest() throws Exception {
-        List<JSONObject> results = new CopyOnWriteArrayList<>();
+        List<String> results = new CopyOnWriteArrayList<>();
         publisher.parallel().subscribe(json -> {
             try {
                 Thread.sleep(new Random().nextInt(100));
@@ -90,7 +88,7 @@ public class JsonPublisherTest {
     public void awaitTest() throws Exception {
         long start = System.currentTimeMillis();
 
-        List<JSONObject> results = new ArrayList<>();
+        List<String> results = new ArrayList<>();
         publisher.serial().subscribe(json -> {
             try {
                 Thread.sleep(new Random().nextInt(100));
@@ -108,7 +106,7 @@ public class JsonPublisherTest {
     public void awaitParallelTest() throws Exception {
         long start = System.currentTimeMillis();
 
-        List<JSONObject> results = new CopyOnWriteArrayList<>();
+        List<String> results = new CopyOnWriteArrayList<>();
         publisher.parallel().subscribe(json -> {
             try {
                 Thread.sleep(new Random().nextInt(100));
@@ -126,8 +124,8 @@ public class JsonPublisherTest {
     public void moreSubscribersTest() {
         long start = System.currentTimeMillis();
 
-        List<JSONObject> results1 = new CopyOnWriteArrayList<>();
-        List<JSONObject> results2 = new CopyOnWriteArrayList<>();
+        List<String> results1 = new CopyOnWriteArrayList<>();
+        List<String> results2 = new CopyOnWriteArrayList<>();
         publisher
                 .subscribe(json -> {
                     try {
@@ -152,7 +150,7 @@ public class JsonPublisherTest {
         } catch (InterruptedException e) {
         }
 
-        List<JSONObject> results = new ArrayList<>();
+        List<String> results = new ArrayList<>();
         results.addAll(results1);
         results.addAll(results2);
 
@@ -163,8 +161,8 @@ public class JsonPublisherTest {
     public void moreSubscribersParallelTest() {
         long start = System.currentTimeMillis();
 
-        List<JSONObject> results1 = new CopyOnWriteArrayList<>();
-        List<JSONObject> results2 = new CopyOnWriteArrayList<>();
+        List<String> results1 = new CopyOnWriteArrayList<>();
+        List<String> results2 = new CopyOnWriteArrayList<>();
         publisher.parallel()
                 .subscribe(json -> {
                     try {
@@ -189,32 +187,32 @@ public class JsonPublisherTest {
         } catch (InterruptedException e) {
         }
 
-        List<JSONObject> results = new ArrayList<>();
+        List<String> results = new ArrayList<>();
         results.addAll(results1);
         results.addAll(results2);
 
         testUnorderedResults(results);
     }
 
-    private void testOrderedResults(List<JSONObject> results) {
+    private void testOrderedResults(List<String> results) {
         assertThat("We should have all the elements.", results.size(), is(ELEMENTS));
 
         IntStream.range(0, ELEMENTS).forEach(i -> {
             String formattedNumber = String.format("%03d", i);
-            JSONObject json = new JSONObject("{\"value\":\"" + formattedNumber + "\"}");
-            assertThat("The elements must be ordered.", results.get(i).toString(), is(json.toString()));
+            String json = "{\"value\":\"" + formattedNumber + "\"}";
+            assertThat("The elements must be ordered.", results.get(i), is(json));
         });
     }
 
-    private void testUnorderedResults(List<JSONObject> results) {
+    private void testUnorderedResults(List<String> results) {
         assertThat("We should have all the elements.", results.size(), is(ELEMENTS));
 
-        Collections.sort(results, Comparator.comparing(JSONObject::toString));
+        Collections.sort(results);
 
         IntStream.range(0, ELEMENTS).forEach(i -> {
             String formattedNumber = String.format("%03d", i);
-            JSONObject json = new JSONObject("{\"value\":\"" + formattedNumber + "\"}");
-            assertThat("The elements must be ordered.", results.get(i).toString(), is(json.toString()));
+            String json = "{\"value\":\"" + formattedNumber + "\"}";
+            assertThat("The elements must be ordered.", results.get(i), is(json));
         });
     }
 }

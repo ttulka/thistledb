@@ -5,8 +5,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONObject;
-
 /**
  * Created by ttulka
  * <p>
@@ -67,7 +65,7 @@ public class Client {
      * @return the result
      * @throws ClientException if the query cannot be sent to server
      */
-    public List<JSONObject> executeQueryBlocking(Query query) {
+    public List<String> executeQueryBlocking(Query query) {
         return executeQueryBlocking(query.getNativeQuery());
     }
 
@@ -96,7 +94,7 @@ public class Client {
      * @return the result
      * @throws ClientException if the query cannot be sent to server
      */
-    public List<JSONObject> executeQueryBlocking(String nativeQuery) {
+    public List<String> executeQueryBlocking(String nativeQuery) {
         checkQuery(nativeQuery);
         try (Socket socket = new Socket(host, port)) {
             socket.setSoTimeout(timeout);
@@ -153,11 +151,11 @@ public class Client {
         }
     }
 
-    private List<JSONObject> executeProcessorBlocking(QueryExecutor queryExecutor) {
+    private List<String> executeProcessorBlocking(QueryExecutor queryExecutor) {
         queryExecutor.executeQuery();
 
-        List<JSONObject> toReturn = new ArrayList<>();
-        JSONObject json;
+        List<String> toReturn = new ArrayList<>();
+        String json;
         while ((json = queryExecutor.getNextResult()) != null) {
             toReturn.add(json);
         }

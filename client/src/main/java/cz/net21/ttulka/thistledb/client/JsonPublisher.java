@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.json.JSONObject;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
@@ -16,9 +15,9 @@ import org.reactivestreams.Subscriber;
  * <p>
  * Reactive JSON publisher.
  */
-public class JsonPublisher implements Publisher<JSONObject> {
+public class JsonPublisher implements Publisher<String> {
 
-    private final Publisher<JSONObject> publisher;
+    private final Publisher<String> publisher;
 
     private final CountDownLatch started = new CountDownLatch(1);
     private final CountDownLatch finished = new CountDownLatch(1);
@@ -32,7 +31,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
         init(() -> queryExecutor.executeQuery());
     }
 
-    private Publisher<JSONObject> createPublisher(Supplier<JSONObject> supplier) {
+    private Publisher<String> createPublisher(Supplier<String> supplier) {
         return new AsyncSupplierPublisher<>(supplier, Executors.newCachedThreadPool());
     }
 
@@ -76,7 +75,7 @@ public class JsonPublisher implements Publisher<JSONObject> {
      * @param subscriber the subscriber
      */
     @Override
-    public void subscribe(Subscriber<? super JSONObject> subscriber) {
+    public void subscribe(Subscriber<? super String> subscriber) {
         // start initialization with the first subscription
         started.countDown();
         try {
@@ -92,12 +91,12 @@ public class JsonPublisher implements Publisher<JSONObject> {
      *
      * @param onNext the consumer
      */
-    public JsonPublisher subscribe(Consumer<JSONObject> onNext) {
+    public JsonPublisher subscribe(Consumer<String> onNext) {
         final ExecutorService executor = Executors.newCachedThreadPool();
 
-        Subscriber<JSONObject> subscriber = new AsyncSubscriber<JSONObject>(Executors.newCachedThreadPool()) {
+        Subscriber<String> subscriber = new AsyncSubscriber<String>(Executors.newCachedThreadPool()) {
             @Override
-            protected boolean whenNext(JSONObject json) {
+            protected boolean whenNext(String json) {
                 if (json != null) {
                     if (parallel) {
                         executor.execute(() -> onNext.accept(json));
