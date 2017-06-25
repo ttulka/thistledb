@@ -16,7 +16,7 @@ import reactor.core.publisher.Flux;
  * Processing a request.
  */
 @CommonsLog
-class Processor {
+class QueryProcessor {
 
     public static final String ACCEPTED = "ACCEPTED";
     public static final String ERROR = "ERROR";
@@ -25,7 +25,7 @@ class Processor {
 
     private final DataSource dataSource;
 
-    public Processor(DataSource dataSource) {
+    public QueryProcessor(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -36,9 +36,11 @@ class Processor {
         try {
             out.println(ACCEPTED);
 
-            if (validateInput(input)) {
+            QueryParser parser = new QueryParser(input);
 
-                processQuery(input).subscribe(
+            if (parser.validate()) {
+
+                processQuery(parser).subscribe(
                         result -> out.println(result),
                         error -> log.error("Error by executing a query: " + input + ".", error)
                 );
@@ -58,91 +60,44 @@ class Processor {
         }
     }
 
-    private boolean validateInput(String input) {
-        return new Validator(input).validate();
-    }
-
-    protected Commands parseCommand(@NonNull String input) {
-        input += " ";
-        String command = input.substring(0, input.indexOf(" "));
-        return Commands.valueOf(command.toUpperCase());
-    }
-
     protected String acceptQuery(@NonNull Commands command) {
         return ACCEPTED + " " + command;
     }
 
-    protected Flux<String> processQuery(@NonNull String input) {
+    protected Flux<String> processQuery(@NonNull QueryParser parser) {
         try {
-            Commands command = parseCommand(input);
+            Commands command = parser.parseCommand();
 
             switch (command) {
                 case SELECT:
-                    return processSelect(input);
+                    return processSelect(parser);
                 case INSERT:
-                    return processInsert(input);
+                    return processInsert(parser);
                 // TODO next commands
                 default:
                     return Flux.just(ERROR + " invalid command: " + command);
             }
         } catch (Exception e) {
-            log.error("Cannot process a command [" + input + "].", e);
+            log.error("Cannot process a command [" + parser.getQuery() + "].", e);
             return Flux.just(ERROR + " " + e.getMessage());
         }
     }
 
-    Flux<String> processSelect(String input) {
-        String collection = parseCollection(input);
-        String columns = parseColumns(input);
-        String where = parseWhere(input);
+    Flux<String> processSelect(QueryParser parser) {
+        String collection = parser.parseCollection();
+        String columns = parser.parseColumns();
+        String where = parser.parseWhere();
 
         return dataSource.select(collection, columns, where)
                 .map(this::serialize);
     }
 
-    Flux<String> processInsert(String input) {
-        String collection = parseCollection(input);
-        String values = parseValues(input);
+    Flux<String> processInsert(QueryParser parser) {
+        String collection = parser.parseCollection();
+        String values = parser.parseValues();
 
         dataSource.insert(collection, new JSONObject(values));
         return Flux.just(OKAY);
-    }
-
-    String parseCollection(String input) {
-        String keyword = null;
-
-        Commands command = parseCommand(input);
-        switch (command) {
-            case SELECT:
-                keyword = "from";
-                break;
-            case INSERT:
-                keyword = "into";
-                break;
-            default:
-                new ServerException("Invalid command: " + command);
-        }
-
-        input = input.substring(input.toLowerCase().indexOf(keyword) + keyword.length()).trim();
-        if (input.indexOf(" ") > 0) {
-            input = input.substring(0, input.indexOf(" "));
-        }
-        return input;
-    }
-
-    String parseColumns(String input) {
-        input = input.substring(input.indexOf(" "), input.toLowerCase().indexOf("from")).replace(" ", "");
-        return input;
-    }
-
-    String parseWhere(String input) {
-        input = input.substring(input.toLowerCase().indexOf("where") + 5).trim();
-        return input;
-    }
-
-    String parseValues(String input) {
-        input = input.substring(input.toLowerCase().indexOf("values") + 6).trim();
-        return input;
     }
 
     private String serialize(JSONObject json) {

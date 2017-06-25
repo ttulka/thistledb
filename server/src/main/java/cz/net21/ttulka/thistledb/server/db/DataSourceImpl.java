@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.json.JSONObject;
 
+import lombok.NonNull;
 import lombok.extern.apachecommons.CommonsLog;
 import reactor.core.publisher.Flux;
 
@@ -28,43 +29,43 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
-    public boolean createCollection(String collectionName) {
+    public boolean createCollection(@NonNull String collectionName) {
         return db.putIfAbsent(collectionName, new HashSet<>()) == null;
     }
 
     @Override
-    public boolean dropCollection(String collectionName) {
+    public boolean dropCollection(@NonNull String collectionName) {
         return db.remove(collectionName) != null;
     }
 
     @Override
-    public Flux<JSONObject> select(String collectionName, String columns, String where) {
+    public Flux<JSONObject> select(@NonNull String collectionName, @NonNull String columns, String where) {
         checkIfCollectionExists(collectionName);
 
         return Flux.fromIterable(db.get(collectionName));
     }
 
     @Override
-    public void insert(String collectionName, JSONObject data) {
+    public void insert(@NonNull String collectionName, @NonNull JSONObject data) {
         checkIfCollectionExists(collectionName);
 
         db.get(collectionName).add(data);
     }
 
     @Override
-    public boolean update(String collectionName, String[] columns, String[] values, String where) {
+    public boolean update(@NonNull String collectionName, @NonNull String[] columns, @NonNull String[] values, String where) {
         checkIfCollectionExists(collectionName);
         return true;
     }
 
     @Override
-    public boolean delete(String collectionName, String where) {
+    public boolean delete(@NonNull String collectionName, String where) {
         checkIfCollectionExists(collectionName);
         return true;
     }
 
     @Override
-    public boolean createIndex(String collectionName, String column) {
+    public boolean createIndex(@NonNull String collectionName, @NonNull String column) {
         checkIfCollectionExists(collectionName);
 
         indexes.putIfAbsent(collectionName, new HashSet<>());
@@ -72,7 +73,7 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
-    public boolean dropIndex(String collectionName, String column) {
+    public boolean dropIndex(@NonNull String collectionName, @NonNull String column) {
         checkIfCollectionExists(collectionName);
 
         if (indexes.containsKey(collectionName)) {

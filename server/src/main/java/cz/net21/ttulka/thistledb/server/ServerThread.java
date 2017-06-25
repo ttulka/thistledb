@@ -23,7 +23,7 @@ class ServerThread implements Runnable {
     private final Listening serverListening;
     private final Runnable onFinished;
 
-    private final Processor processor;
+    private final QueryProcessor queryProcessor;
 
     public ServerThread(@NonNull Socket socket, @NonNull DataSource dataSource,
                         Listening serverListening, Runnable onFinished) {
@@ -32,7 +32,7 @@ class ServerThread implements Runnable {
         this.serverListening = serverListening;
         this.onFinished = onFinished;
 
-        this.processor = new Processor(dataSource);
+        this.queryProcessor = new QueryProcessor(dataSource);
     }
 
     @Override
@@ -44,7 +44,7 @@ class ServerThread implements Runnable {
         ) {
             String input;
             while (serverListening.listening() && (input = in.readLine()) != null) {
-                processor.process(input.trim(), out);
+                queryProcessor.process(input.trim(), out);
             }
         } catch (IOException e) {
             log.error("Error while serving a client socket.", e);

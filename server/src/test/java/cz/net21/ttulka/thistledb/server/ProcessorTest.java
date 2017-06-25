@@ -36,7 +36,7 @@ public class ProcessorTest {
     private DataSource dataSource;
 
     @InjectMocks
-    private Processor processor;
+    private QueryProcessor queryProcessor;
 
     @Before
     public void setUp() {
@@ -45,63 +45,9 @@ public class ProcessorTest {
     }
 
     @Test
-    public void parseCommandTest() {
-        Commands cmd = processor.parseCommand("SELECT FROM test");
-        assertThat(cmd, is(Commands.SELECT));
-
-        cmd = processor.parseCommand("select FROM test");
-        assertThat(cmd, is(Commands.SELECT));
-
-        cmd = processor.parseCommand("sEleCt FROM test");
-        assertThat(cmd, is(Commands.SELECT));
-
-        cmd = processor.parseCommand("SELECT");
-        assertThat(cmd, is(Commands.SELECT));
-    }
-
-    @Test
     public void acceptQueryTest() {
-        String result = processor.acceptQuery(Commands.SELECT);
-        assertThat(result, is(Processor.ACCEPTED + " " + Commands.SELECT));
-    }
-
-    @Test
-    public void parseCollectionForSelectTest() {
-        String result = processor.parseCollection("SELECT * FROM test");
-        assertThat(result, is("test"));
-
-        result = processor.parseCollection("SELECT col1, col2 FROM test WHERE person.name = 'John'");
-        assertThat(result, is("test"));
-    }
-
-    @Test
-    public void parseCollectionForInsertTest() {
-        String result = processor.parseCollection("INSERT INTO test VALUES " + json);
-        assertThat(result, is("test"));
-    }
-
-    @Test
-    public void parseColumnsTest() {
-        String result = processor.parseColumns("SELECT * FROM test");
-        assertThat(result, is("*"));
-
-        result = processor.parseColumns("SELECT col1, col2 FROM test");
-        assertThat(result, is("col1,col2"));
-    }
-
-    @Test
-    public void parseWhereTest() {
-        String result = processor.parseWhere("SELECT * FROM test WHERE 1=1");
-        assertThat(result, is("1=1"));
-
-        result = processor.parseWhere("SELECT col1, col2 FROM test wHeRe 1=1 AND 2=2");
-        assertThat(result, is("1=1 AND 2=2"));
-    }
-
-    @Test
-    public void parseValues() {
-        String result = processor.parseValues("INSERT INTO test VALUES " + json);
-        assertThat(result, is(json.toString()));
+        String result = queryProcessor.acceptQuery(Commands.SELECT);
+        assertThat(result, is(QueryProcessor.ACCEPTED + " " + Commands.SELECT));
     }
 
     @Test
@@ -109,10 +55,10 @@ public class ProcessorTest {
         List<String> out = new ArrayList<>();
         PrintWriter writer = mockPrintWriter(out);
 
-        processor.process("SELECT * FROM test", writer);
+        queryProcessor.process("SELECT * FROM test", writer);
 
         assertThat(out.size(), is(2));
-        assertThat(out.get(0), is(Processor.ACCEPTED));
+        assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(json.toString()));
     }
 
@@ -121,10 +67,10 @@ public class ProcessorTest {
         List<String> out = new ArrayList<>();
         PrintWriter writer = mockPrintWriter(out);
 
-        processor.process("SELECT * FROM test_multiple", writer);
+        queryProcessor.process("SELECT * FROM test_multiple", writer);
 
         assertThat(out.size(), is(3));
-        assertThat(out.get(0), is(Processor.ACCEPTED));
+        assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(json.toString()));
         assertThat(out.get(2), is(json.toString()));
     }

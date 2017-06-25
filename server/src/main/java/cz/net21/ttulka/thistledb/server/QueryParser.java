@@ -2,11 +2,14 @@ package cz.net21.ttulka.thistledb.server;
 
 import java.util.regex.Pattern;
 
+import lombok.NonNull;
+import lombok.extern.apachecommons.CommonsLog;
+
 /**
  * Created by ttulka
  */
-// TODO
-class Validator {
+@CommonsLog
+class QueryParser {
 
     private static final String COLLECTION = "[\\w\\d]+";
 
@@ -29,8 +32,30 @@ class Validator {
 
     private final String ql;
 
-    public Validator(String ql) {
-        this.ql = ql != null ? ql.trim().toUpperCase() : "";
+    private final Commands command;
+
+    public QueryParser(@NonNull String ql) {
+        this.ql = ql.trim();
+        this.command = parseCommand(this.ql);
+    }
+
+    public String getQuery() {
+        return ql;
+    }
+
+    public Commands parseCommand() {
+        return command;
+    }
+
+    static Commands parseCommand(String input) {
+        input += " ";
+        String command = input.substring(0, input.indexOf(" "));
+        try {
+            return Commands.valueOf(command.toUpperCase());
+        } catch (Throwable t) {
+            log.warn("Wrong command constant " + command + ".");
+        }
+        return null;
     }
 
     public boolean validate() {
@@ -42,5 +67,41 @@ class Validator {
                DROP.matcher(ql).matches() ||
                CREATE_INDEX.matcher(ql).matches() ||
                DROP_INDEX.matcher(ql).matches();
+    }
+
+    public String parseCollection() {
+        String keyword = null;
+
+        switch (command) {
+            case SELECT:
+                keyword = "from";
+                break;
+            case INSERT:
+                keyword = "into";
+                break;
+            default:
+                new ServerException("Invalid command: " + command);
+        }
+
+        String input = ql.substring(ql.toLowerCase().indexOf(keyword) + keyword.length()).trim();
+        if (input.indexOf(" ") > 0) {
+            input = input.substring(0, input.indexOf(" "));
+        }
+        return input;
+    }
+
+    public String parseColumns() {
+        String input = ql.substring(ql.indexOf(" "), ql.toLowerCase().indexOf("from")).replace(" ", "");
+        return input;
+    }
+
+    public String parseWhere() {
+        String input = ql.substring(ql.toLowerCase().indexOf("where") + 5).trim();
+        return input;
+    }
+
+    public String parseValues() {
+        String input = ql.substring(ql.toLowerCase().indexOf("values") + 6).trim();
+        return input;
     }
 }

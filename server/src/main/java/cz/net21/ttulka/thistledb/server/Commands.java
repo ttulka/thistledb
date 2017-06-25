@@ -7,12 +7,10 @@ package cz.net21.ttulka.thistledb.server;
  */
 enum Commands {
 
-    SERVER_STOP,
-
     SELECT,
     INSERT,
     UPDATE,
-    DETELE,
+    DELETE,
 
     CREATE,
     DROP
