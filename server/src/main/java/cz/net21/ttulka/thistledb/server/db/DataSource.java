@@ -25,7 +25,6 @@ public interface DataSource {
      *
      * @param collectionName the collection name
      * @return true if the collection was dropped, otherwise false
-     * @throws DatabaseException if the collection doesn't exist
      */
     boolean dropCollection(String collectionName);
 
@@ -69,7 +68,7 @@ public interface DataSource {
      * @return true if a record was deleted, otherwise false
      * @throws DatabaseException if the collection doesn't exist
      */
-    void delete(String collectionName, String where);
+    boolean delete(String collectionName, String where);
 
     /**
      * Creates an index in a collection.
@@ -79,7 +78,7 @@ public interface DataSource {
      * @return true if a new index was created, otherwise false
      * @throws DatabaseException if the collection doesn't exist
      */
-    void createIndex(String collectionName, String column);
+    boolean createIndex(String collectionName, String column);
 
     /**
      * Drops an index from a collection.
@@ -89,5 +88,5 @@ public interface DataSource {
      * @return true if the index was dropped, otherwise false
      * @throws DatabaseException if the collection doesn't exist
      */
-    void dropIndex(String collectionName, String column);
+    boolean dropIndex(String collectionName, String column);
 }
