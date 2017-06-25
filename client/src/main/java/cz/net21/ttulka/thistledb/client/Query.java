@@ -2,8 +2,6 @@ package cz.net21.ttulka.thistledb.client;
 
 import java.util.Arrays;
 
-import org.json.JSONObject;
-
 /**
  * Created by ttulka
  * <p>
@@ -46,11 +44,11 @@ public class Query {
             return new Query(sb.toString());
         }
 
-        public QueryBuilder select(String from) {
-            return select(from, new String[]{"*"});
+        public QueryBuilder selectFrom(String from) {
+            return selectFrom(from, new String[]{"*"});
         }
 
-        public QueryBuilder select(String from, String[] columns) {
+        public QueryBuilder selectFrom(String from, String[] columns) {
             if (columns == null || columns.length == 0) {
                 throw new IllegalArgumentException("Columns cannot be empty.");
             }
@@ -75,14 +73,7 @@ public class Query {
             return this;
         }
 
-        public QueryBuilder insert(String into, JSONObject data) {
-            if (data == null) {
-                throw new IllegalArgumentException("JSON data cannot be null.");
-            }
-            return insert(into, data.toString());
-        }
-
-        public QueryBuilder insert(String into, String data) {
+        public QueryBuilder insertInto(String into, String data) {
             if (into == null || into.isEmpty()) {
                 throw new IllegalArgumentException("Collection name cannot be empty.");
             }
@@ -94,7 +85,7 @@ public class Query {
             }
             command = true;
             ready = true;
-            sb.append("INSERT INTO ").append(into).append(" ").append(data);
+            sb.append("INSERT INTO ").append(into).append(" VALUES ").append(data);
             return this;
         }
 
@@ -123,11 +114,14 @@ public class Query {
             }
             whereAllowed = true;
             ready = true;
-            sb.append(" ").append(column).append("=").append(value);
+            if (!sb.toString().endsWith(" SET")) {
+                sb.append(",");
+            }
+            sb.append(" ").append(column).append("=").append("'").append(value).append("'");
             return this;
         }
 
-        public QueryBuilder delete(String from) {
+        public QueryBuilder deleteFrom(String from) {
             if (from == null || from.isEmpty()) {
                 throw new IllegalArgumentException("Collection name cannot be empty.");
             }
