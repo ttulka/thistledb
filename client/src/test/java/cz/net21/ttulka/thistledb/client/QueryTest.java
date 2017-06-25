@@ -81,4 +81,14 @@ public class QueryTest {
         Query q = Query.builder().dropIndex("test", "abc").build();
         assertThat(q.getNativeQuery(), is("DROP INDEX abc ON test"));
     }
+
+    @Test (expected = IllegalStateException.class)
+    public void illegalStateANDWithoutWHERETest() {
+        Query.builder().deleteFrom("test").and("a", "1").build();
+    }
+
+    @Test (expected = IllegalStateException.class)
+    public void illegalStateORWithoutWHERETest() {
+        Query.builder().deleteFrom("test").or("a", "1").build();
+    }
 }
