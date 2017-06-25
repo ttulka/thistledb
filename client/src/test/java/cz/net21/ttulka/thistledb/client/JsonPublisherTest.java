@@ -122,6 +122,80 @@ public class JsonPublisherTest {
         testUnorderedResults(results);
     }
 
+    @Test
+    public void moreSubscribersTest() {
+        long start = System.currentTimeMillis();
+
+        List<JSONObject> results1 = new CopyOnWriteArrayList<>();
+        List<JSONObject> results2 = new CopyOnWriteArrayList<>();
+        publisher
+                .subscribe(json -> {
+                    try {
+                        Thread.sleep(new Random().nextInt(100));
+                    } catch (InterruptedException e) {
+                    }
+                    results1.add(json);
+                })
+                .subscribe(json -> {
+                    try {
+                        Thread.sleep(new Random().nextInt(100));
+                    } catch (InterruptedException e) {
+                    }
+                    results2.add(json);
+                })
+                .await();
+
+        System.out.println("moreSubscribersTest: " + (System.currentTimeMillis() - start));
+
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+        }
+
+        List<JSONObject> results = new ArrayList<>();
+        results.addAll(results1);
+        results.addAll(results2);
+
+        testUnorderedResults(results);
+    }
+
+    @Test
+    public void moreSubscribersParallelTest() {
+        long start = System.currentTimeMillis();
+
+        List<JSONObject> results1 = new CopyOnWriteArrayList<>();
+        List<JSONObject> results2 = new CopyOnWriteArrayList<>();
+        publisher.parallel()
+                .subscribe(json -> {
+                    try {
+                        Thread.sleep(new Random().nextInt(100));
+                    } catch (InterruptedException e) {
+                    }
+                    results1.add(json);
+                })
+                .subscribe(json -> {
+                    try {
+                        Thread.sleep(new Random().nextInt(100));
+                    } catch (InterruptedException e) {
+                    }
+                    results2.add(json);
+                })
+                .await();
+
+        System.out.println("moreSubscribersParallelTest: " + (System.currentTimeMillis() - start));
+
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+        }
+
+        List<JSONObject> results = new ArrayList<>();
+        results.addAll(results1);
+        results.addAll(results2);
+
+        testUnorderedResults(results);
+    }
+
     private void testOrderedResults(List<JSONObject> results) {
         assertThat("We should have all the elements.", results.size(), is(ELEMENTS));
 
