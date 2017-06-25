@@ -20,6 +20,8 @@ public class Client {
     private final String host;
     private final int port;
 
+    private int timeout = 0;
+
     public Client() {
         this(DEFAULT_HOST, DEFAULT_PORT);
     }
@@ -35,6 +37,16 @@ public class Client {
     public Client(String host, int port) {
         this.host = host;
         this.port = port;
+    }
+
+    /**
+     * Sets timeout for a client response.
+     * The timeout must be greater then zero. A timeout of zero is interpreted as an infinite timeout.
+     *
+     * @param timeout the specified timeout, in milliseconds
+     */
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
     }
 
     /**
@@ -69,6 +81,7 @@ public class Client {
     public JsonPublisher executeQuery(String nativeQuery) {
         checkQuery(nativeQuery);
         try (Socket socket = new Socket(host, port)) {
+            socket.setSoTimeout(timeout);
             return new JsonPublisher(new QueryExecutor(socket, nativeQuery));
 
         } catch (IOException e) {
@@ -86,6 +99,7 @@ public class Client {
     public List<JSONObject> executeQueryBlocking(String nativeQuery) {
         checkQuery(nativeQuery);
         try (Socket socket = new Socket(host, port)) {
+            socket.setSoTimeout(timeout);
             return executeProcessorBlocking(new QueryExecutor(socket, nativeQuery));
 
         } catch (IOException e) {
@@ -113,6 +127,7 @@ public class Client {
     public void executeCommand(String nativeQuery) {
         checkQuery(nativeQuery);
         try (Socket socket = new Socket(host, port)) {
+            socket.setSoTimeout(timeout);
             new Thread(() -> {
                 new QueryExecutor(socket, nativeQuery).executeQuery();
             }).start();
@@ -130,6 +145,7 @@ public class Client {
      */
     public boolean test() {
         try (Socket socket = new Socket(host, port)) {
+            socket.setSoTimeout(timeout);
             return true;
 
         } catch (Throwable t) {
