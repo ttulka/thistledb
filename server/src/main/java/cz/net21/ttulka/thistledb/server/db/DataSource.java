@@ -15,15 +15,19 @@ public interface DataSource {
      * Creates a collection.
      *
      * @param collectionName the collection name
+     * @return true if a new collection was created, otherwise false
+     * @throws DatabaseException if the collection already exists
      */
-    void createCollection(String collectionName);
+    boolean createCollection(String collectionName);
 
     /**
      * Drops a collection.
      *
      * @param collectionName the collection name
+     * @return true if the collection was dropped, otherwise false
+     * @throws DatabaseException if the collection doesn't exist
      */
-    void dropCollection(String collectionName);
+    boolean dropCollection(String collectionName);
 
     /**
      * Selects from a collection by a condition.
@@ -32,6 +36,7 @@ public interface DataSource {
      * @param columns        the columns to select
      * @param where          the condition
      * @return a collection of found documents
+     * @throws DatabaseException if the collection doesn't exist
      */
     Flux<JSONObject> select(String collectionName, String columns, String where);
 
@@ -40,6 +45,7 @@ public interface DataSource {
      *
      * @param collectionName the collection name
      * @param data           the JSON data to insert
+     * @throws DatabaseException if the collection doesn't exist
      */
     void insert(String collectionName, JSONObject data);
 
@@ -50,14 +56,18 @@ public interface DataSource {
      * @param columns        the columns to update
      * @param values         the new values
      * @param where          the condition
+     * @return true if the collection was updated, otherwise false
+     * @throws DatabaseException if the collection doesn't exist
      */
-    void update(String collectionName, String[] columns, String[] values, String where);
+    boolean update(String collectionName, String[] columns, String[] values, String where);
 
     /**
      * Deletes from a collection by a condition.
      *
      * @param collectionName the collection name
      * @param where          the condition
+     * @return true if a record was deleted, otherwise false
+     * @throws DatabaseException if the collection doesn't exist
      */
     void delete(String collectionName, String where);
 
@@ -66,6 +76,8 @@ public interface DataSource {
      *
      * @param collectionName the collection name
      * @param column         the column to create the index on
+     * @return true if a new index was created, otherwise false
+     * @throws DatabaseException if the collection doesn't exist
      */
     void createIndex(String collectionName, String column);
 
@@ -74,6 +86,8 @@ public interface DataSource {
      *
      * @param collectionName the collection name
      * @param column         the column of the index
+     * @return true if the index was dropped, otherwise false
+     * @throws DatabaseException if the collection doesn't exist
      */
     void dropIndex(String collectionName, String column);
 }

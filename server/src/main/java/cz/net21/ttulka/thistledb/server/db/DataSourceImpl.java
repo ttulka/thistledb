@@ -2,7 +2,9 @@ package cz.net21.ttulka.thistledb.server.db;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 
@@ -19,49 +21,49 @@ import reactor.core.publisher.Flux;
 @CommonsLog
 public class DataSourceImpl implements DataSource {
 
-    private List<JSONObject> db = new ArrayList<>();
+    private Map<String, List<JSONObject>> db = new HashMap<>();
 
     public DataSourceImpl(Path dataDir) {
         // TODO
     }
 
     @Override
-    public void createCollection(String collectionName) {
-        // TODO
+    public boolean createCollection(String collectionName) {
+        return false;
     }
 
     @Override
-    public void dropCollection(String collectionName) {
-        // TODO
+    public boolean dropCollection(String collectionName) {
+        return false;
     }
 
     @Override
-    public Flux<JSONObject> select(@NonNull String collectionName, @NonNull String columns, String where) {
-        return Flux.fromIterable(db);
+    public Flux<JSONObject> select(String collectionName, String columns, String where) {
+        return null;
     }
 
     @Override
-    public void insert(@NonNull String collectionName, @NonNull JSONObject data) {
-        db.add(data);
+    public void insert(String collectionName, JSONObject data) {
+
     }
 
     @Override
-    public void update(String collectionName, String[] columns, String[] values, String where) {
-        // TODO
+    public boolean update(String collectionName, String[] columns, String[] values, String where) {
+        return false;
     }
 
     @Override
     public void delete(String collectionName, String where) {
-        // TODO
+
     }
 
     @Override
     public void createIndex(String collectionName, String column) {
-        // TODO
+
     }
 
     @Override
     public void dropIndex(String collectionName, String column) {
-        // TODO
+
     }
 }

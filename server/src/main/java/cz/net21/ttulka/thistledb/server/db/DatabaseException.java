@@ -8,7 +8,7 @@ import cz.net21.ttulka.thistledb.server.ServerException;
  * Exception thrown by the database access.
  */
 public class DatabaseException extends ServerException {
-    
+
     public DatabaseException() {
     }
 
