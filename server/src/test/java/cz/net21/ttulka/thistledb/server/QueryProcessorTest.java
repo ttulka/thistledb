@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
  * Created by ttulka
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ProcessorTest {
+public class QueryProcessorTest {
 
     private final JSONObject json = new JSONObject("{ \"person\": { \"name\": \"John\", surname: \"Smith\", \"age\": 42 } }");
 
@@ -80,4 +80,6 @@ public class ProcessorTest {
         Mockito.doAnswer((s) -> out.add(s.getArgumentAt(0, String.class))).when(writer).println(anyString());
         return writer;
     }
+
+    // TODO test all the methods process*()
 }

@@ -1,7 +1,6 @@
 package cz.net21.ttulka.thistledb.server;
 
 import java.io.PrintWriter;
-import java.util.Collection;
 
 import org.json.JSONObject;
 
@@ -37,19 +36,16 @@ class QueryProcessor {
             out.println(ACCEPTED);
 
             QueryParser parser = new QueryParser(input);
+            processQuery(parser).subscribe(
+                    result -> out.println(result),
+                    error -> log.error("Error by executing a query: " + input + ".", error)
+            );
 
-            if (parser.validate()) {
-
-                processQuery(parser).subscribe(
-                        result -> out.println(result),
-                        error -> log.error("Error by executing a query: " + input + ".", error)
-                );
-            } else {
-                out.println(INVALID);
-            }
-
+        } catch (IllegalArgumentException e) {
+            out.println(INVALID);
         } catch (Exception e) {
             log.error("Error by processing a command: " + input + ".", e);
+            out.println(ERROR + " " + e.getMessage());
         } finally {
             try {
                 out.println();
@@ -66,16 +62,27 @@ class QueryProcessor {
 
     protected Flux<String> processQuery(@NonNull QueryParser parser) {
         try {
-            Commands command = parser.parseCommand();
+            Commands command = parser.getCommand();
 
             switch (command) {
                 case SELECT:
                     return processSelect(parser);
                 case INSERT:
                     return processInsert(parser);
-                // TODO next commands
+                case UPDATE:
+                    return processUpdate(parser);
+                case DELETE:
+                    return processDelete(parser);
+                case CREATE:
+                    return processCreate(parser);
+                case DROP:
+                    return processDrop(parser);
+                case CREATE_INDEX:
+                    return processCreateIndex(parser);
+                case DROP_INDEX:
+                    return processDropIndex(parser);
                 default:
-                    return Flux.just(ERROR + " invalid command: " + command);
+                    return Flux.just(ERROR + " cannot process command " + command);
             }
         } catch (Exception e) {
             log.error("Cannot process a command [" + parser.getQuery() + "].", e);
@@ -100,25 +107,59 @@ class QueryProcessor {
         return Flux.just(OKAY);
     }
 
+    Flux<String> processUpdate(QueryParser parser) {
+        String collection = parser.parseCollection();
+        String where = parser.parseWhere();
+
+        String[] columns = parser.parseSetColumns();
+        String[] values = parser.parseSetValues();
+
+        dataSource.update(collection, columns, values, where);
+        return Flux.just(OKAY);
+    }
+
+    Flux<String> processDelete(QueryParser parser) {
+        String collection = parser.parseCollection();
+        String where = parser.parseWhere();
+
+        dataSource.delete(collection, where);
+        return Flux.just(OKAY);
+    }
+
+    Flux<String> processCreate(QueryParser parser) {
+        String collection = parser.parseCollection();
+
+        dataSource.createCollection(collection);
+        return Flux.just(OKAY);
+    }
+
+    Flux<String> processDrop(QueryParser parser) {
+        String collection = parser.parseCollection();
+
+        dataSource.dropCollection(collection);
+        return Flux.just(OKAY);
+    }
+
+    Flux<String> processCreateIndex(QueryParser parser) {
+        String collection = parser.parseCollection();
+        String columns = parser.parseColumns();
+
+        dataSource.createIndex(collection, columns);
+        return Flux.just(OKAY);
+    }
+
+    Flux<String> processDropIndex(QueryParser parser) {
+        String collection = parser.parseCollection();
+        String columns = parser.parseColumns();
+
+        dataSource.dropIndex(collection, columns);
+        return Flux.just(OKAY);
+    }
+
     private String serialize(JSONObject json) {
         if (json == null) {
             return "{}";
         }
         return json.toString();
-    }
-
-    private String serialize(Collection<JSONObject> jsonList) {
-        if (jsonList.isEmpty()) {
-            return "{}";
-        }
-        if (jsonList.size() == 1) {
-            return serialize(jsonList.iterator().next());
-        }
-        StringBuilder sb = new StringBuilder();
-        jsonList.stream()
-                .map(this::serialize)
-                .forEach(s -> sb.append(s).append(","));
-        sb.deleteCharAt(sb.length() - 1);
-        return "{[" + sb + "]}";
     }
 }

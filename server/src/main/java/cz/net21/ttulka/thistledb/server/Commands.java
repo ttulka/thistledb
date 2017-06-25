@@ -13,5 +13,8 @@ enum Commands {
     DELETE,
 
     CREATE,
-    DROP
+    DROP,
+
+    CREATE_INDEX,
+    DROP_INDEX
 }
