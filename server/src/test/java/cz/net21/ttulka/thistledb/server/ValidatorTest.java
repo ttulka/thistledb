@@ -31,13 +31,10 @@ public class ValidatorTest {
         assertThat(new Validator("SELECT a1 FROM test").validate(), is(true));
         assertThat(new Validator("SELECT a1,a_2 FROM test").validate(), is(true));
         assertThat(new Validator("SELECT a1, a_2 FROM test").validate(), is(true));
-        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE 1").validate(), is(true));
-        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE 1 AND 1").validate(), is(true));
-        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE 1 AND 1 OR 1").validate(), is(true));
-        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE ((1 AND 1) OR 1)").validate(), is(true));
-        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE ((1 AND 1) OR (1 OR 1))").validate(), is(true));
-        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE ((1 AND 1) OR (1 OR 1)) AND 1").validate(), is(true));
-        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE ((a1=1 AND a_2 = '') OR (a1 = 'xxx' OR 1)) AND 1").validate(), is(true));
+        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE 1=1").validate(), is(true));
+        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE 1=1 AND 1=1").validate(), is(true));
+        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE 1=1 AND 1=1 OR 1=1").validate(), is(true));
+        assertThat(new Validator("SELECT a1, a_2 FROM test WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").validate(), is(true));
     }
 
     @Test
@@ -71,37 +68,62 @@ public class ValidatorTest {
         assertThat(new Validator("UPDATE test SET x.a_1 = '1'").validate(), is(true));
         assertThat(new Validator("UPDATE test SET x.a_1 = y.a_1").validate(), is(true));
         assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1'").validate(), is(true));
-        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1").validate(), is(true));
-        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1 AND 1").validate(), is(true));
-        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1 AND 1 OR 1").validate(), is(true));
-        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE ((1 AND 1) OR 1)").validate(), is(true));
-        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE ((1 AND 1) OR (1 OR 1))").validate(), is(true));
-        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE ((1 AND 1) OR (1 OR 1)) AND 1").validate(), is(true));
-        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE ((a1=1 AND a_2 = '') OR (a1 = 'xxx' OR 1)) AND 1").validate(), is(true));
+        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1").validate(), is(true));
+        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1").validate(), is(true));
+        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1 OR 1=1").validate(), is(true));
+        assertThat(new Validator("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").validate(), is(true));
     }
 
     @Test
     public void validateDeleteTest() {
-        // TODO
+        assertThat(new Validator("DELETE").validate(), is(false));
+        assertThat(new Validator("DELETE FROM").validate(), is(false));
+        assertThat(new Validator("DELETE FROM *").validate(), is(false));
+        assertThat(new Validator("DELETE test FROM test").validate(), is(false));
+        assertThat(new Validator("DELETE FROM test,test1").validate(), is(false));
+
+        assertThat(new Validator("DELETE FROM test").validate(), is(true));
+        assertThat(new Validator("DELETE FROM test WHERE 1=1").validate(), is(true));
+        assertThat(new Validator("DELETE FROM test WHERE 1=1 AND 1=1").validate(), is(true));
+        assertThat(new Validator("DELETE FROM test WHERE 1=1 AND 1=1 OR 1=1").validate(), is(true));
+        assertThat(new Validator("DELETE FROM test WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").validate(), is(true));
     }
 
     @Test
     public void validateCreateIndexTest() {
-        // TODO
+        assertThat(new Validator("CREATE INDEX").validate(), is(false));
+        assertThat(new Validator("CREATE INDEX a_2.a_3").validate(), is(false));
+        assertThat(new Validator("CREATE INDEX a_2.a_3 ON").validate(), is(false));
+        assertThat(new Validator("CREATE INDEX a_2.a_3 ON a_2.a_3").validate(), is(false));
+
+        assertThat(new Validator("CREATE INDEX a_2.a_3 ON a_2").validate(), is(true));
     }
 
     @Test
     public void validateDropIndexTest() {
-        // TODO
+        assertThat(new Validator("DROP INDEX").validate(), is(false));
+        assertThat(new Validator("DROP INDEX a_2.a_3").validate(), is(false));
+        assertThat(new Validator("DROP INDEX a_2.a_3 ON").validate(), is(false));
+        assertThat(new Validator("DROP INDEX a_2.a_3 ON a_2.a_3").validate(), is(false));
+
+        assertThat(new Validator("DROP INDEX a_2.a_3 ON a_2").validate(), is(true));
     }
 
     @Test
     public void validateCreateTest() {
-        // TODO
+        assertThat(new Validator("CREATE").validate(), is(false));
+        assertThat(new Validator("CREATE *").validate(), is(false));
+        assertThat(new Validator("CREATE a_2.a_3").validate(), is(false));
+
+        assertThat(new Validator("CREATE a_2").validate(), is(false));
     }
 
     @Test
     public void validateDropTest() {
-        // TODO
+        assertThat(new Validator("DROP").validate(), is(false));
+        assertThat(new Validator("DROP *").validate(), is(false));
+        assertThat(new Validator("DROP a_2.a_3").validate(), is(false));
+
+        assertThat(new Validator("DROP a_2").validate(), is(false));
     }
 }
