@@ -18,7 +18,7 @@ public class Client {
     private final String host;
     private final int port;
 
-    private int timeout = 0;
+    private int timeout = 2 * 60 * 1000;    // 2 minutes
 
     public Client() {
         this(DEFAULT_HOST, DEFAULT_PORT);
