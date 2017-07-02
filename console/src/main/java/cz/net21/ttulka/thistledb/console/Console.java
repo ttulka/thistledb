@@ -5,9 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.Iterator;
 import java.util.List;
-
-import org.json.JSONObject;
 
 import cz.net21.ttulka.thistledb.client.Client;
 import cz.net21.ttulka.thistledb.client.ClientException;
@@ -88,12 +87,15 @@ public class Console {
         List<String> result = client.executeQueryBlocking(query);
 
         out.println("\nResult(s):");
-        result.forEach(this::formatJsonResult);
-        out.println();
+
+        Iterator<String> iterator = result.iterator();
+        while (iterator.hasNext()) {
+            formatJsonResult(iterator.next(), !iterator.hasNext());
+        }
     }
 
-    private void formatJsonResult(String json) {
-        new JsonFormatter(json, out).formatJsonResult();
+    private void formatJsonResult(String json, boolean last) {
+        new JsonFormatter(json, out).formatJsonResult(last);
     }
 
     private void printLogo() {

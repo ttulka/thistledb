@@ -19,40 +19,54 @@ class JsonFormatter {
         this.out = out;
     }
 
-    public void formatJsonResult() {
-        formatJsonResult(json, 0);
+    public void formatJsonResult(boolean last) {
+        formatJsonResult(json, 1, last);
     }
 
-    private void formatJsonResult(JSONObject json, int level) {
-        printLevel(level, "{");
+    private void formatJsonResult(JSONObject json, int level, boolean last) {
+        out.println("{");
         Iterator<String> iterator = json.keys();
-        boolean first = true;
         while (iterator.hasNext()) {
             String key = iterator.next();
             printLevel(level + 1, "\"" + key + "\" : ");
 
-            formatJsonResult(json.get(key), level + 1);
-            first = false;
+            formatJsonResult(json.get(key), level + 1, false, !iterator.hasNext());
         }
-        printLevel(level, "}");
+        printLevel(level - 1, "}");
+        if (!last) {
+            out.print(", ");
+        }
+        out.println();
     }
 
-    private void formatJsonResult(JSONArray array, int level) {
-        printLevel(level, "[");
+    private void formatJsonResult(JSONArray array, int level, boolean last) {
+        out.println("[");
         Iterator<Object> iterator = array.iterator();
         while (iterator.hasNext()) {
-            formatJsonResult(iterator.next(), level + 1);
+            formatJsonResult(iterator.next(), level + 1, true, !iterator.hasNext());
         }
-        printLevel(level, "]");
+        printLevel(level - 1, "]");
+        if (!last) {
+            out.print(", ");
+        }
+        out.println();
     }
 
-    private void formatJsonResult(Object o, int level) {
+    private void formatJsonResult(Object o, int level, boolean printLevel, boolean last) {
+        if (printLevel) {
+            printLevel(level, "");
+        }
+
         if (o instanceof JSONObject) {
-            formatJsonResult((JSONObject) o, level + 1);
+            formatJsonResult((JSONObject) o, level + 1, last);
         } else if (o instanceof JSONArray) {
-            formatJsonResult((JSONArray) o, level + 1);
+            formatJsonResult((JSONArray) o, level + 1, last);
         } else {
-            printLevel(level + 1, "\"" + o + "\"");
+            out.print("\"" + o + "\"");
+            if (!last) {
+                out.print(", ");
+            }
+            out.println();
         }
     }
 
@@ -60,6 +74,6 @@ class JsonFormatter {
         for (int i = 0; i < level; i++) {
             out.print("  ");
         }
-        out.println(str);
+        out.print(str);
     }
 }
