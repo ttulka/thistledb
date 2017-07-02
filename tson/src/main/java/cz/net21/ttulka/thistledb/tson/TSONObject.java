@@ -107,7 +107,38 @@ public class TSONObject extends JSONObject {
      * @throws JSONException If there is a syntax error in the source string or a duplicated key.
      */
     public TSONObject(String source) throws JSONException {
-        this(new TSONTokener(source));
+        this(new JSONTokener(source) {
+            @Override
+            public Object nextValue() throws JSONException {
+                char c = this.nextClean();
+                String string;
+
+                switch (c) {
+                    case '"':
+                    case '\'':
+                        return this.nextString(c);
+                    case '{':
+                        this.back();
+                        return new TSONObject(this);
+                    case '[':
+                        this.back();
+                        return new JSONArray(this);
+                }
+
+                StringBuilder sb = new StringBuilder();
+                while (c >= ' ' && ",:]}/\\\"[{;=#".indexOf(c) < 0) {
+                    sb.append(c);
+                    c = this.next();
+                }
+                this.back();
+
+                string = sb.toString().trim();
+                if ("".equals(string)) {
+                    throw this.syntaxError("Missing value");
+                }
+                return TSONObject.stringToValue(string);
+            }
+        });
     }
 
     /**
