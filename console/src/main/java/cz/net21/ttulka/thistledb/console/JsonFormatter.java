@@ -3,7 +3,8 @@ package cz.net21.ttulka.thistledb.console;
 import java.io.PrintStream;
 import java.util.Iterator;
 
-import cz.net21.ttulka.thistledb.tson.TSONArray;
+import org.json.JSONArray;
+
 import cz.net21.ttulka.thistledb.tson.TSONObject;
 
 /**
@@ -39,7 +40,7 @@ class JsonFormatter {
         out.println();
     }
 
-    private void formatJsonResult(TSONArray array, int level, boolean last) {
+    private void formatJsonResult(JSONArray array, int level, boolean last) {
         out.println("[");
         Iterator<Object> iterator = array.iterator();
         while (iterator.hasNext()) {
@@ -59,8 +60,8 @@ class JsonFormatter {
 
         if (o instanceof TSONObject) {
             formatJsonResult((TSONObject) o, level + 1, last);
-        } else if (o instanceof TSONArray) {
-            formatJsonResult((TSONArray) o, level + 1, last);
+        } else if (o instanceof JSONArray) {
+            formatJsonResult((JSONArray) o, level + 1, last);
         } else {
             out.print("\"" + o + "\"");
             if (!last) {
