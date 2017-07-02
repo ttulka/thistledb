@@ -1,4 +1,4 @@
 ```
 $ mvn clean package appassembler:assemble
-$ target\server\bin\server.bat
+$ target\console\bin\console.bat
 ```
