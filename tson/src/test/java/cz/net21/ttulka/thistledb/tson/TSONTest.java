@@ -1,6 +1,5 @@
 package cz.net21.ttulka.thistledb.tson;
 
-import org.json.JSONObject;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -12,7 +11,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class TSONTest {
 
     private static final String JSON = "{\"a\":1,\"b\":{\"aa\":11,\"bb\":22,\"cc\":{\"aaa\":{\"aaaa\":1111,\"bbbb\":2222,\"c\":3333},\"bbb\":222,\"ccc\":333}},\"c\":3}";
-    //private static final String JSON = "{\"a\":\"1\"}";
 
     @Test
     public void shouldKeepOrderOfElementsTest() {

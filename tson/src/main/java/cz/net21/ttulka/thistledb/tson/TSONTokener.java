@@ -12,7 +12,7 @@ import org.json.JSONTokener;
  * <p>
  * JSON implementation keeping an order of elements.
  */
-public class TSONTokener extends JSONTokener {
+class TSONTokener extends JSONTokener {
 
     /**
      * Construct a TSONTokener from a Reader.

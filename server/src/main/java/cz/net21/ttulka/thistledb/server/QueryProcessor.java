@@ -2,9 +2,8 @@ package cz.net21.ttulka.thistledb.server;
 
 import java.io.PrintWriter;
 
-import org.json.JSONObject;
-
 import cz.net21.ttulka.thistledb.server.db.DataSource;
+import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.NonNull;
 import lombok.extern.apachecommons.CommonsLog;
 import reactor.core.publisher.Flux;
@@ -103,7 +102,7 @@ class QueryProcessor {
         String collection = parser.parseCollection();
         String values = parser.parseValues();
 
-        dataSource.insert(collection, new JSONObject(values));
+        dataSource.insert(collection, new TSONObject(values));
         return Flux.just(OKAY);
     }
 
@@ -156,7 +155,7 @@ class QueryProcessor {
         return Flux.just(OKAY);
     }
 
-    private String serialize(JSONObject json) {
+    private String serialize(TSONObject json) {
         if (json == null) {
             return "{}";
         }

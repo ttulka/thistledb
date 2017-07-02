@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +13,7 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import cz.net21.ttulka.thistledb.server.db.DataSource;
+import cz.net21.ttulka.thistledb.tson.TSONObject;
 import reactor.core.publisher.Flux;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class QueryProcessorTest {
 
-    private final JSONObject json = new JSONObject("{ \"person\": { \"name\": \"John\", surname: \"Smith\", \"age\": 42 } }");
+    private final TSONObject json = new TSONObject("{ \"person\": { \"name\": \"John\", surname: \"Smith\", \"age\": 42 } }");
 
     @Mock
     private DataSource dataSource;

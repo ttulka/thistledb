@@ -1,13 +1,12 @@
 package cz.net21.ttulka.thistledb.server.db;
 
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONObject;
-
+import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.NonNull;
 import lombok.extern.apachecommons.CommonsLog;
 import reactor.core.publisher.Flux;
@@ -21,8 +20,8 @@ import reactor.core.publisher.Flux;
 @CommonsLog
 public class DataSourceImpl implements DataSource {
 
-    private Map<String, Set<JSONObject>> db = new HashMap<>();
-    private Map<String, Set<String>> indexes = new HashMap<>();
+    private Map<String, Set<TSONObject>> db = new LinkedHashMap<>();
+    private Map<String, Set<String>> indexes = new LinkedHashMap<>();
 
     public DataSourceImpl(Path dataDir) {
         // TODO
@@ -39,14 +38,14 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
-    public Flux<JSONObject> select(@NonNull String collectionName, @NonNull String columns, String where) {
+    public Flux<TSONObject> select(@NonNull String collectionName, @NonNull String columns, String where) {
         checkIfCollectionExists(collectionName);
 
         return Flux.fromIterable(db.get(collectionName));
     }
 
     @Override
-    public void insert(@NonNull String collectionName, @NonNull JSONObject data) {
+    public void insert(@NonNull String collectionName, @NonNull TSONObject data) {
         checkIfCollectionExists(collectionName);
 
         db.get(collectionName).add(data);

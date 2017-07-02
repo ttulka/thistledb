@@ -1,7 +1,8 @@
 package cz.net21.ttulka.thistledb.server;
 
-import org.json.JSONObject;
 import org.junit.Test;
+
+import cz.net21.ttulka.thistledb.tson.TSONObject;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -11,7 +12,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class QueryParserTest {
 
-    private final JSONObject json = new JSONObject("{ \"person\": { \"name\": \"John\", surname: \"Smith\", \"age\": 42 } }");
+    private final TSONObject json = new TSONObject("{ \"person\": { \"name\": \"John\", surname: \"Smith\", \"age\": 42 } }");
 
     @Test(expected = IllegalArgumentException.class)
     public void validateInsertWrongTest() {

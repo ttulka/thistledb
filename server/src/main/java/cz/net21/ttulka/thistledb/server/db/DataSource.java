@@ -1,7 +1,6 @@
 package cz.net21.ttulka.thistledb.server.db;
 
-import org.json.JSONObject;
-
+import cz.net21.ttulka.thistledb.tson.TSONObject;
 import reactor.core.publisher.Flux;
 
 /**
@@ -37,7 +36,7 @@ public interface DataSource {
      * @return a collection of found documents
      * @throws DatabaseException if the collection doesn't exist
      */
-    Flux<JSONObject> select(String collectionName, String columns, String where);
+    Flux<TSONObject> select(String collectionName, String columns, String where);
 
     /**
      * Inserts JSON data into a collection.
@@ -46,7 +45,7 @@ public interface DataSource {
      * @param data           the JSON data to insert
      * @throws DatabaseException if the collection doesn't exist
      */
-    void insert(String collectionName, JSONObject data);
+    void insert(String collectionName, TSONObject data);
 
     /**
      * Updates a collection by a condition.

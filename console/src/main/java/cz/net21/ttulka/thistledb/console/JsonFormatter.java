@@ -3,19 +3,19 @@ package cz.net21.ttulka.thistledb.console;
 import java.io.PrintStream;
 import java.util.Iterator;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import cz.net21.ttulka.thistledb.tson.TSONArray;
+import cz.net21.ttulka.thistledb.tson.TSONObject;
 
 /**
  * Created by ttulka
  */
 class JsonFormatter {
 
-    private final JSONObject json;
+    private final TSONObject json;
     private final PrintStream out;
 
     public JsonFormatter(String json, PrintStream out) {
-        this.json = new JSONObject(json);
+        this.json = new TSONObject(json);
         this.out = out;
     }
 
@@ -23,7 +23,7 @@ class JsonFormatter {
         formatJsonResult(json, 1, last);
     }
 
-    private void formatJsonResult(JSONObject json, int level, boolean last) {
+    private void formatJsonResult(TSONObject json, int level, boolean last) {
         out.println("{");
         Iterator<String> iterator = json.keys();
         while (iterator.hasNext()) {
@@ -39,7 +39,7 @@ class JsonFormatter {
         out.println();
     }
 
-    private void formatJsonResult(JSONArray array, int level, boolean last) {
+    private void formatJsonResult(TSONArray array, int level, boolean last) {
         out.println("[");
         Iterator<Object> iterator = array.iterator();
         while (iterator.hasNext()) {
@@ -57,10 +57,10 @@ class JsonFormatter {
             printLevel(level, "");
         }
 
-        if (o instanceof JSONObject) {
-            formatJsonResult((JSONObject) o, level + 1, last);
-        } else if (o instanceof JSONArray) {
-            formatJsonResult((JSONArray) o, level + 1, last);
+        if (o instanceof TSONObject) {
+            formatJsonResult((TSONObject) o, level + 1, last);
+        } else if (o instanceof TSONArray) {
+            formatJsonResult((TSONArray) o, level + 1, last);
         } else {
             out.print("\"" + o + "\"");
             if (!last) {
