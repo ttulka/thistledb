@@ -61,7 +61,7 @@ public class DataSourceImpl implements DataSource {
     @Override
     public boolean delete(@NonNull String collectionName, String where) {
         checkIfCollectionExists(collectionName);
-        return true;
+        return db.remove(collectionName) != null;
     }
 
     @Override
