@@ -106,7 +106,6 @@ public class DataSourceImplTest {
     }
 
     @Test
-    @Ignore // TODO
     public void selectWhereTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
@@ -128,7 +127,6 @@ public class DataSourceImplTest {
     }
 
     @Test
-    @Ignore // TODO
     public void selectWhereUnsatisfiedableTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 

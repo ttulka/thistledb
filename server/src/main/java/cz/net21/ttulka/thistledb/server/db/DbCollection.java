@@ -169,6 +169,8 @@ public class DbCollection {
             if (json != null) {
                 if (where.matches(json)) {
                     return deserialize(json);
+                } else {
+                    return next();
                 }
             }
             return null;
