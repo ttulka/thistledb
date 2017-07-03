@@ -43,7 +43,7 @@ class QueryProcessor {
             );
 
         } catch (IllegalArgumentException e) {
-            out.println(INVALID);
+            out.println(INVALID + " " + e.getMessage());
         } catch (Exception e) {
             log.error("Error by processing a command: " + input + ".", e);
             out.println(ERROR + " " + e.getMessage());

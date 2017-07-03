@@ -23,6 +23,8 @@ class QueryExecutor {
 
     private BufferedReader in;
 
+    private boolean listening = true;
+
     public QueryExecutor(Socket socket, String nativeQuery) {
         this.socket = socket;
         this.query = nativeQuery;
@@ -57,7 +59,7 @@ class QueryExecutor {
             throw new IllegalStateException("Query was not executed yet.");
         }
         try {
-            while (true) {
+            while (listening) {
                 String result = in.readLine();
 
                 if (result != null && !result.isEmpty()) {
@@ -83,19 +85,27 @@ class QueryExecutor {
         } catch (Exception e) {
             throw new ClientException("Error by receiving results from server.", e);
         }
+        return null;
     }
 
     private String error(String result) {
-        String msg = result.substring(ERROR.length());
-        return "{\"status\":\"error\", \"message\":\"" + msg + "\"}";
+        listening = false;
+        String msg = result.substring(ERROR.length() + 1);
+        return "{\"status\":\"error\", \"message\":\"" + removeQuotes(msg) + "\"}";
     }
 
     private String invalid(String result) {
-        String msg = result.substring(INVALID.length());
-        return "{\"status\":\"invalid\", \"message\":\"" + msg + "\"}";
+        listening = false;
+        String msg = result.substring(INVALID.length() + 1);
+        return "{\"status\":\"invalid\", \"message\":\"" + removeQuotes(msg) + "\"}";
     }
 
     private String okay() {
+        listening = false;
         return "{\"status\":\"okay\"}";
+    }
+
+    private String removeQuotes(String s) {
+        return s.replace("\"", "'");
     }
 }

@@ -24,7 +24,9 @@ public class QueryParserTest {
         assertThat(QueryParser.SELECT.matcher("FROM * SELECT test").matches(), is(false));
         assertThat(QueryParser.SELECT.matcher("SELECT * FROM test WHERE").matches(), is(false));
         assertThat(QueryParser.SELECT.matcher("SELECT * FROM test,test2 WHERE 1").matches(), is(false));
+        assertThat(QueryParser.SELECT.matcher("select * from test where person.name = \"Johnny").matches(), is(false));
 
+        assertThat(QueryParser.SELECT.matcher("select * from test where person.name = \"Johnny\"").matches(), is(true));
         assertThat(QueryParser.SELECT.matcher("SELECT * FROM test").matches(), is(true));
         assertThat(QueryParser.SELECT.matcher("SELECT a1 FROM test").matches(), is(true));
         assertThat(QueryParser.SELECT.matcher("SELECT a1 FROM test WHERE 1=1").matches(), is(true));

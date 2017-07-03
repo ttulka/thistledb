@@ -88,6 +88,10 @@ public class Console {
 
         out.println("\nResult(s):");
 
+        if (result.isEmpty()) {
+            result.add("{}");
+        }
+
         Iterator<String> iterator = result.iterator();
         while (iterator.hasNext()) {
             formatJsonResult(iterator.next(), !iterator.hasNext());
