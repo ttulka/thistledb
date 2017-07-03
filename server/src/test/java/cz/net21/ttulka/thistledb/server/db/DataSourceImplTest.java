@@ -106,6 +106,26 @@ public class DataSourceImplTest {
     }
 
     @Test
+    public void selectElementTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
+
+        Flux<TSONObject> stream = dataSource.select(TEST_COLLECTION_NAME, "person.name");
+
+        List<String> results = new CopyOnWriteArrayList<>();
+        stream.map(TSONObject::toString).subscribe(results::add);
+
+        waitForSeconds(1);
+
+        assertThat("Should return two records.", results.size(), is(2));
+        assertThat("Should contain both items.", results, containsInAnyOrder("{}", "{\"name\":\"John\"}"));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
     public void selectWhereTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 

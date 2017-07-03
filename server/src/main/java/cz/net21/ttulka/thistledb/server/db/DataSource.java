@@ -31,22 +31,22 @@ public interface DataSource {
      * Selects from a collection by a condition.
      *
      * @param collectionName the collection name
-     * @param columns        the columns to select
+     * @param element        the element to select
      * @param where          the condition
      * @return a collection of found documents
      * @throws DatabaseException if the collection doesn't exist
      */
-    Flux<TSONObject> select(String collectionName, String columns, String where);
+    Flux<TSONObject> select(String collectionName, String element, String where);
 
     /**
      * Selects from a collection. Convenient method.
      *
      * @param collectionName the collection name
-     * @param columns        the columns to select
+     * @param element        the element to select
      * @return a collection of found documents
      * @throws DatabaseException if the collection doesn't exist
      */
-    Flux<TSONObject> select(String collectionName, String columns);
+    Flux<TSONObject> select(String collectionName, String element);
 
     /**
      * Inserts JSON data into a collection.

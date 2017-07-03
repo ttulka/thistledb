@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
+import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.Data;
 import lombok.NonNull;
 
@@ -42,7 +42,7 @@ class Where {
         if (json == null) {
             return false;
         }
-        JSONObject jsonObject = new JSONObject(json);
+        TSONObject jsonObject = new TSONObject(json);
 
         return andConditions.stream()
                 .map(and -> and.matches(jsonObject))
@@ -94,7 +94,7 @@ class Where {
 
         private final List<DataPart> orClause;
 
-        public boolean matches(JSONObject json) {
+        public boolean matches(TSONObject json) {
             return orClause.stream()
                     .map(or -> or.matches(json))
                     .anyMatch(match -> match);
@@ -107,26 +107,8 @@ class Where {
         private final String key;
         private final String value;
 
-        public boolean matches(JSONObject json) {
-            return valueMatches(findValue(json));
-        }
-
-        Object findValue(JSONObject json) {
-            Object toReturn = null;
-
-            for (String keyPart : key.split("\\.")) {
-                if (json == null || !json.keySet().contains(keyPart)) {
-                    return null;
-                }
-                toReturn = json.get(keyPart);
-
-                if (toReturn instanceof JSONObject) {
-                    json = (JSONObject)toReturn;
-                } else {
-                    json = null;
-                }
-            }
-            return toReturn;
+        public boolean matches(TSONObject json) {
+            return valueMatches(json.findPath(key));
         }
 
         boolean valueMatches(Object o) {

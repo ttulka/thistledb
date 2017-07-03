@@ -395,4 +395,32 @@ public class TSONObject extends JSONObject {
         }
         return results;
     }
+
+    /**
+     * Finds a sub JSON object by the path.
+     *
+     * @param path the path with comma-separated levels, eg.: "addressBook.person.name"
+     * @return the sub object or null
+     */
+    public Object findPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        TSONObject json = this;
+        Object toReturn = null;
+
+        for (String keyPart : path.split("\\.")) {
+            if (json == null || !json.keySet().contains(keyPart)) {
+                return null;
+            }
+            toReturn = json.get(keyPart);
+
+            if (toReturn instanceof TSONObject) {
+                json = (TSONObject) toReturn;
+            } else {
+                json = null;
+            }
+        }
+        return toReturn;
+    }
 }

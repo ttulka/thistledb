@@ -36,10 +36,10 @@ public class DbCollection {
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public Select select(@NonNull String columns, String where) {
+    public Select select(@NonNull String element, String where) {
         lock.readLock().lock();
         try {
-            return new Select(where);
+            return new Select(element, where);
 
         } catch (FileNotFoundException e) {
             throw new DatabaseException("Cannot work with a collection: " + e.getMessage(), e);
@@ -157,10 +157,12 @@ public class DbCollection {
     class Select extends DbAccess {
 
         private final Where where;
+        private final String elementKey;
 
-        public Select(String where) throws FileNotFoundException {
+        public Select(String elementKey, String where) throws FileNotFoundException {
             super();
             this.where = Where.create(where);
+            this.elementKey = elementKey;
         }
 
         public TSONObject next() {
@@ -168,13 +170,40 @@ public class DbCollection {
 
             if (json != null) {
                 if (where.matches(json)) {
-                    return deserialize(json);
+                    return selectElement(deserialize(json));
+
                 } else {
                     return next();
                 }
             }
             return null;
         }
+
+        private TSONObject selectElement(TSONObject jsonObject) {
+            if ("*".equals(elementKey) || elementKey == null || elementKey.isEmpty()) {
+                return jsonObject;
+            }
+            Object o = jsonObject.findPath(elementKey);
+
+            if (o == null) {
+                return new TSONObject();
+            }
+            if (o instanceof TSONObject) {
+                return (TSONObject) o;
+            }
+            TSONObject tson = new TSONObject();
+            tson.put(getLastKey(elementKey), o);
+            return tson;
+        }
+
+        private String getLastKey(String elementKey) {
+            int index = elementKey.lastIndexOf(".");
+            if (index != -1) {
+                return elementKey.substring(index + 1);
+            }
+            return elementKey;
+        }
+
     }
 
     class Delete extends DbAccess {

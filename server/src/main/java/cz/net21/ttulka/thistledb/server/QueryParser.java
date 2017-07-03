@@ -24,12 +24,11 @@ class QueryParser {
     private static final String JSON = "\\{.*\\}";    // TODO
 
     private static final String JSON_PATH = "[\\w\\d\\._\\-$]+";    // TODO
-    private static final String JSON_PATH_COMPOSITED = "((" + JSON_PATH + ")(\\s*,\\s*)?)+";
 
     private static final String WHERE = "(" + JSON_PATH + "\\s*=\\s*(('(.+)')|(\\d+)))+";
     private static final String WHERE_COMPOSITED = "(" + WHERE + ")(\\s+(AND|OR)\\s+(" + WHERE + "))*";
 
-    static final Pattern SELECT = compile("SELECT\\s+(\\*|" + JSON_PATH_COMPOSITED + ")\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern SELECT = compile("SELECT\\s+(\\*|" + JSON_PATH + ")\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern INSERT = compile("INSERT\\s+INTO\\s+(" + COLLECTION + ")\\s+VALUES\\s+(" + JSON + ")", CASE_INSENSITIVE);
     static final Pattern UPDATE = compile("UPDATE\\s+(" + COLLECTION + ")\\s+SET((\\s+((?!.WHERE).)+)\\s*=\\s*(((?!.WHERE).)+))(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern DELETE = compile("DELETE\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
@@ -96,7 +95,7 @@ class QueryParser {
     public String parseCollection() {
         switch (command) {
             case SELECT:
-                return getMatchingGroup(SELECT, ql, 5);
+                return getMatchingGroup(SELECT, ql, 2);
             case INSERT:
                 return getMatchingGroup(INSERT, ql, 1);
             case UPDATE:
@@ -134,7 +133,7 @@ class QueryParser {
     public String parseWhere() {
         switch (command) {
             case SELECT:
-                return getMatchingGroup(SELECT, ql, 7);
+                return getMatchingGroup(SELECT, ql, 4);
             case UPDATE:
                 return getMatchingGroup(UPDATE, ql, 8);
             case DELETE:

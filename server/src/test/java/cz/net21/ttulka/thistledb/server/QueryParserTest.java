@@ -27,12 +27,10 @@ public class QueryParserTest {
 
         assertThat(QueryParser.SELECT.matcher("SELECT * FROM test").matches(), is(true));
         assertThat(QueryParser.SELECT.matcher("SELECT a1 FROM test").matches(), is(true));
-        assertThat(QueryParser.SELECT.matcher("SELECT a1,a_2 FROM test").matches(), is(true));
-        assertThat(QueryParser.SELECT.matcher("SELECT a1, a_2 FROM test").matches(), is(true));
-        assertThat(QueryParser.SELECT.matcher("SELECT a1, a_2 FROM test WHERE 1=1").matches(), is(true));
-        assertThat(QueryParser.SELECT.matcher("SELECT a1, a_2 FROM test WHERE 1=1 AND 1=1").matches(), is(true));
-        assertThat(QueryParser.SELECT.matcher("SELECT a1, a_2 FROM test WHERE 1=1 AND 1=1 OR 1=1").matches(), is(true));
-        assertThat(QueryParser.SELECT.matcher("SELECT a1, a_2 FROM test WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.SELECT.matcher("SELECT a1 FROM test WHERE 1=1").matches(), is(true));
+        assertThat(QueryParser.SELECT.matcher("SELECT a_2 FROM test WHERE 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.SELECT.matcher("SELECT a_2 FROM test WHERE 1=1 AND 1=1 OR 1=1").matches(), is(true));
+        assertThat(QueryParser.SELECT.matcher("SELECT a_2 FROM test WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").matches(), is(true));
     }
 
     @Test
@@ -157,7 +155,7 @@ public class QueryParserTest {
         String result = new QueryParser("SELECT * FROM test").parseCollection();
         assertThat(result, is("test"));
 
-        result = new QueryParser("SELECT col1, col2 FROM test WHERE person.name = 'John'").parseCollection();
+        result = new QueryParser("SELECT col1 FROM test WHERE person.name = 'John'").parseCollection();
         assertThat(result, is("test"));
     }
 
@@ -208,11 +206,8 @@ public class QueryParserTest {
         String result = new QueryParser("SELECT * FROM test").parseColumns();
         assertThat(result, is("*"));
 
-        result = new QueryParser("SELECT col1 FROM test").parseColumns();
-        assertThat(result, is("col1"));
-
-        result = new QueryParser("SELECT col1, col2 FROM test").parseColumns();
-        assertThat(result, is("col1,col2"));
+        result = new QueryParser("SELECT _col1_ FROM test").parseColumns();
+        assertThat(result, is("_col1_"));
 
         result = new QueryParser("CREATE INDEX col1 ON test").parseColumns();
         assertThat(result, is("col1"));
@@ -226,7 +221,7 @@ public class QueryParserTest {
         String result = new QueryParser("SELECT * FROM test WHERE 1=1").parseWhere();
         assertThat(result, is("1=1"));
 
-        result = new QueryParser("SELECT col1, col2 FROM test wHeRe 1=1 AND 2=2").parseWhere();
+        result = new QueryParser("SELECT col1 FROM test wHeRe 1=1 AND 2=2").parseWhere();
         assertThat(result, is("1=1 AND 2=2"));
 
         result = new QueryParser("UPDATE test SET a.b='1', b.c=2 WHERE 1=1 AND 2=2").parseWhere();
