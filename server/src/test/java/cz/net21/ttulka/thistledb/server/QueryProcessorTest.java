@@ -54,9 +54,10 @@ public class QueryProcessorTest {
 
         queryProcessor.process("SELECT * FROM test", writer);
 
-        assertThat(out.size(), is(2));
+        assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(TestData.JSON_PERSON));
+        assertThat(out.get(2), is(QueryProcessor.FINISHED));
     }
 
     @Test
@@ -66,10 +67,11 @@ public class QueryProcessorTest {
 
         queryProcessor.process("SELECT * FROM test_multiple", writer);
 
-        assertThat(out.size(), is(3));
+        assertThat(out.size(), is(4));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(TestData.JSON_PERSON));
         assertThat(out.get(2), is(TestData.JSON_PERSON));
+        assertThat(out.get(3), is(QueryProcessor.FINISHED));
     }
 
     @Test
@@ -79,9 +81,10 @@ public class QueryProcessorTest {
 
         queryProcessor.process("UPDATE test SET a=1", writer);
 
-        assertThat(out.size(), is(2));
+        assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(QueryProcessor.OKAY));
+        assertThat(out.get(2), is(QueryProcessor.FINISHED));
     }
 
     @Test
@@ -91,9 +94,10 @@ public class QueryProcessorTest {
 
         queryProcessor.process("DELETE FROM test", writer);
 
-        assertThat(out.size(), is(2));
+        assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(QueryProcessor.OKAY));
+        assertThat(out.get(2), is(QueryProcessor.FINISHED));
     }
 
     @Test
@@ -103,9 +107,10 @@ public class QueryProcessorTest {
 
         queryProcessor.process("CREATE test", writer);
 
-        assertThat(out.size(), is(2));
+        assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(QueryProcessor.OKAY));
+        assertThat(out.get(2), is(QueryProcessor.FINISHED));
     }
 
     @Test
@@ -115,9 +120,10 @@ public class QueryProcessorTest {
 
         queryProcessor.process("DROP test", writer);
 
-        assertThat(out.size(), is(2));
+        assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(QueryProcessor.OKAY));
+        assertThat(out.get(2), is(QueryProcessor.FINISHED));
     }
 
     @Test
@@ -127,9 +133,10 @@ public class QueryProcessorTest {
 
         queryProcessor.process("CREATE INDEX a ON test", writer);
 
-        assertThat(out.size(), is(2));
+        assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(QueryProcessor.OKAY));
+        assertThat(out.get(2), is(QueryProcessor.FINISHED));
     }
 
     @Test
@@ -139,9 +146,10 @@ public class QueryProcessorTest {
 
         queryProcessor.process("DROP INDEX a ON test", writer);
 
-        assertThat(out.size(), is(2));
+        assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(QueryProcessor.OKAY));
+        assertThat(out.get(2), is(QueryProcessor.FINISHED));
     }
 
     private PrintWriter mockPrintWriter(List<String> out) {
