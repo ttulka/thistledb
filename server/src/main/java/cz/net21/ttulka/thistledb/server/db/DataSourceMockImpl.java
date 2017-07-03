@@ -44,6 +44,11 @@ public class DataSourceMockImpl implements DataSource {
     }
 
     @Override
+    public Flux<TSONObject> select(@NonNull String collectionName, @NonNull String columns) {
+        return select(collectionName, columns, null);
+    }
+
+    @Override
     public void insert(@NonNull String collectionName, @NonNull TSONObject data) {
         checkIfCollectionExists(collectionName);
 
@@ -57,9 +62,19 @@ public class DataSourceMockImpl implements DataSource {
     }
 
     @Override
+    public boolean update(@NonNull String collectionName, @NonNull String[] columns, @NonNull String[] values) {
+        return update(collectionName, columns, values, null);
+    }
+
+    @Override
     public boolean delete(@NonNull String collectionName, String where) {
         checkIfCollectionExists(collectionName);
         return db.remove(collectionName) != null;
+    }
+
+    @Override
+    public boolean delete(@NonNull String collectionName) {
+        return delete(collectionName, null);
     }
 
     @Override

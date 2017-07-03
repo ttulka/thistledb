@@ -10,6 +10,9 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.NonNull;
@@ -32,18 +35,32 @@ public class DbCollection {
         return path;
     }
 
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
+
     public Select select(@NonNull String columns, String where) {
+        lock.readLock().lock();
         try {
             return new Select(where);
 
         } catch (FileNotFoundException e) {
             throw new DatabaseException("Cannot work with a collection: " + e.getMessage(), e);
+        } finally {
+            lock.readLock().unlock();
         }
     }
 
     public void insert(@NonNull TSONObject data) {
+        lock.writeLock().lock();
+        try {
+            insert(serialize(data));
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    private void insert(String json) {
         try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
-            writer.write(serialize(data));
+            writer.write(json);
             writer.write(RECORD_SEPARATOR);
 
         } catch (IOException e) {
@@ -52,12 +69,15 @@ public class DbCollection {
     }
 
     public boolean delete(String where) {
+        lock.writeLock().lock();
         try {
-            new PrintWriter(Files.newOutputStream(path)).close();
+            return new Delete(where).delete();
+
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new DatabaseException("Cannot delete from a collection: " + e.getMessage(), e);
+        } finally {
+            lock.writeLock().unlock();
         }
-        return true;
     }
 
     String serialize(TSONObject tson) {
@@ -68,24 +88,21 @@ public class DbCollection {
         return new TSONObject(tson);
     }
 
-    class Select implements AutoCloseable {
+    abstract class DbAccess implements AutoCloseable {
 
         static final int BUFFER_SIZE = 1024;
 
-        private final Where where;
+        protected final RandomAccessFile file;
+        protected final FileChannel channel;
 
-        private final RandomAccessFile file;
-        private final FileChannel channel;
-
-        private boolean finished = false;
-
-        public Select(String where) throws FileNotFoundException {
-            this.where = new Where(where);
+        protected DbAccess() throws FileNotFoundException {
             this.file = new RandomAccessFile(path.toFile(), "r");
             this.channel = file.getChannel();
         }
 
-        TSONObject next() {
+        private boolean finished = false;
+
+        protected String nextRecord() {
             if (finished) {
                 return null;
             }
@@ -102,11 +119,7 @@ public class DbCollection {
                         if (ch == RECORD_SEPARATOR) {
                             channel.position(channel.position() - (read - i - 1));
 
-                            String json = sb.toString();
-
-                            if (where.matches(json)) {
-                                return deserialize(json);
-                            }
+                            return sb.toString();
 
                         } else {
                             sb.append(ch);
@@ -139,6 +152,70 @@ public class DbCollection {
                     // ignore
                 }
             }
+        }
+    }
+
+    class Select extends DbAccess {
+
+        private final Where where;
+
+        public Select(String where) throws FileNotFoundException {
+            super();
+            this.where = new Where(where);
+        }
+
+        public TSONObject next() {
+            String json = nextRecord();
+
+            if (json != null) {
+                if (where.matches(json)) {
+                    return deserialize(json);
+                }
+            }
+            return null;
+        }
+    }
+
+    class Delete extends DbAccess {
+
+        private final Where where;
+
+        public Delete(String where) throws FileNotFoundException {
+            super();
+            this.where = new Where(where);
+        }
+
+        public boolean delete() throws IOException {
+            boolean deleted = false;
+            DbCollection tmpCollection = new DbCollection(Files.createTempFile(path.getParent(), null, "_delete"));
+            String json;
+            do {
+                json = nextRecord();
+
+                if (json != null) {
+                    if (where.matches(json)) {
+                        delete(json);
+                        deleted = true;
+                    } else {
+                        tmpCollection.insert(json);
+                    }
+                }
+            } while (json != null);
+
+            moveCollection(tmpCollection);
+
+            return deleted;
+        }
+
+        private void moveCollection(DbCollection tmpCollection) throws IOException {
+            close();
+            try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(path))) {
+                // TODO copy content of tmp collection to the current collection
+            }
+        }
+
+        private void delete(String json) {
+            // TODO remove from indexes etc
         }
     }
 }

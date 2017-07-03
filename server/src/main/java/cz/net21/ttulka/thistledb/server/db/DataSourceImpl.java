@@ -91,9 +91,10 @@ public class DataSourceImpl implements DataSource {
     public boolean dropCollection(@NonNull String collectionName) {
         if (collectionExists(collectionName)) {
             try {
-                Files.delete(getCollection(collectionName).getPath());
-
+                Path path = getCollection(collectionName).getPath();
                 removeCollection(collectionName);
+
+                Files.delete(path);
                 return true;
 
             } catch (IOException e) {
@@ -122,6 +123,11 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
+    public Flux<TSONObject> select(@NonNull String collectionName, @NonNull String columns) {
+        return select(collectionName, columns, null);
+    }
+
+    @Override
     public void insert(@NonNull String collectionName, @NonNull TSONObject data) {
         checkIfCollectionExists(collectionName);
 
@@ -136,10 +142,20 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
+    public boolean update(@NonNull String collectionName, @NonNull String[] columns, @NonNull String[] values) {
+        return update(collectionName, columns, values, null);
+    }
+
+    @Override
     public boolean delete(@NonNull String collectionName, String where) {
         checkIfCollectionExists(collectionName);
 
         return getCollection(collectionName).delete(where);
+    }
+
+    @Override
+    public boolean delete(@NonNull String collectionName) {
+        return delete(collectionName, null);
     }
 
     @Override

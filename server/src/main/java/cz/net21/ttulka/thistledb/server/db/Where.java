@@ -12,6 +12,9 @@ class Where {
     }
 
     public boolean matches(String json) {
+        if (json == null) {
+            return false;
+        }
         // TODO
         return true;
     }

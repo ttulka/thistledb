@@ -39,6 +39,16 @@ public interface DataSource {
     Flux<TSONObject> select(String collectionName, String columns, String where);
 
     /**
+     * Selects from a collection. Convenient method.
+     *
+     * @param collectionName the collection name
+     * @param columns        the columns to select
+     * @return a collection of found documents
+     * @throws DatabaseException if the collection doesn't exist
+     */
+    Flux<TSONObject> select(String collectionName, String columns);
+
+    /**
      * Inserts JSON data into a collection.
      *
      * @param collectionName the collection name
@@ -60,6 +70,17 @@ public interface DataSource {
     boolean update(String collectionName, String[] columns, String[] values, String where);
 
     /**
+     * Updates a collection. Convenient method.
+     *
+     * @param collectionName the collection name
+     * @param columns        the columns to update
+     * @param values         the new values
+     * @return true if the collection was updated, otherwise false
+     * @throws DatabaseException if the collection doesn't exist
+     */
+    boolean update(String collectionName, String[] columns, String[] values);
+
+    /**
      * Deletes from a collection by a condition.
      *
      * @param collectionName the collection name
@@ -68,6 +89,15 @@ public interface DataSource {
      * @throws DatabaseException if the collection doesn't exist
      */
     boolean delete(String collectionName, String where);
+
+    /**
+     * Deletes from a collection. Convenient method.
+     *
+     * @param collectionName the collection name
+     * @return true if a record was deleted, otherwise false
+     * @throws DatabaseException if the collection doesn't exist
+     */
+    boolean delete(String collectionName);
 
     /**
      * Creates an index in a collection.
