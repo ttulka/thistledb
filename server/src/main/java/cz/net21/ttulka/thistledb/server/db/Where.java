@@ -1,8 +1,12 @@
 package cz.net21.ttulka.thistledb.server.db;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import lombok.Data;
 import lombok.NonNull;
@@ -20,26 +24,29 @@ class Where {
         }
     };
 
-    private final List<Condition> conditions;
+    private final List<Condition> andConditions;
 
     public static Where create(String where) {
         return where != null ? new Where(where) : EMPTY;
     }
 
     private Where(@NonNull String where) {
-        this.conditions = parse(where);
+        this.andConditions = parse(where);
     }
 
     private Where() {
-        conditions = null;
+        andConditions = null;
     }
 
     public boolean matches(@NonNull String json) {
         if (json == null) {
             return false;
         }
-        // TODO
-        return true;
+        JSONObject jsonObject = new JSONObject(json);
+
+        return andConditions.stream()
+                .map(and -> and.matches(jsonObject))
+                .allMatch(match -> match);
     }
 
     private static List<Condition> parse(String where) {
@@ -84,12 +91,60 @@ class Where {
 
     @Data
     static class Condition {
+
         private final List<DataPart> orClause;
+
+        public boolean matches(JSONObject json) {
+            return orClause.stream()
+                    .map(or -> or.matches(json))
+                    .anyMatch(match -> match);
+        }
     }
 
     @Data
     static class DataPart {
+
         private final String key;
         private final String value;
+
+        public boolean matches(JSONObject json) {
+            return valueMatches(findValue(json));
+        }
+
+        Object findValue(JSONObject json) {
+            Object toReturn = null;
+
+            for (String keyPart : key.split("\\.")) {
+                if (json == null || !json.keySet().contains(keyPart)) {
+                    return null;
+                }
+                toReturn = json.get(keyPart);
+
+                if (toReturn instanceof JSONObject) {
+                    json = (JSONObject)toReturn;
+                } else {
+                    json = null;
+                }
+            }
+            return toReturn;
+        }
+
+        boolean valueMatches(Object o) {
+            if (o != null) {
+                if (o instanceof JSONArray) {
+                    JSONArray array = (JSONArray) o;
+
+                    Iterator iterator = array.iterator();
+                    while (iterator.hasNext()) {
+                        if (iterator.next().toString().equals(value)) {
+                            return true;
+                        }
+                    }
+                } else {
+                    return o.toString().equals(value);
+                }
+            }
+            return false;
+        }
     }
 }

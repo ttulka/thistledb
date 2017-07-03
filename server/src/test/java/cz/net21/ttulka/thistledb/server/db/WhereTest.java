@@ -47,7 +47,7 @@ public class WhereTest {
 
     @Test
     public void parseAndPartsTest() {
-        List<Where.Condition> andParts = Where.parseAndParts("person.name = \"John\" OR person.name = \"Johnny\" AND person.age = 42 ");
+        List<Where.Condition> andParts = Where.parseAndParts("person.name = \"John\" OR person.name = \"Johnny\" AND person.age = 42");
 
         assertThat(andParts, notNullValue());
         assertThat(andParts.size(), is(2));
@@ -64,5 +64,15 @@ public class WhereTest {
 
         assertThat(andParts.get(1).getOrClause().get(0).getKey(), is("person.age"));
         assertThat(andParts.get(1).getOrClause().get(0).getValue(), is("42"));
+    }
+
+    @Test
+    public void matchesTest() {
+        Where where = Where.create("person.name = \"John\" OR person.name = \"Johnny\" AND person.age = 42");
+
+//        assertThat(where.matches("{\"person\":{\"name\":\"John\",\"surname\":\"Smith\"}}"), is(false));
+//        assertThat(where.matches("{\"person\":{\"name\":\"John\",\"surname\":\"Smith\",\"age\":33}}"), is(false));
+//        assertThat(where.matches("{\"person\":{\"name\":\"Jon\",\"surname\":\"Smith\",\"age\":42}}"), is(false));
+        assertThat(where.matches("{\"person\":{\"name\":\"Johnny\",\"surname\":\"Smith\",\"age\":42}}"), is(true));
     }
 }
