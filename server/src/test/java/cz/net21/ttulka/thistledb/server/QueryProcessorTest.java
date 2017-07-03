@@ -13,7 +13,6 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import cz.net21.ttulka.thistledb.server.db.DataSource;
-import cz.net21.ttulka.thistledb.tson.TSONObject;
 import reactor.core.publisher.Flux;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -30,8 +29,6 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class QueryProcessorTest {
 
-    private final TSONObject json = new TSONObject("{ \"person\": { \"name\": \"John\", surname: \"Smith\", \"age\": 42 } }");
-
     @Mock
     private DataSource dataSource;
 
@@ -40,8 +37,8 @@ public class QueryProcessorTest {
 
     @Before
     public void setUp() {
-        when(dataSource.select(eq("test"), anyString(), any())).thenReturn(Flux.just(json));
-        when(dataSource.select(eq("test_multiple"), anyString(), any())).thenReturn(Flux.just(json, json));
+        when(dataSource.select(eq("test"), anyString(), any())).thenReturn(Flux.just(TestData.TSON_PERSON));
+        when(dataSource.select(eq("test_multiple"), anyString(), any())).thenReturn(Flux.just(TestData.TSON_PERSON, TestData.TSON_PERSON));
     }
 
     @Test
@@ -59,7 +56,7 @@ public class QueryProcessorTest {
 
         assertThat(out.size(), is(2));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
-        assertThat(out.get(1), is(json.toString()));
+        assertThat(out.get(1), is(TestData.JSON_PERSON));
     }
 
     @Test
@@ -71,8 +68,8 @@ public class QueryProcessorTest {
 
         assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
-        assertThat(out.get(1), is(json.toString()));
-        assertThat(out.get(2), is(json.toString()));
+        assertThat(out.get(1), is(TestData.JSON_PERSON));
+        assertThat(out.get(2), is(TestData.JSON_PERSON));
     }
 
     @Test

@@ -1,0 +1,18 @@
+package cz.net21.ttulka.thistledb.server;
+
+import cz.net21.ttulka.thistledb.tson.TSONObject;
+
+/**
+ * Created by ttulka
+ * <p>
+ * Data for testing purposes.
+ */
+public abstract class TestData {
+
+    public static final String JSON_BASIC = "{\"a\":\"1\"}";
+
+    public static final String JSON_PERSON = "{\"person\":{\"name\":\"John\",\"surname\":\"Smith\",\"age\":42}}";
+
+    public static final TSONObject TSON_BASIC = new TSONObject(JSON_BASIC);
+    public static final TSONObject TSON_PERSON = new TSONObject(JSON_PERSON);
+}

@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.junit.Test;
 
@@ -21,9 +23,11 @@ import static org.hamcrest.core.IsNull.nullValue;
  */
 public class ServerTest {
 
+    private static final Path dataPath = Paths.get("src/test/resources/data");
+
     @Test
     public void startServerTest() throws InterruptedException {
-        Server server = new Server();
+        Server server = new Server(dataPath);
 
         assertThat("Server doesn't listen before been started.", server.listening(), is(false));
 
@@ -38,7 +42,7 @@ public class ServerTest {
 
     @Test
     public void checkConnectionPoolMaxThreadsTest() throws Exception {
-        try (Server server = new Server()) {
+        try (Server server = new Server(dataPath)) {
 
             server.setMaxConnectionPoolThreads(2);
 
@@ -78,7 +82,7 @@ public class ServerTest {
 
     @Test
     public void maxClientTimeoutTest() throws Exception {
-        try (Server server = new Server()) {
+        try (Server server = new Server(dataPath)) {
 
             server.startAndWait(500);
 
