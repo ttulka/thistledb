@@ -16,6 +16,7 @@ class QueryExecutor {
     public static final String ERROR = "ERROR";
     public static final String INVALID = "INVALID";
     public static final String OKAY = "OKAY";
+    public static final String FINISHED = "FINISHED";
 
     private final Socket socket;
     private final String query;
@@ -56,26 +57,29 @@ class QueryExecutor {
             throw new IllegalStateException("Query was not executed yet.");
         }
         try {
-            String result = in.readLine();
+            while (true) {
+                String result = in.readLine();
 
-            if (result != null && !result.isEmpty()) {
+                if (result != null && !result.isEmpty()) {
 
-                if (result.startsWith(ACCEPTED)) {
-                    return getNextResult();
+                    if (result.equals(FINISHED)) {
+                        return null;
+                    }
+                    if (result.startsWith(ACCEPTED)) {
+                        return getNextResult();
+                    }
+                    if (result.startsWith(ERROR)) {
+                        return error(result);
+                    }
+                    if (result.startsWith(INVALID)) {
+                        return invalid(result);
+                    }
+                    if (result.startsWith(OKAY)) {
+                        return okay();
+                    }
+                    return result;
                 }
-                if (result.startsWith(ERROR)) {
-                    return error(result);
-                }
-                if (result.startsWith(INVALID)) {
-                    return invalid(result);
-                }
-                if (result.startsWith(OKAY)) {
-                    return okay();
-                }
-                return result;
             }
-            return null;
-
         } catch (Exception e) {
             throw new ClientException("Error by receiving results from server.", e);
         }

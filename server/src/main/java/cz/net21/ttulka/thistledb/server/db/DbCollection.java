@@ -90,6 +90,7 @@ public class DbCollection {
 
                         if (ch == SEPARATOR) {
                             channel.position(channel.position() - (read - i - 1));
+
                             return new TSONObject(sb.toString());
 
                         } else {

@@ -20,6 +20,7 @@ class QueryProcessor {
     public static final String ERROR = "ERROR";
     public static final String INVALID = "INVALID";
     public static final String OKAY = "OKAY";
+    public static final String FINISHED = "FINISHED";
 
     private final DataSource dataSource;
 
@@ -37,7 +38,8 @@ class QueryProcessor {
             QueryParser parser = new QueryParser(input);
             processQuery(parser).subscribe(
                     result -> out.println(result),
-                    error -> log.error("Error by executing a query: " + input + ".", error)
+                    error -> log.error("Error by executing a query: " + input + ".", error),
+                    () -> out.println(FINISHED)
             );
 
         } catch (IllegalArgumentException e) {
