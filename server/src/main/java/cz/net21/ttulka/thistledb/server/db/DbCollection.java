@@ -160,7 +160,7 @@ public class DbCollection {
 
         public Select(String where) throws FileNotFoundException {
             super();
-            this.where = new Where(where);
+            this.where = Where.create(where);
         }
 
         public TSONObject next() {
@@ -181,7 +181,7 @@ public class DbCollection {
 
         public Delete(String where) throws FileNotFoundException {
             super();
-            this.where = new Where(where);
+            this.where = Where.create(where);
         }
 
         public boolean delete() throws IOException {
