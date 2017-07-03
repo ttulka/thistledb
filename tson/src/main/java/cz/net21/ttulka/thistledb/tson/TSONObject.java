@@ -35,71 +35,6 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Construct a TSONObject from a Map.
-     *
-     * @param m A map object that can be used to initialize the contents of the TSONObject.
-     */
-    public TSONObject(Map<?, ?> m) {
-        this.map = new LinkedHashMap<>();
-        if (m != null) {
-            for (final Entry<?, ?> e : m.entrySet()) {
-                final Object value = e.getValue();
-                if (value != null) {
-                    this.map.put(String.valueOf(e.getKey()), wrap(value));
-                }
-            }
-        }
-    }
-
-    /**
-     * Construct a JSONObject from a JSONTokener.
-     *
-     * @param x A JSONTokener object containing the source string.
-     * @throws JSONException If there is a syntax error in the source string or a duplicated key.
-     */
-    TSONObject(JSONTokener x) throws JSONException {
-        this();
-        char c;
-        String key;
-
-        if (x.nextClean() != '{') {
-            throw x.syntaxError("A JSONObject text must begin with '{'");
-        }
-        for (; ; ) {
-            c = x.nextClean();
-            switch (c) {
-                case 0:
-                    throw x.syntaxError("A JSONObject text must end with '}'");
-                case '}':
-                    return;
-                default:
-                    x.back();
-                    key = x.nextValue().toString();
-            }
-
-            c = x.nextClean();
-            if (c != ':') {
-                throw x.syntaxError("Expected a ':' after a key");
-            }
-            this.putOnce(key, x.nextValue());
-
-            switch (x.nextClean()) {
-                case ';':
-                case ',':
-                    if (x.nextClean() == '}') {
-                        return;
-                    }
-                    x.back();
-                    break;
-                case '}':
-                    return;
-                default:
-                    throw x.syntaxError("Expected a ',' or '}'");
-            }
-        }
-    }
-
-    /**
      * Construct a TSONObject from a source JSON text string. This is the most
      * commonly used TSONObject constructor.
      *
@@ -142,23 +77,49 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Construct a JSONObject from an Object, using reflection to find the
-     * public members. The resulting JSONObject's keys will be the strings from
-     * the names array, and the values will be the field values associated with
-     * those keys in the object. If a key is not found or not visible, then it
-     * will not be copied into the new JSONObject.
+     * Construct a JSONObject from a JSONTokener.
      *
-     * @param object An object that has fields that should be used to make a JSONObject.
-     * @param names  An array of strings, the names of the fields to be obtained from the object.
+     * @param x A JSONTokener object containing the source string.
+     * @throws JSONException If there is a syntax error in the source string or a duplicated key.
      */
-    public TSONObject(Object object, String names[]) {
+    private TSONObject(JSONTokener x) throws JSONException {
         this();
-        Class<?> c = object.getClass();
-        for (int i = 0; i < names.length; i += 1) {
-            String name = names[i];
-            try {
-                this.putOpt(name, c.getField(name).get(object));
-            } catch (Exception ignore) {
+        char c;
+        String key;
+
+        if (x.nextClean() != '{') {
+            throw x.syntaxError("A JSONObject text must begin with '{'");
+        }
+        for (; ; ) {
+            c = x.nextClean();
+            switch (c) {
+                case 0:
+                    throw x.syntaxError("A JSONObject text must end with '}'");
+                case '}':
+                    return;
+                default:
+                    x.back();
+                    key = x.nextValue().toString();
+            }
+
+            c = x.nextClean();
+            if (c != ':') {
+                throw x.syntaxError("Expected a ':' after a key");
+            }
+            this.putOnce(key, x.nextValue());
+
+            switch (x.nextClean()) {
+                case ';':
+                case ',':
+                    if (x.nextClean() == '}') {
+                        return;
+                    }
+                    x.back();
+                    break;
+                case '}':
+                    return;
+                default:
+                    throw x.syntaxError("Expected a ',' or '}'");
             }
         }
     }
