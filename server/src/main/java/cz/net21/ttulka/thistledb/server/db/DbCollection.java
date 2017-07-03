@@ -43,7 +43,7 @@ public class DbCollection {
 
     public void insert(@NonNull TSONObject data) {
         try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
-            writer.write(data.toString());
+            writer.write(serialize(data));
             writer.write(SEPARATOR);
 
         } catch (IOException e) {
@@ -58,6 +58,14 @@ public class DbCollection {
             e.printStackTrace();
         }
         return true;
+    }
+
+    String serialize(TSONObject tson) {
+        return Serializer.serialize(tson);
+    }
+
+    TSONObject deserialize(String tson) {
+        return Serializer.deserialize(tson);
     }
 
     class Select implements AutoCloseable {
@@ -91,7 +99,7 @@ public class DbCollection {
                         if (ch == SEPARATOR) {
                             channel.position(channel.position() - (read - i - 1));
 
-                            return new TSONObject(sb.toString());
+                            return deserialize(sb.toString());
 
                         } else {
                             sb.append(ch);
