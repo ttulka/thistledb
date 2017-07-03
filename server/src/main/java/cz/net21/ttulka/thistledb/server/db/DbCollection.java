@@ -20,7 +20,7 @@ import lombok.NonNull;
 // TODO
 public class DbCollection {
 
-    static final char SEPARATOR = '\1';
+    static final char RECORD_SEPARATOR = '\1';
 
     private final Path path;
 
@@ -34,7 +34,7 @@ public class DbCollection {
 
     public Select select(@NonNull String columns, String where) {
         try {
-            return new Select();
+            return new Select(where);
 
         } catch (FileNotFoundException e) {
             throw new DatabaseException("Cannot work with a collection: " + e.getMessage(), e);
@@ -44,7 +44,7 @@ public class DbCollection {
     public void insert(@NonNull TSONObject data) {
         try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
             writer.write(serialize(data));
-            writer.write(SEPARATOR);
+            writer.write(RECORD_SEPARATOR);
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot insert into a collection: " + e.getMessage(), e);
@@ -61,25 +61,28 @@ public class DbCollection {
     }
 
     String serialize(TSONObject tson) {
-        return Serializer.serialize(tson);
+        return tson.toString();
     }
 
     TSONObject deserialize(String tson) {
-        return Serializer.deserialize(tson);
+        return new TSONObject(tson);
     }
 
     class Select implements AutoCloseable {
 
         static final int BUFFER_SIZE = 1024;
 
+        private final Where where;
+
         private final RandomAccessFile file;
         private final FileChannel channel;
 
         private boolean finished = false;
 
-        public Select() throws FileNotFoundException {
-            file = new RandomAccessFile(path.toFile(), "r");
-            channel = file.getChannel();
+        public Select(String where) throws FileNotFoundException {
+            this.where = new Where(where);
+            this.file = new RandomAccessFile(path.toFile(), "r");
+            this.channel = file.getChannel();
         }
 
         TSONObject next() {
@@ -96,10 +99,14 @@ public class DbCollection {
                     for (int i = 0; i < read; i++) {
                         char ch = (char) buffer.get();
 
-                        if (ch == SEPARATOR) {
+                        if (ch == RECORD_SEPARATOR) {
                             channel.position(channel.position() - (read - i - 1));
 
-                            return deserialize(sb.toString());
+                            String json = sb.toString();
+
+                            if (where.matches(json)) {
+                                return deserialize(json);
+                            }
 
                         } else {
                             sb.append(ch);
