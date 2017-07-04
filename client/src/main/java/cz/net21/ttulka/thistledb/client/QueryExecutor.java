@@ -65,18 +65,23 @@ class QueryExecutor {
                 if (result != null && !result.isEmpty()) {
 
                     if (result.equals(FINISHED)) {
+                        listening = false;
                         return null;
                     }
                     if (result.startsWith(ACCEPTED)) {
+                        listening = false;
                         return getNextResult();
                     }
                     if (result.startsWith(ERROR)) {
+                        listening = false;
                         return error(result);
                     }
                     if (result.startsWith(INVALID)) {
+                        listening = false;
                         return invalid(result);
                     }
                     if (result.startsWith(OKAY)) {
+                        listening = false;
                         return okay();
                     }
                     return result;
@@ -89,19 +94,16 @@ class QueryExecutor {
     }
 
     private String error(String result) {
-        listening = false;
         String msg = result.substring(ERROR.length() + 1);
         return "{\"status\":\"error\", \"message\":\"" + removeQuotes(msg) + "\"}";
     }
 
     private String invalid(String result) {
-        listening = false;
         String msg = result.substring(INVALID.length() + 1);
         return "{\"status\":\"invalid\", \"message\":\"" + removeQuotes(msg) + "\"}";
     }
 
     private String okay() {
-        listening = false;
         return "{\"status\":\"okay\"}";
     }
 
