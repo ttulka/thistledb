@@ -3,12 +3,12 @@ package cz.net21.ttulka.thistledb.server.db;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -239,9 +239,7 @@ public class DbCollection {
 
         private void moveCollection(DbCollection tmpCollection) throws IOException {
             close();
-            try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(path))) {
-                // TODO copy content of tmp collection to the current collection
-            }
+            Files.move(tmpCollection.getPath(), path, StandardCopyOption.REPLACE_EXISTING);
         }
 
         private void delete(String json) {

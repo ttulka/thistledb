@@ -15,8 +15,6 @@ import cz.net21.ttulka.thistledb.server.TestData;
 import cz.net21.ttulka.thistledb.tson.TSONObject;
 import reactor.core.publisher.Flux;
 
-import static org.hamcrest.CoreMatchers.both;
-import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -189,7 +187,6 @@ public class DataSourceImplTest {
     }
 
     @Test
-    @Ignore // TODO
     public void deleteWhereTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
@@ -215,7 +212,6 @@ public class DataSourceImplTest {
     }
 
     @Test
-    @Ignore // TODO
     public void deleteWhereUnsatisfiedableTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
