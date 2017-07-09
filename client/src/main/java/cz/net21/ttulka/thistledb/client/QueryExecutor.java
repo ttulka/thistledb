@@ -1,6 +1,7 @@
 package cz.net21.ttulka.thistledb.client;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -65,23 +66,22 @@ class QueryExecutor {
                 if (result != null && !result.isEmpty()) {
 
                     if (result.equals(FINISHED)) {
-                        listening = false;
+                        stopListening();
                         return null;
                     }
                     if (result.startsWith(ACCEPTED)) {
-                        listening = false;
                         return getNextResult();
                     }
                     if (result.startsWith(ERROR)) {
-                        listening = false;
+                        stopListening();
                         return error(result);
                     }
                     if (result.startsWith(INVALID)) {
-                        listening = false;
+                        stopListening();
                         return invalid(result);
                     }
                     if (result.startsWith(OKAY)) {
-                        listening = false;
+                        stopListening();
                         return okay();
                     }
                     return result;
@@ -91,6 +91,11 @@ class QueryExecutor {
             throw new ClientException("Error by receiving results from server.", e);
         }
         return null;
+    }
+
+    private void stopListening() throws IOException {
+        in.readLine();
+        listening = false;
     }
 
     private String error(String result) {

@@ -17,10 +17,10 @@ import reactor.core.publisher.Flux;
 class QueryProcessor {
 
     public static final String ACCEPTED = "ACCEPTED";
+    public static final String FINISHED = "FINISHED";
     public static final String ERROR = "ERROR";
     public static final String INVALID = "INVALID";
     public static final String OKAY = "OKAY";
-    public static final String FINISHED = "FINISHED";
 
     private final DataSource dataSource;
 
@@ -38,22 +38,28 @@ class QueryProcessor {
             QueryParser parser = new QueryParser(input);
             processQuery(parser).subscribe(
                     result -> out.println(result),
-                    error -> log.error("Error by executing a query: " + input + ".", error),
-                    () -> out.println(FINISHED)
+                    error -> {
+                        log.error("Error by executing a query: " + input + ".", error);
+                        printEOF(out, ERROR + " " + error.getMessage());
+                    },
+                    () -> printEOF(out, FINISHED)
             );
 
         } catch (IllegalArgumentException e) {
-            out.println(INVALID + " " + e.getMessage());
+            printEOF(out, INVALID + " " + e.getMessage());
         } catch (Exception e) {
             log.error("Error by processing a command: " + input + ".", e);
-            out.println(ERROR + " " + e.getMessage());
-        } finally {
-            try {
-                out.println();
-                out.flush();
-            } catch (Throwable t) {
-                // ignore
-            }
+            printEOF(out, ERROR + " " + e.getMessage());
+        }
+    }
+
+    private void printEOF(PrintWriter out, String message) {
+        try {
+            out.println(message);
+            out.println();
+            out.flush();
+        } catch (Throwable t) {
+            // ignore
         }
     }
 
@@ -62,32 +68,27 @@ class QueryProcessor {
     }
 
     protected Flux<String> processQuery(@NonNull QueryParser parser) {
-        try {
-            Commands command = parser.getCommand();
+        Commands command = parser.getCommand();
 
-            switch (command) {
-                case SELECT:
-                    return processSelect(parser);
-                case INSERT:
-                    return processInsert(parser);
-                case UPDATE:
-                    return processUpdate(parser);
-                case DELETE:
-                    return processDelete(parser);
-                case CREATE:
-                    return processCreate(parser);
-                case DROP:
-                    return processDrop(parser);
-                case CREATE_INDEX:
-                    return processCreateIndex(parser);
-                case DROP_INDEX:
-                    return processDropIndex(parser);
-                default:
-                    return Flux.just(ERROR + " cannot process command " + command);
-            }
-        } catch (Exception e) {
-            log.error("Cannot process a command [" + parser.getQuery() + "].", e);
-            return Flux.just(ERROR + " " + e.getMessage());
+        switch (command) {
+            case SELECT:
+                return processSelect(parser);
+            case INSERT:
+                return processInsert(parser);
+            case UPDATE:
+                return processUpdate(parser);
+            case DELETE:
+                return processDelete(parser);
+            case CREATE:
+                return processCreate(parser);
+            case DROP:
+                return processDrop(parser);
+            case CREATE_INDEX:
+                return processCreateIndex(parser);
+            case DROP_INDEX:
+                return processDropIndex(parser);
+            default:
+                throw new RuntimeException("Cannot process command " + command);
         }
     }
 
