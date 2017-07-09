@@ -46,8 +46,16 @@ class QueryParser {
      * @throws IllegalArgumentException if the query is invalid
      */
     public QueryParser(@NonNull String ql) {
-        this.ql = ql.trim();
+        this.ql = cleanQuery(ql);
         this.command = parseCommand(this.ql);
+    }
+
+    private String cleanQuery(String ql) {
+        ql = ql.trim();
+        if (ql.endsWith(";")) {
+            ql = ql.substring(0, ql.length() - 1);
+        }
+        return ql.trim().replaceAll("\\s+", " ");
     }
 
     public String getQuery() {

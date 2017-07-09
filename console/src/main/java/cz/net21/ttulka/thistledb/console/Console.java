@@ -20,6 +20,10 @@ import lombok.extern.apachecommons.CommonsLog;
 @CommonsLog
 public class Console {
 
+    static final String COMMAND_DELIMITER = ";";
+    static final String COMMAND_SEPARATOR = "$";
+    static final String COMMAND_NEWLINE = ">";
+
     private final Client client;
 
     private final InputStream in;
@@ -50,26 +54,22 @@ public class Console {
         this.client = new Client(host, port);
     }
 
-    public void start() {
+    public final void start() {
         printLogo();
 
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
-        String command = null;
         out.println("\nType 'quit' to stop the server and exit the console.");
         do {
             try {
-                out.print("$ ");
-                command = br.readLine();
-                if (command != null && !command.trim().isEmpty()) {
-                    command = command.trim();
+                out.print(COMMAND_SEPARATOR + " ");
 
-                    if ("exit".equals(command) || "quit".equals(command)) {
-                        break;
-                    }
-
-                    executeQuery(command);
+                String command = readCommand(br);
+                if (command == null) {
+                    break;
                 }
+                executeQuery(command);
+
             } catch (IOException e) {
                 err.println("Invalid user input!");
             } catch (ClientException e) {
@@ -78,9 +78,33 @@ public class Console {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } while (command != null);
+        } while (true);
 
         out.println("\nBye!");
+    }
+
+    private String readCommand(BufferedReader br) throws IOException {
+        String line;
+        boolean newCommand = true;
+        StringBuilder command = new StringBuilder();
+        do {
+            if (!newCommand) {
+                out.print("  " + COMMAND_NEWLINE + " ");
+            }
+            newCommand = false;
+
+            line = br.readLine();
+
+            if (command.length() == 0 && ("exit".equals(line) || "quit".equals(line))) {
+                return null;
+            }
+
+            if (line != null && !line.trim().isEmpty()) {
+                command.append(" ").append(line.trim());
+            }
+        } while (!command.toString().endsWith(COMMAND_DELIMITER));
+
+        return command.toString().trim();
     }
 
     void executeQuery(String query) {
