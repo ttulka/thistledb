@@ -21,6 +21,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -54,6 +55,8 @@ public class QueryProcessorTest {
 
         queryProcessor.process("SELECT * FROM test", writer);
 
+        verify(dataSource).select(anyString(), anyString(), any());
+
         assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(TestData.JSON_PERSON));
@@ -66,6 +69,8 @@ public class QueryProcessorTest {
         PrintWriter writer = mockPrintWriter(out);
 
         queryProcessor.process("SELECT * FROM test_multiple", writer);
+
+        verify(dataSource).select(anyString(), anyString(), any());
 
         assertThat(out.size(), is(4));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
@@ -81,6 +86,8 @@ public class QueryProcessorTest {
 
         queryProcessor.process("UPDATE test SET a=1", writer);
 
+        verify(dataSource).update(anyString(), any(), any(), any());
+
         assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(QueryProcessor.OKAY));
@@ -93,6 +100,8 @@ public class QueryProcessorTest {
         PrintWriter writer = mockPrintWriter(out);
 
         queryProcessor.process("DELETE FROM test", writer);
+
+        verify(dataSource).delete(anyString(), anyString());
 
         assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
@@ -107,6 +116,8 @@ public class QueryProcessorTest {
 
         queryProcessor.process("CREATE test", writer);
 
+        verify(dataSource).createCollection(anyString());
+
         assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(QueryProcessor.OKAY));
@@ -119,6 +130,8 @@ public class QueryProcessorTest {
         PrintWriter writer = mockPrintWriter(out);
 
         queryProcessor.process("DROP test", writer);
+
+        verify(dataSource).dropCollection(anyString());
 
         assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
@@ -133,6 +146,8 @@ public class QueryProcessorTest {
 
         queryProcessor.process("CREATE INDEX a ON test", writer);
 
+        verify(dataSource).createIndex(anyString(), anyString());
+
         assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));
         assertThat(out.get(1), is(QueryProcessor.OKAY));
@@ -145,6 +160,8 @@ public class QueryProcessorTest {
         PrintWriter writer = mockPrintWriter(out);
 
         queryProcessor.process("DROP INDEX a ON test", writer);
+
+        verify(dataSource).dropIndex(anyString(), anyString());
 
         assertThat(out.size(), is(3));
         assertThat(out.get(0), is(QueryProcessor.ACCEPTED));

@@ -19,6 +19,9 @@ import org.mockito.stubbing.Answer;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -63,6 +66,10 @@ public class JsonPublisherTest {
 
         Thread.sleep(ELEMENTS * 100);
 
+        verify(queryExecutor).executeQuery();
+        verify(queryExecutor, times(ELEMENTS + 1)).getNextResult(); // the last returns null
+        verifyNoMoreInteractions(queryExecutor);
+
         testOrderedResults(results);
     }
 
@@ -80,6 +87,10 @@ public class JsonPublisherTest {
         assertThat("It's too early to have all the elements.", results.size(), not(is(ELEMENTS)));
 
         Thread.sleep(ELEMENTS * 100);
+
+        verify(queryExecutor).executeQuery();
+        verify(queryExecutor, times(ELEMENTS + 1)).getNextResult(); // the last returns null
+        verifyNoMoreInteractions(queryExecutor);
 
         testUnorderedResults(results);
     }
@@ -99,6 +110,10 @@ public class JsonPublisherTest {
 
         System.out.println("awaitTest: " + (System.currentTimeMillis() - start));
 
+        verify(queryExecutor).executeQuery();
+        verify(queryExecutor, times(ELEMENTS + 1)).getNextResult(); // the last returns null
+        verifyNoMoreInteractions(queryExecutor);
+
         testOrderedResults(results);
     }
 
@@ -116,6 +131,10 @@ public class JsonPublisherTest {
         }).await();
 
         System.out.println("awaitParallelTest: " + (System.currentTimeMillis() - start));
+
+        verify(queryExecutor).executeQuery();
+        verify(queryExecutor, times(ELEMENTS + 1)).getNextResult(); // the last returns null
+        verifyNoMoreInteractions(queryExecutor);
 
         testUnorderedResults(results);
     }
@@ -149,6 +168,10 @@ public class JsonPublisherTest {
             Thread.sleep(200);
         } catch (InterruptedException e) {
         }
+
+        verify(queryExecutor).executeQuery();
+        verify(queryExecutor, times(ELEMENTS + 2)).getNextResult(); // the last request return null
+        verifyNoMoreInteractions(queryExecutor);
 
         List<String> results = new ArrayList<>();
         results.addAll(results1);
@@ -186,6 +209,10 @@ public class JsonPublisherTest {
             Thread.sleep(100);
         } catch (InterruptedException e) {
         }
+
+        verify(queryExecutor).executeQuery();
+        verify(queryExecutor, times(ELEMENTS + 2)).getNextResult(); // the last request return null
+        verifyNoMoreInteractions(queryExecutor);
 
         List<String> results = new ArrayList<>();
         results.addAll(results1);
