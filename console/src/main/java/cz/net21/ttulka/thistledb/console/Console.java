@@ -64,7 +64,7 @@ public class Console {
                 if (command != null && !command.trim().isEmpty()) {
                     command = command.trim();
 
-                    if ("quit".equals(command)) {
+                    if ("exit".equals(command) || "quit".equals(command)) {
                         break;
                     }
 
