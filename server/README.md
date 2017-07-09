@@ -17,6 +17,7 @@ new line
 ```
 ACCEPTED
 OKAY
+FINISHED
 new line
 ```             
 

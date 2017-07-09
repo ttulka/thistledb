@@ -81,6 +81,7 @@ class QueryExecutor {
                         return invalid(result);
                     }
                     if (result.startsWith(OKAY)) {
+                        in.readLine();  // FINISHED
                         stopListening();
                         return okay();
                     }
