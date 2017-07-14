@@ -59,7 +59,7 @@ public class Console {
 
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
-        out.println("\nType 'quit' to stop the server and exit the console.");
+        out.println("\nType 'quit' to exit.");
         do {
             try {
                 out.print(COMMAND_SEPARATOR + " ");
