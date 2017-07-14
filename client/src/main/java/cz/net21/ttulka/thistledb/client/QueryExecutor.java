@@ -26,9 +26,20 @@ class QueryExecutor {
 
     private boolean listening = true;
 
+    /**
+     * Creates a {@link QueryExecutor}
+     *
+     * @param socket      the server socket
+     * @param nativeQuery the query
+     * @throws QueryException when the query is invalid
+     */
     public QueryExecutor(Socket socket, String nativeQuery) {
         this.socket = socket;
         this.query = nativeQuery;
+
+        if (!QueryValidator.validate(query)) {
+            throw new QueryException("Query '" + query + "' is invalid.");
+        }
     }
 
     /**
