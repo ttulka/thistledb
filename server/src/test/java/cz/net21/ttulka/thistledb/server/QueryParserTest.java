@@ -1,9 +1,12 @@
 package cz.net21.ttulka.thistledb.server;
 
+import java.util.List;
+
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 
 /**
  * Created by ttulka
@@ -235,8 +238,11 @@ public class QueryParserTest {
 
     @Test
     public void parseValuesTest() {
-        String result = new QueryParser("INSERT INTO test VALUES " + TestData.JSON_PERSON).parseValues();
-        assertThat(result, is(TestData.JSON_PERSON));
+        List<String> result = new QueryParser("INSERT INTO test VALUES " + TestData.JSON_PERSON).parseValues();
+        assertThat(result, contains(TestData.JSON_PERSON));
+
+        result = new QueryParser("INSERT INTO test VALUES " + TestData.JSON_BASIC + ", " + TestData.JSON_PERSON).parseValues();
+        assertThat(result, contains(TestData.JSON_BASIC, TestData.JSON_PERSON));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package cz.net21.ttulka.thistledb.server;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 import cz.net21.ttulka.thistledb.server.db.DataSource;
 import cz.net21.ttulka.thistledb.tson.TSONObject;
@@ -103,9 +104,9 @@ class QueryProcessor {
 
     Flux<String> processInsert(QueryParser parser) {
         String collection = parser.parseCollection();
-        String values = parser.parseValues();
+        List<String> values = parser.parseValues();
 
-        dataSource.insert(collection, new TSONObject(values));
+        dataSource.insert(collection, values);
         return Flux.just(OKAY);
     }
 
@@ -158,10 +159,10 @@ class QueryProcessor {
         return Flux.just(OKAY);
     }
 
-    private String serialize(TSONObject json) {
-        if (json == null) {
-            return "{}";
+    private String serialize(String json) {
+        if (json == null || json.isEmpty()) {
+            return new TSONObject().toString();
         }
-        return json.toString();
+        return json;
     }
 }

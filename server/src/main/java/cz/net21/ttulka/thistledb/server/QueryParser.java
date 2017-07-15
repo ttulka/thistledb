@@ -2,11 +2,15 @@ package cz.net21.ttulka.thistledb.server;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.json.JSONArray;
+
+import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.NonNull;
 import lombok.extern.apachecommons.CommonsLog;
 
@@ -151,13 +155,25 @@ class QueryParser {
         }
     }
 
-    public String parseValues() {
+    public List<String> parseValues() {
         switch (command) {
             case INSERT:
-                return getMatchingGroup(INSERT, ql, 2);
+                return parseListOfJsons(getMatchingGroup(INSERT, ql, 2));
             default:
                 throw new IllegalArgumentException("The query has no values clause: " + ql);
         }
+    }
+
+    private List<String> parseListOfJsons(String listOfJsons) {
+        String asArray = "{\"array\":[" + listOfJsons + "]}";
+        JSONArray array = new TSONObject(asArray).getJSONArray("array");
+
+        List<String> toReturn = new ArrayList<>(array.length());
+        Iterator<Object> iterator = array.iterator();
+        while (iterator.hasNext()) {
+            toReturn.add(iterator.next().toString());
+        }
+        return toReturn;
     }
 
     public String[] parseSetColumns() {

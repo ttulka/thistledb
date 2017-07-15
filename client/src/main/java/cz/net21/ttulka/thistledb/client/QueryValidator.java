@@ -62,7 +62,7 @@ public class QueryValidator {
         Matcher matcher = INSERT.matcher(query);
         if (matcher.matches()) {
             String json = matcher.group(2);
-            return validateJson(json);
+            return validateListOfJsons(json);
         }
         return true;
     }
@@ -73,6 +73,20 @@ public class QueryValidator {
         }
         try {
             new JSONTokener(json).tokenize();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    static boolean validateListOfJsons(String listOfJsons) {
+        if (listOfJsons == null || listOfJsons.isEmpty()) {
+            return false;
+        }
+        try {
+            new JSONTokener(listOfJsons).tokenizeList();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -94,10 +108,24 @@ public class QueryValidator {
 
         /**
          * Tokenize the JSON input.
+         *
          * @throws IllegalStateException if the input doesn't match JSON
          */
         public void tokenize() {
-            tokenObject(json);
+            String jsonObject = tokenObject(json);
+
+            if (!jsonObject.isEmpty()) {
+                throw new IllegalStateException("Expected EOF in " + getAround(jsonObject) + ".");
+            }
+        }
+
+        public void tokenizeList() {
+            String jsonObject = json;
+            do {
+                jsonObject = tokenObject(jsonObject);
+                jsonObject = peekLiteral(",", jsonObject);
+
+            } while (!jsonObject.isEmpty());
         }
 
         String tokenObject(String token) {
@@ -204,7 +232,7 @@ public class QueryValidator {
             }
 
             if (!isNumber) {
-                throw new IllegalStateException("Not a number literal in '" + token.substring(0, 10) + "'.");
+                throw new IllegalStateException("Not a number literal in '" + getAround(token) + "'.");
             }
             return token.substring(index - 1);
         }
@@ -249,12 +277,12 @@ public class QueryValidator {
 
             } catch (Exception ignore) {
             }
-            throw new IllegalStateException("Expected a value in '" + token.substring(0, 10) + "'.");
+            throw new IllegalStateException("Expected a value in '" + getAround(token) + "'.");
         }
 
         String tokenLiteral(String literal, String token) {
             if (!token.startsWith(literal)) {
-                throw new IllegalStateException("Expected '" + literal + "' in '" + token.substring(0, 10) + "'.");
+                throw new IllegalStateException("Expected '" + literal + "' in '" + getAround(token) + "'.");
             }
             return token.substring(literal.length());
         }
@@ -265,6 +293,10 @@ public class QueryValidator {
             } catch (Exception ignore) {
             }
             return token;
+        }
+
+        private String getAround(String json) {
+            return json.substring(0, Math.min(10, json.length()));
         }
     }
 }

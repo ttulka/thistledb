@@ -35,11 +35,15 @@ class QueryExecutor {
      */
     public QueryExecutor(Socket socket, String nativeQuery) {
         this.socket = socket;
-        this.query = nativeQuery;
+        this.query = cleanQuery(nativeQuery);
 
         if (!QueryValidator.validate(query)) {
             throw new QueryException("Query '" + query + "' is invalid.");
         }
+    }
+
+    private String cleanQuery(String query) {
+        return query.replace("\\n", " ");   // remove new lines
     }
 
     /**

@@ -44,6 +44,9 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validate("INSERT INTO test VALUES {\"a1\" : { \"a_2\":\"1\" }}"), is(true));
         assertThat(QueryValidator.validate("INSERT INTO test VALUES {\"a1\" : { \"a_2\": [\"1\", \"a_2\" ] }}"), is(true));
         assertThat(QueryValidator.validate("INSERT INTO test VALUES {\"a1\" : { \"a_2\": [{\"1\" : \"a_2\"} , {\"1_a\" : \"_a_2_.1\"} ] }}"), is(true));
+
+        assertThat(QueryValidator.validate("INSERT INTO test VALUES {},{}"), is(true));
+        assertThat(QueryValidator.validate("INSERT INTO test VALUES {\"a\":\"1\"},{\"b\":\"2\"}"), is(true));
     }
 
     @Test
