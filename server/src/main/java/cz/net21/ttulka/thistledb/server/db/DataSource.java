@@ -74,10 +74,10 @@ public interface DataSource {
      * @param columns        the columns to update
      * @param values         the new values
      * @param where          the condition
-     * @return true if the collection was updated, otherwise false
+     * @return count of updated documents
      * @throws DatabaseException if the collection doesn't exist
      */
-    boolean update(String collectionName, String[] columns, String[] values, String where);
+    int update(String collectionName, String[] columns, String[] values, String where);
 
     /**
      * Updates a collection. Convenient method.
@@ -85,10 +85,10 @@ public interface DataSource {
      * @param collectionName the collection name
      * @param columns        the columns to update
      * @param values         the new values
-     * @return true if the collection was updated, otherwise false
+     * @return count of updated documents
      * @throws DatabaseException if the collection doesn't exist
      */
-    boolean update(String collectionName, String[] columns, String[] values);
+    int update(String collectionName, String[] columns, String[] values);
 
     /**
      * Deletes from a collection by a condition.

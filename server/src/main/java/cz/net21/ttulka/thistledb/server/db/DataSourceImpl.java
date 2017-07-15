@@ -141,14 +141,14 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
-    public boolean update(@NonNull String collectionName, @NonNull String[] columns, @NonNull String[] values, String where) {
+    public int update(@NonNull String collectionName, @NonNull String[] columns, @NonNull String[] values, String where) {
         checkIfCollectionExists(collectionName);
         // TODO
-        return true;
+        return 0;
     }
 
     @Override
-    public boolean update(@NonNull String collectionName, @NonNull String[] columns, @NonNull String[] values) {
+    public int update(@NonNull String collectionName, @NonNull String[] columns, @NonNull String[] values) {
         return update(collectionName, columns, values, null);
     }
 
