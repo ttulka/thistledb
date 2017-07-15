@@ -59,7 +59,7 @@ class QueryParser {
         if (ql.endsWith(";")) {
             ql = ql.substring(0, ql.length() - 1);
         }
-        return ql.trim().replaceAll("\\s+", " ");
+        return ql;
     }
 
     public String getQuery() {

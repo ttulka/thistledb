@@ -41,6 +41,8 @@ public class QueryValidator {
         if (query == null || query.isEmpty()) {
             return false;
         }
+        query = cleanQuery(query);
+
         if (!SELECT.matcher(query).matches()
             && !INSERT.matcher(query).matches()
             && !UPDATE.matcher(query).matches()
@@ -56,6 +58,14 @@ public class QueryValidator {
             return false;
         }
         return true;
+    }
+
+    private static String cleanQuery(String ql) {
+        ql = ql.trim();
+        if (ql.endsWith(";")) {
+            ql = ql.substring(0, ql.length() - 1);
+        }
+        return ql;
     }
 
     private static boolean validateInsert(String query) {

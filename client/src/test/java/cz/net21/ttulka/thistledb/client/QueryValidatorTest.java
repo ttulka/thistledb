@@ -21,13 +21,14 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validate("SELECT * FROM test,test2 WHERE 1"), is(false));
         assertThat(QueryValidator.validate("select * from test where person.name = \"Johnny"), is(false));
 
-        assertThat(QueryValidator.validate("select * from test where person.name = \"Johnny\""), is(true));
         assertThat(QueryValidator.validate("SELECT * FROM test"), is(true));
+        assertThat(QueryValidator.validate("SELECT * FROM test;"), is(true));
         assertThat(QueryValidator.validate("SELECT a1 FROM test"), is(true));
         assertThat(QueryValidator.validate("SELECT a1 FROM test WHERE 1=1"), is(true));
         assertThat(QueryValidator.validate("SELECT a_2 FROM test WHERE 1=1 AND 1=1"), is(true));
         assertThat(QueryValidator.validate("SELECT a_2 FROM test WHERE 1=1 AND 1=1 OR 1=1"), is(true));
         assertThat(QueryValidator.validate("SELECT a_2 FROM test WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1"), is(true));
+        assertThat(QueryValidator.validate("select * from test where person.name = \"Johnny\""), is(true));
     }
 
     @Test

@@ -43,6 +43,10 @@ class QueryExecutor {
     }
 
     private String cleanQuery(String query) {
+        query = query.trim();
+        if (query.endsWith(";")) {
+            query = query.substring(0, query.length() - 1);
+        }
         return query.replace("\\n", " ");   // remove new lines
     }
 

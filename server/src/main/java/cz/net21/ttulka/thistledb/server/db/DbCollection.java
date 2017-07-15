@@ -55,9 +55,8 @@ public class DbCollection {
         try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
             for (String json : jsonData) {
                 writer.write(serialize(json));
+                writer.write(RECORD_SEPARATOR);
             }
-            writer.write(RECORD_SEPARATOR);
-
         } catch (IOException e) {
             throw new DatabaseException("Cannot insert into a collection: " + e.getMessage(), e);
         } finally {
