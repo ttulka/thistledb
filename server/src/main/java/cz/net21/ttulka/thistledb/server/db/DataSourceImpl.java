@@ -143,8 +143,8 @@ public class DataSourceImpl implements DataSource {
     @Override
     public int update(@NonNull String collectionName, @NonNull String[] columns, @NonNull String[] values, String where) {
         checkIfCollectionExists(collectionName);
-        // TODO
-        return 0;
+
+        return getCollection(collectionName).update(columns, values, where);
     }
 
     @Override

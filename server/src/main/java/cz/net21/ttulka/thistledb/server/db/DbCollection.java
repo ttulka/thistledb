@@ -80,6 +80,18 @@ public class DbCollection {
         }
     }
 
+    public int update(String[] columns, String[] values, String where) {
+        lock.writeLock().lock();
+        try {
+            return new Update(columns, values, where).update();
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot update a collection: " + e.getMessage(), e);
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     String serialize(String tson) {
         return tson;
     }
@@ -245,6 +257,53 @@ public class DbCollection {
 
         private void delete(String json) {
             // TODO remove from indexes etc
+        }
+    }
+
+    class Update extends DbAccess {
+
+        private final Where where;
+        private final String[] columns;
+        private final String[] values;
+
+        public Update(String[] columns, String[] values, String where) throws FileNotFoundException {
+            super();
+            this.where = Where.create(where);
+            this.columns = columns;
+            this.values = values;
+        }
+
+        public int update() throws IOException {
+            int updated = 0;
+            DbCollection tmpCollection = new DbCollection(Files.createTempFile(path.getParent(), null, "_update"));
+            String json;
+            do {
+                json = nextRecord();
+
+                if (json != null) {
+                    if (where.matches(json)) {
+                        json = update(json, columns, values);
+                        updated ++;
+                    }
+                    tmpCollection.insert(json);
+                }
+            } while (json != null);
+
+            moveCollection(tmpCollection);
+
+            return updated;
+        }
+
+        private void moveCollection(DbCollection tmpCollection) throws IOException {
+            close();
+            Files.move(tmpCollection.getPath(), path, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        private String update(String json, String[] columns, String[] values) {
+            // TODO update the document
+            // TODO update indexes etc
+
+            return json;
         }
     }
 }
