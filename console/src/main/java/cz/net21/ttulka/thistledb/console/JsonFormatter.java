@@ -63,7 +63,11 @@ class JsonFormatter {
         } else if (o instanceof JSONArray) {
             formatJsonResult((JSONArray) o, level + 1, last);
         } else {
-            out.print("\"" + o + "\"");
+            if (o instanceof String) {
+                out.print("\"" + o + "\"");
+            } else {
+                out.print(o);
+            }
             if (!last) {
                 out.print(", ");
             }

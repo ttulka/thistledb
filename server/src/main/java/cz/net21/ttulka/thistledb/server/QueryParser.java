@@ -176,12 +176,12 @@ class QueryParser {
     }
 
     public String[] parseSetColumns() {
-        return parseUpdateSet(s -> s.substring(0, s.indexOf("=")));
+        return parseUpdateSet(s -> s.substring(0, s.indexOf("=")).trim());
     }
 
     public String[] parseSetValues() {
         return parseUpdateSet(s -> {
-            s = s.substring(s.indexOf("=") + 1);
+            s = s.substring(s.indexOf("=") + 1).trim();
 
             if (s.startsWith("'") && s.endsWith("'")) {
                 s = s.substring(1, s.length() - 1);

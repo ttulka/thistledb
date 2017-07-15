@@ -327,6 +327,10 @@ public class DbCollection {
                 return new JSONArray(value);
             } catch (Exception ignore) {
             }
+            try {
+                return new JSONObject("{\"value\":" + value + "}").get("value");
+            } catch (Exception ignore) {
+            }
             return value;
         }
     }
