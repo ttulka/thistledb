@@ -38,8 +38,8 @@ public class QueryProcessorTest {
 
     @Before
     public void setUp() {
-        when(dataSource.select(eq("test"), anyString(), any())).thenReturn(Flux.just(TestData.TSON_PERSON));
-        when(dataSource.select(eq("test_multiple"), anyString(), any())).thenReturn(Flux.just(TestData.TSON_PERSON, TestData.TSON_PERSON));
+        when(dataSource.select(eq("test"), anyString(), any())).thenReturn(Flux.just(TestData.JSON_PERSON));
+        when(dataSource.select(eq("test_multiple"), anyString(), any())).thenReturn(Flux.just(TestData.JSON_PERSON, TestData.JSON_PERSON));
     }
 
     @Test

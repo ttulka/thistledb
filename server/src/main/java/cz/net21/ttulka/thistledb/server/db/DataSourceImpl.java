@@ -3,10 +3,11 @@ package cz.net21.ttulka.thistledb.server.db;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.NonNull;
 import lombok.extern.apachecommons.CommonsLog;
 import reactor.core.publisher.Flux;
@@ -105,13 +106,13 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
-    public Flux<TSONObject> select(@NonNull String collectionName, @NonNull String columns, String where) {
+    public Flux<String> select(@NonNull String collectionName, @NonNull String columns, String where) {
         checkIfCollectionExists(collectionName);
 
         DbCollection.Select select = getCollection(collectionName).select(columns, where);
 
-        Flux<TSONObject> stream = Flux.generate(sink -> {
-            TSONObject json = select.next();
+        Flux<String> stream = Flux.generate(sink -> {
+            String json = select.next();
             if (json != null) {
                 sink.next(json);
             } else {
@@ -123,12 +124,17 @@ public class DataSourceImpl implements DataSource {
     }
 
     @Override
-    public Flux<TSONObject> select(@NonNull String collectionName, @NonNull String columns) {
+    public Flux<String> select(@NonNull String collectionName, @NonNull String columns) {
         return select(collectionName, columns, null);
     }
 
     @Override
-    public void insert(@NonNull String collectionName, @NonNull TSONObject data) {
+    public void insert(@NonNull String collectionName, @NonNull String data) {
+        insert(collectionName, Collections.singleton(data));
+    }
+
+    @Override
+    public void insert(@NonNull String collectionName, @NonNull Collection<String> data) {
         checkIfCollectionExists(collectionName);
 
         getCollection(collectionName).insert(data);

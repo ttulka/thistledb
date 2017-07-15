@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import cz.net21.ttulka.thistledb.server.TestData;
-import cz.net21.ttulka.thistledb.tson.TSONObject;
 import reactor.core.publisher.Flux;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -87,13 +86,13 @@ public class DataSourceImplTest {
     public void selectTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_BASIC);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
-        Flux<TSONObject> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
+        Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
 
         List<String> results = new CopyOnWriteArrayList<>();
-        stream.map(TSONObject::toString).subscribe(results::add);
+        stream.subscribe(results::add);
 
         waitForSeconds(1);
 
@@ -107,13 +106,13 @@ public class DataSourceImplTest {
     public void selectElementTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_BASIC);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
-        Flux<TSONObject> stream = dataSource.select(TEST_COLLECTION_NAME, "person.name");
+        Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "person.name");
 
         List<String> results = new CopyOnWriteArrayList<>();
-        stream.map(TSONObject::toString).subscribe(results::add);
+        stream.subscribe(results::add);
 
         waitForSeconds(1);
 
@@ -127,14 +126,14 @@ public class DataSourceImplTest {
     public void selectWhereTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_BASIC);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
-        Flux<TSONObject> stream = dataSource.select(TEST_COLLECTION_NAME, "*", "person.name = \"John\"");
+        Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "*", "person.name = \"John\"");
 
         List<String> results = new CopyOnWriteArrayList<>();
-        stream.map(TSONObject::toString).subscribe(results::add);
+        stream.subscribe(results::add);
 
         waitForSeconds(1);
 
@@ -148,13 +147,13 @@ public class DataSourceImplTest {
     public void selectWhereUnsatisfiedableTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_BASIC);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
-        Flux<TSONObject> stream = dataSource.select(TEST_COLLECTION_NAME, "*", "person.name = \"XXX\"");
+        Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "*", "person.name = \"XXX\"");
 
         List<String> results = new CopyOnWriteArrayList<>();
-        stream.map(TSONObject::toString).subscribe(results::add);
+        stream.subscribe(results::add);
 
         waitForSeconds(1);
 
@@ -167,17 +166,17 @@ public class DataSourceImplTest {
     public void deleteTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_BASIC);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
         boolean deleted = dataSource.delete(TEST_COLLECTION_NAME);
 
         assertThat("Should be deleted.", deleted, is(true));
 
-        Flux<TSONObject> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
+        Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
 
         List<String> results = new CopyOnWriteArrayList<>();
-        stream.map(TSONObject::toString).subscribe(results::add);
+        stream.subscribe(results::add);
 
         waitForSeconds(1);
 
@@ -190,18 +189,18 @@ public class DataSourceImplTest {
     public void deleteWhereTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_BASIC);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
         boolean deleted = dataSource.delete(TEST_COLLECTION_NAME, "person.name = \"John\"");
 
         assertThat("Should be deleted.", deleted, is(true));
 
-        Flux<TSONObject> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
+        Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
 
         List<String> results = new CopyOnWriteArrayList<>();
-        stream.map(TSONObject::toString).subscribe(results::add);
+        stream.subscribe(results::add);
 
         waitForSeconds(1);
 
@@ -215,17 +214,17 @@ public class DataSourceImplTest {
     public void deleteWhereUnsatisfiedableTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_BASIC);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.TSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
         boolean deleted = dataSource.delete(TEST_COLLECTION_NAME, "person.name = \"XXX\"");
 
         assertThat("Shouldn't be deleted.", deleted, is(false));
 
-        Flux<TSONObject> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
+        Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
 
         List<String> results = new CopyOnWriteArrayList<>();
-        stream.map(TSONObject::toString).subscribe(results::add);
+        stream.subscribe(results::add);
 
         waitForSeconds(1);
 

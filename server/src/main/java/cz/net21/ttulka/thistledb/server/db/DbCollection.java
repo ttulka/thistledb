@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -48,23 +50,23 @@ public class DbCollection {
         }
     }
 
-    public void insert(@NonNull TSONObject data) {
+    public void insert(@NonNull Collection<String> jsonData) {
         lock.writeLock().lock();
-        try {
-            insert(serialize(data));
+        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
+            for (String json : jsonData) {
+                writer.write(serialize(json));
+            }
+            writer.write(RECORD_SEPARATOR);
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot insert into a collection: " + e.getMessage(), e);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     private void insert(String json) {
-        try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
-            writer.write(json);
-            writer.write(RECORD_SEPARATOR);
-
-        } catch (IOException e) {
-            throw new DatabaseException("Cannot insert into a collection: " + e.getMessage(), e);
-        }
+        insert(Collections.singleton(json));
     }
 
     public boolean delete(String where) {
@@ -79,12 +81,12 @@ public class DbCollection {
         }
     }
 
-    String serialize(TSONObject tson) {
-        return tson.toString();
+    String serialize(String tson) {
+        return tson;
     }
 
-    TSONObject deserialize(String tson) {
-        return new TSONObject(tson);
+    String deserialize(String tson) {
+        return tson;
     }
 
     abstract class DbAccess implements AutoCloseable {
@@ -165,7 +167,7 @@ public class DbCollection {
             this.elementKey = elementKey;
         }
 
-        public TSONObject next() {
+        public String next() {
             String json = nextRecord();
 
             if (json != null) {
@@ -179,21 +181,21 @@ public class DbCollection {
             return null;
         }
 
-        private TSONObject selectElement(TSONObject jsonObject) {
+        private String selectElement(String jsonObject) {
             if ("*".equals(elementKey) || elementKey == null || elementKey.isEmpty()) {
                 return jsonObject;
             }
-            Object o = jsonObject.findPath(elementKey);
+            Object o = new TSONObject(jsonObject).findPath(elementKey);
 
             if (o == null) {
-                return new TSONObject();
+                return new TSONObject().toString();
             }
             if (o instanceof TSONObject) {
-                return (TSONObject) o;
+                return ((TSONObject) o).toString();
             }
             TSONObject tson = new TSONObject();
             tson.put(getLastKey(elementKey), o);
-            return tson;
+            return tson.toString();
         }
 
         private String getLastKey(String elementKey) {
