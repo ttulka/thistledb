@@ -89,7 +89,11 @@ public class Console {
         StringBuilder command = new StringBuilder();
         do {
             if (!newCommand) {
-                out.print("  " + COMMAND_NEWLINE + " ");
+                if (command.length() > 0) {
+                    out.print("  " + COMMAND_NEWLINE + " ");
+                } else {
+                    out.print(COMMAND_SEPARATOR + " ");
+                }
             }
             newCommand = false;
 
