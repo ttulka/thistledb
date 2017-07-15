@@ -442,9 +442,8 @@ public class TSONObject extends JSONObject {
 
         String[] splittedPath = path.split("\\.");
 
-        int i;
-        for (i = 0; i < splittedPath.length; i++) {
-            String keyPart = splittedPath[i];
+        int index = 0;
+        for (String keyPart : splittedPath) {
             if (json == null || !json.keySet().contains(keyPart)) {
                 break;
             }
@@ -455,14 +454,11 @@ public class TSONObject extends JSONObject {
             } else {
                 break;
             }
+            index ++;
         }
 
-        if (i == splittedPath.length - 1) {
-            json.put(splittedPath[i], value);
-        } else {
-            Object toAdd = createSubElement(Arrays.copyOfRange(splittedPath, i + 1, splittedPath.length), value);
-            json.put(splittedPath[i], toAdd);
-        }
+        String[] restPath = Arrays.copyOfRange(splittedPath, index + 1, splittedPath.length);
+        json.put(splittedPath[index], createSubElement(restPath, value));
 
         return ref;
     }
