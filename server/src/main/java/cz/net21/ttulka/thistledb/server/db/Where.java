@@ -108,7 +108,7 @@ class Where {
         private final String value;
 
         public boolean matches(TSONObject json) {
-            return valueMatches(json.findPath(key));
+            return valueMatches(json.findByPath(key));
         }
 
         boolean valueMatches(Object o) {

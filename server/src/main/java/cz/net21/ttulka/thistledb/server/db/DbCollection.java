@@ -15,6 +15,9 @@ import java.util.Collections;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.NonNull;
 
@@ -196,7 +199,7 @@ public class DbCollection {
             if ("*".equals(elementKey) || elementKey == null || elementKey.isEmpty()) {
                 return jsonObject;
             }
-            Object o = new TSONObject(jsonObject).findPath(elementKey);
+            Object o = new TSONObject(jsonObject).findByPath(elementKey);
 
             if (o == null) {
                 return new TSONObject().toString();
@@ -283,7 +286,7 @@ public class DbCollection {
                 if (json != null) {
                     if (where.matches(json)) {
                         json = update(json, columns, values);
-                        updated ++;
+                        updated++;
                     }
                     tmpCollection.insert(json);
                 }
@@ -300,10 +303,31 @@ public class DbCollection {
         }
 
         private String update(String json, String[] columns, String[] values) {
-            // TODO update the document
+            TSONObject tson = new TSONObject(json);
+
+            for (int i = 0; i < columns.length; i++) {
+                Object value = null;
+                if (values.length > i) {
+                    value = getJsonValue(values[i]);
+                }
+                tson = tson.updateByPath(columns[i], value);
+            }
+
             // TODO update indexes etc
 
-            return json;
+            return tson.toString();
+        }
+
+        private Object getJsonValue(String value) {
+            try {
+                return new JSONObject(value);
+            } catch (Exception ignore) {
+            }
+            try {
+                return new JSONArray(value);
+            } catch (Exception ignore) {
+            }
+            return value;
         }
     }
 }

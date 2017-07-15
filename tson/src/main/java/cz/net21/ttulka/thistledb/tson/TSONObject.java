@@ -3,6 +3,7 @@ package cz.net21.ttulka.thistledb.tson;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -402,7 +403,7 @@ public class TSONObject extends JSONObject {
      * @param path the path with comma-separated levels, eg.: "addressBook.person.name"
      * @return the sub object or null
      */
-    public Object findPath(String path) {
+    public Object findByPath(String path) {
         if (path == null) {
             return null;
         }
@@ -422,5 +423,56 @@ public class TSONObject extends JSONObject {
             }
         }
         return toReturn;
+    }
+
+    /**
+     * Set a sub JSON object by the path.
+     *
+     * @param path  the path with comma-separated levels, eg.: "addressBook.person.name"
+     * @param value the sub-object to set
+     * @return true if the sub-object was changed, otherwise false
+     */
+    public TSONObject updateByPath(String path, Object value) {
+        TSONObject json = new TSONObject(this.toString());
+        TSONObject ref = json;
+
+        if (path == null) {
+            return json;
+        }
+
+        String[] splittedPath = path.split("\\.");
+
+        int i;
+        for (i = 0; i < splittedPath.length; i++) {
+            String keyPart = splittedPath[i];
+            if (json == null || !json.keySet().contains(keyPart)) {
+                break;
+            }
+            Object o = json.get(keyPart);
+
+            if (o instanceof TSONObject) {
+                json = (TSONObject) o;
+            } else {
+                break;
+            }
+        }
+
+        if (i == splittedPath.length - 1) {
+            json.put(splittedPath[i], value);
+        } else {
+            Object toAdd = createSubElement(Arrays.copyOfRange(splittedPath, i + 1, splittedPath.length), value);
+            json.put(splittedPath[i], toAdd);
+        }
+
+        return ref;
+    }
+
+    private Object createSubElement(String[] path, Object value) {
+        for (int i = path.length - 1; i >= 0; i--) {
+            TSONObject json = new TSONObject();
+            json.put(path[i], value);
+            value = json;
+        }
+        return value;
     }
 }
