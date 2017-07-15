@@ -254,6 +254,12 @@ public class QueryParserTest {
     @Test
     public void parseSetValuesTest() {
         String[] result = new QueryParser("UPDATE test SET a.b='1', b.c=2 WHERE 1=1 AND 2=2").parseSetValues();
-        assertThat(String.join(",", result), is("'1',2"));
+        assertThat(String.join(",", result), is("1,2"));
+
+        result = new QueryParser("UPDATE test SET a='[1,2]', b=3").parseSetValues();
+        assertThat(String.join(",", result), is("[1,2],3"));
+
+        result = new QueryParser("UPDATE test SET a='{\"aa\":1,\"ab\":2}', b=3").parseSetValues();
+        assertThat(String.join(",", result), is("{\"aa\":1,\"ab\":2},3"));
     }
 }

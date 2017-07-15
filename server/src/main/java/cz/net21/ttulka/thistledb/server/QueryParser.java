@@ -1,7 +1,6 @@
 package cz.net21.ttulka.thistledb.server;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
@@ -181,20 +180,76 @@ class QueryParser {
     }
 
     public String[] parseSetValues() {
-        return parseUpdateSet(s -> s.substring(s.indexOf("=") + 1));
+        return parseUpdateSet(s -> {
+            s = s.substring(s.indexOf("=") + 1);
+
+            if (s.startsWith("'") && s.endsWith("'")) {
+                s = s.substring(1, s.length() - 1);
+            }
+            return s;
+        });
     }
 
     private String[] parseUpdateSet(Function<String, String> mapper) {
         if (command != Commands.UPDATE) {
-            throw new IllegalArgumentException("The query has no set clause: " + ql);
+            throw new IllegalArgumentException("The query has no SET clause: " + ql);
         }
         String setClause = getMatchingGroup(UPDATE, ql, 2).trim();
-        List<String> columns = new ArrayList<>();
-        Arrays.stream(setClause.split(","))
-                .map(mapper)
-                .map(String::trim)
-                .forEach(columns::add);
 
+        List<String> columns = new ArrayList<>();
+
+        Iterator<String> splitter = new Splitter(setClause, ',');
+        while (splitter.hasNext()) {
+            String next = splitter.next().trim();
+            next = mapper.apply(next);
+            columns.add(next);
+        }
         return columns.toArray(new String[]{});
+    }
+
+    class Splitter implements Iterator<String> {
+
+        private final String string;
+        private final char separator;
+
+        private int index = 0;
+        private String next;
+
+        public Splitter(String string, char separator) {
+            this.string = string;
+            this.separator = separator;
+            next = getNext();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        private boolean quote = false;
+
+        @Override
+        public String next() {
+            String toReturn = next;
+            next = getNext();
+            return toReturn;
+        }
+
+        String getNext() {
+            StringBuilder sb = new StringBuilder();
+
+            for (; index < string.length(); index++) {
+                char ch = string.charAt(index);
+                if (ch == '\'') {
+                    quote = !quote;
+                }
+                if (ch == separator && !quote) {
+                    index++;
+                    return sb.toString();
+                }
+                sb.append(ch);
+            }
+            return sb.length() > 0 ? sb.toString() : null;
+        }
     }
 }
