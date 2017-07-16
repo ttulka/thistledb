@@ -15,14 +15,15 @@ import lombok.extern.apachecommons.CommonsLog;
 /**
  * Created by ttulka
  * <p>
- * The admin console.
+ * The command-line console.
  */
 @CommonsLog
 public class Console {
 
     static final String COMMAND_DELIMITER = ";";
-    static final String COMMAND_SEPARATOR = "$";
-    static final String COMMAND_NEWLINE = ">";
+    static final String COMMAND_SEPARATOR = "$ ";
+    static final String COMMAND_NEWLINE = "  > ";
+    static final String COMMAND_EXIT = "EXIT";
 
     private final Client client;
 
@@ -62,10 +63,13 @@ public class Console {
         out.println("\nType 'quit' to exit.");
         do {
             try {
-                out.print(COMMAND_SEPARATOR + " ");
+                out.print(COMMAND_SEPARATOR);
 
                 String command = readCommand(br);
                 if (command == null) {
+                    continue;
+                }
+                if (COMMAND_EXIT.equals(command)) {
                     break;
                 }
                 executeQuery(command);
@@ -89,18 +93,17 @@ public class Console {
         StringBuilder command = new StringBuilder();
         do {
             if (!newCommand) {
-                if (command.length() > 0) {
-                    out.print("  " + COMMAND_NEWLINE + " ");
-                } else {
-                    out.print(COMMAND_SEPARATOR + " ");
+                if (command.length() == 0) {
+                    return null;
                 }
+                out.print(COMMAND_NEWLINE);
             }
             newCommand = false;
 
             line = br.readLine();
 
             if (command.length() == 0 && ("exit".equals(line) || "quit".equals(line))) {
-                return null;
+                return COMMAND_EXIT;
             }
 
             if (line != null && !line.trim().isEmpty()) {
