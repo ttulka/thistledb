@@ -97,29 +97,29 @@ Copy the Maven dependency into your project:
 </dependency>
 ```
 Open a client connection:
-```java
+```
 import cz.net21.ttulka.thistledb.client.Client;
 // ...
 Client client = new Client("localhost", 9658);
 ```
 Create a collection:
-```java
+```
 client.executeCommand("CREATE test");
 ```
 Put a document into the collection:
-```java
+```
 String json = "{\"patient\" : {\"id\" : \"123456789\", \"name\" : \"John Smith\"} }";
 client.executeCommand("INSERT INTO test VALUES " + json);
 ```
 Select the document from the collection (blocking):
-```java
+```
 String query = "SELECT * FROM test WHERE patient.id='123456789'";
 List<String> result = client.executeQueryBlocking(query);
 
 result.forEach(json -> System.out.println(json));
 ```
 Select the document from the collection (non-blocking):
-```java
+```
 client.executeQuery(query).subscribe(System.out::println);
 ```
 
@@ -135,13 +135,13 @@ Copy the Maven dependency into your project:
 </dependency>
 ```
 Create a server instance:
-```java
+```
 import cz.net21.ttulka.thistledb.server.Server;
 // ...
 Server server = new Server();
 ```
 Start and stop the server:
-```java
+```
 server.start();
 server.stop();
 ```
