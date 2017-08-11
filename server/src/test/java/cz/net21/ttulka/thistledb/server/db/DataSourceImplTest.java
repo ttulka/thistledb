@@ -25,9 +25,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 public class DataSourceImplTest {
 
     private static final String TEST_COLLECTION_NAME = "test";
-
-    // TODO
-
+    
     private DataSource dataSource;
 
     @Rule

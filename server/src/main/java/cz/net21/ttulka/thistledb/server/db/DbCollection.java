@@ -1,7 +1,6 @@
 package cz.net21.ttulka.thistledb.server.db;
 
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -114,9 +113,9 @@ public class DbCollection {
         protected DbAccess() throws IOException {
             this.file = new RandomAccessFile(path.toFile(), "rw");
             this.channel = file.getChannel();
-
-            this.channel.lock();
         }
+
+        protected long positionOfActualRecord = 0;
 
         private boolean finished = false;
 
@@ -124,10 +123,14 @@ public class DbCollection {
             if (finished) {
                 return null;
             }
+
             StringBuilder sb = new StringBuilder();
             try {
+                positionOfActualRecord = channel.position();
+
                 ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
                 boolean deleted = false;
+                boolean newRecord = true;
                 int read;
                 while ((read = channel.read(buffer)) > 0) {
                     buffer.flip();
@@ -138,14 +141,17 @@ public class DbCollection {
                         if (deleted) {
                             if (ch == RECORD_SEPARATOR) {
                                 deleted = false;
+                                newRecord = true;
                             }
                             continue;
                         }
 
-                        if (ch == RECORD_DELETED) {
+                        if (newRecord && ch == RECORD_DELETED) {
                             deleted = true;
                             continue;
                         }
+
+                        newRecord = false;
 
                         if (ch == RECORD_SEPARATOR) {
                             channel.position(channel.position() - (read - i - 1));
@@ -173,6 +179,7 @@ public class DbCollection {
                 try {
                     channel.close();
                 } catch (IOException e) {
+                    e.getStackTrace();
                     // ignore
                 }
             }
@@ -180,6 +187,7 @@ public class DbCollection {
                 try {
                     file.close();
                 } catch (IOException e) {
+                    e.printStackTrace();
                     // ignore
                 }
             }
@@ -249,7 +257,6 @@ public class DbCollection {
 
         public boolean delete() throws IOException {
             boolean deleted = false;
-            DbCollection tmpCollection = new DbCollection(Files.createTempFile(path.getParent(), null, "_delete"));
             String json;
             do {
                 json = nextRecord();
@@ -258,23 +265,18 @@ public class DbCollection {
                     if (where.matches(json)) {
                         delete(json);
                         deleted = true;
-                    } else {
-                        tmpCollection.insert(json);
                     }
                 }
             } while (json != null);
 
-            moveCollection(tmpCollection);
+            close();
 
             return deleted;
         }
 
-        private void moveCollection(DbCollection tmpCollection) throws IOException {
-            close();
-            Files.move(tmpCollection.getPath(), path, StandardCopyOption.REPLACE_EXISTING);
-        }
+        private void delete(String json) throws IOException {
+            channel.write(ByteBuffer.wrap(new byte[]{RECORD_DELETED}), positionOfActualRecord);
 
-        private void delete(String json) {
             // TODO remove from indexes etc
         }
     }
