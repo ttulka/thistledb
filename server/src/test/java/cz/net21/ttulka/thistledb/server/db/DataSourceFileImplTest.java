@@ -22,11 +22,11 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 /**
  * Created by ttulka
  */
-public class DataSourceImplTest {
+public class DataSourceFileImplTest {
 
     private static final String TEST_COLLECTION_NAME = "test";
 
-    private DataSource dataSource;
+    private DataSourceFileImpl dataSource;
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -34,7 +34,7 @@ public class DataSourceImplTest {
     @Before
     public void createDataSource() throws IOException {
         Path tempFile = temp.newFolder().toPath();
-        dataSource = new DataSourceImpl(tempFile);
+        dataSource = new DataSourceFileImpl(tempFile);
     }
 
     @Test
@@ -239,5 +239,10 @@ public class DataSourceImplTest {
         } catch (InterruptedException e) {
             // ignore
         }
+    }
+
+    @Test
+    public void cleanUpDataTest() {
+        // TODO
     }
 }

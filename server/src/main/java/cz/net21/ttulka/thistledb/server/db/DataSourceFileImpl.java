@@ -19,13 +19,13 @@ import reactor.core.scheduler.Schedulers;
  * Service to the database access.
  */
 @CommonsLog
-public class DataSourceImpl implements DataSource {
+public class DataSourceFileImpl implements DataSource {
 
     private final Path dataDir;
 
     private final Map<String, DbCollection> collections = new HashMap<>();
 
-    public DataSourceImpl(@NonNull Path dataDir) {
+    public DataSourceFileImpl(@NonNull Path dataDir) {
         this.dataDir = dataDir;
 
         if (Files.exists(dataDir)) {
@@ -181,5 +181,9 @@ public class DataSourceImpl implements DataSource {
         if (!collectionExists(collectionName)) {
             throw new DatabaseException("Collection '" + collectionName + "' doesn't exist.");
         }
+    }
+
+    public void cleanUpData() {
+        // TODO delete hard the soft deletes
     }
 }

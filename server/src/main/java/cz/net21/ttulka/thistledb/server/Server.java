@@ -13,8 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import cz.net21.ttulka.thistledb.server.db.DataSource;
-import cz.net21.ttulka.thistledb.server.db.DataSourceImpl;
+import cz.net21.ttulka.thistledb.server.db.DataSourceFileImpl;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
@@ -32,7 +31,7 @@ public class Server implements Runnable, AutoCloseable {
     public static final int DEFAULT_MAX_TIMEOUT = 2 * 1000;     // 2 s
 
     private final int port;
-    private final DataSource dataSource;
+    private final DataSourceFileImpl dataSource;
 
     private int maxConnectionPoolThreads = DEFAULT_MAX_CONNECTION_POOL;
     private int maxClientTimeout = DEFAULT_MAX_TIMEOUT;
@@ -58,7 +57,7 @@ public class Server implements Runnable, AutoCloseable {
 
     public Server(int port, Path dataDir) {
         this.port = port;
-        this.dataSource = new DataSourceImpl(dataDir);
+        this.dataSource = new DataSourceFileImpl(dataDir);
     }
 
     public int getPort() {
@@ -186,6 +185,8 @@ public class Server implements Runnable, AutoCloseable {
                 log.warn("Cannot close a serverSocket", e);
             }
         }
+
+        dataSource.cleanUpData();
     }
 
     public boolean listening() {
