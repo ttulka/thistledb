@@ -16,7 +16,7 @@ import lombok.extern.apachecommons.CommonsLog;
  * Application thread to server a client connection.
  */
 @CommonsLog
-class ServerThread implements Runnable {
+class ServerThreadForClientConnection implements Runnable {
 
     private final Socket socket;
 
@@ -25,8 +25,8 @@ class ServerThread implements Runnable {
 
     private final QueryProcessor queryProcessor;
 
-    public ServerThread(@NonNull Socket socket, @NonNull DataSource dataSource,
-                        Listening serverListening, Runnable onFinished) {
+    public ServerThreadForClientConnection(@NonNull Socket socket, @NonNull DataSource dataSource,
+                                           Listening serverListening, Runnable onFinished) {
         super();
         this.socket = socket;
         this.serverListening = serverListening;

@@ -128,7 +128,7 @@ public class Server implements Runnable, AutoCloseable {
                     if (checkConnectionPoolMaxThreads(clientSocket)) {
                         connectionPool.getAndIncrement();
 
-                        ServerThread serverThread = new ServerThread(clientSocket, dataSource, this::listening, connectionPool::decrementAndGet);
+                        ServerThreadForClientConnection serverThread = new ServerThreadForClientConnection(clientSocket, dataSource, this::listening, connectionPool::decrementAndGet);
                         executor.execute(serverThread);
                     }
                 }

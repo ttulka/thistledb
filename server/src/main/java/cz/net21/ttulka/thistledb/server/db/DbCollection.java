@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,7 +22,6 @@ import lombok.NonNull;
 /**
  * Created by ttulka
  */
-// TODO
 public class DbCollection {
 
     static final char RECORD_SEPARATOR = '\1';
