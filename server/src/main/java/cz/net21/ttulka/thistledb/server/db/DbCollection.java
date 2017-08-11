@@ -28,6 +28,7 @@ import lombok.NonNull;
 public class DbCollection {
 
     static final char RECORD_SEPARATOR = '\1';
+    static final char RECORD_DELETED = '\2';
 
     private final Path path;
 
@@ -46,7 +47,7 @@ public class DbCollection {
         try {
             return new Select(element, where);
 
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             throw new DatabaseException("Cannot work with a collection: " + e.getMessage(), e);
         } finally {
             lock.readLock().unlock();
@@ -110,9 +111,11 @@ public class DbCollection {
         protected final RandomAccessFile file;
         protected final FileChannel channel;
 
-        protected DbAccess() throws FileNotFoundException {
-            this.file = new RandomAccessFile(path.toFile(), "r");
+        protected DbAccess() throws IOException {
+            this.file = new RandomAccessFile(path.toFile(), "rw");
             this.channel = file.getChannel();
+
+            this.channel.lock();
         }
 
         private boolean finished = false;
@@ -124,6 +127,7 @@ public class DbCollection {
             StringBuilder sb = new StringBuilder();
             try {
                 ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+                boolean deleted = false;
                 int read;
                 while ((read = channel.read(buffer)) > 0) {
                     buffer.flip();
@@ -131,12 +135,24 @@ public class DbCollection {
                     for (int i = 0; i < read; i++) {
                         char ch = (char) buffer.get();
 
+                        if (deleted) {
+                            if (ch == RECORD_SEPARATOR) {
+                                deleted = false;
+                            }
+                            continue;
+                        }
+
+                        if (ch == RECORD_DELETED) {
+                            deleted = true;
+                            continue;
+                        }
+
                         if (ch == RECORD_SEPARATOR) {
                             channel.position(channel.position() - (read - i - 1));
 
                             return sb.toString();
 
-                        } else {
+                        } else if (!deleted) {
                             sb.append(ch);
                         }
                     }
@@ -175,7 +191,7 @@ public class DbCollection {
         private final Where where;
         private final String elementKey;
 
-        public Select(String elementKey, String where) throws FileNotFoundException {
+        public Select(String elementKey, String where) throws IOException {
             super();
             this.where = Where.create(where);
             this.elementKey = elementKey;
@@ -226,7 +242,7 @@ public class DbCollection {
 
         private final Where where;
 
-        public Delete(String where) throws FileNotFoundException {
+        public Delete(String where) throws IOException {
             super();
             this.where = Where.create(where);
         }
@@ -269,7 +285,7 @@ public class DbCollection {
         private final String[] columns;
         private final String[] values;
 
-        public Update(String[] columns, String[] values, String where) throws FileNotFoundException {
+        public Update(String[] columns, String[] values, String where) throws IOException {
             super();
             this.where = Where.create(where);
             this.columns = columns;
