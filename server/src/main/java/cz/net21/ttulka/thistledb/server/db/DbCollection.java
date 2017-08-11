@@ -115,7 +115,7 @@ public class DbCollection {
             this.channel = file.getChannel();
         }
 
-        protected long positionOfActualRecord = 0;
+        private long positionOfActualRecord = 0;
 
         private boolean finished = false;
 
@@ -171,6 +171,11 @@ public class DbCollection {
                 throw new DatabaseException("Cannot read a collection: " + e.getMessage(), e);
             }
             return null;
+        }
+
+        protected void deleteRecord() throws IOException {
+            // write a "deleted" flag as the first byte
+            channel.write(ByteBuffer.wrap(new byte[]{RECORD_DELETED}), positionOfActualRecord);
         }
 
         @Override
@@ -264,6 +269,8 @@ public class DbCollection {
                 if (json != null) {
                     if (where.matches(json)) {
                         delete(json);
+                        deleteRecord();
+
                         deleted = true;
                     }
                 }
@@ -275,8 +282,6 @@ public class DbCollection {
         }
 
         private void delete(String json) throws IOException {
-            channel.write(ByteBuffer.wrap(new byte[]{RECORD_DELETED}), positionOfActualRecord);
-
             // TODO remove from indexes etc
         }
     }
@@ -296,7 +301,6 @@ public class DbCollection {
 
         public int update() throws IOException {
             int updated = 0;
-            DbCollection tmpCollection = new DbCollection(Files.createTempFile(path.getParent(), null, "_update"));
             String json;
             do {
                 json = nextRecord();
@@ -304,20 +308,15 @@ public class DbCollection {
                 if (json != null) {
                     if (where.matches(json)) {
                         json = update(json, columns, values);
+                        deleteRecord();
+                        insert(json);
+
                         updated++;
                     }
-                    tmpCollection.insert(json);
                 }
             } while (json != null);
 
-            moveCollection(tmpCollection);
-
             return updated;
-        }
-
-        private void moveCollection(DbCollection tmpCollection) throws IOException {
-            close();
-            Files.move(tmpCollection.getPath(), path, StandardCopyOption.REPLACE_EXISTING);
         }
 
         private String update(String json, String[] columns, String[] values) {
