@@ -1,6 +1,7 @@
 package cz.net21.ttulka.thistledb.server.db;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -22,11 +23,11 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 /**
  * Created by ttulka
  */
-public class DataSourceFileImplTest {
+public class DataSourceFileTest {
 
     private static final String TEST_COLLECTION_NAME = "test";
 
-    private DataSourceFileImpl dataSource;
+    private DataSourceFile dataSource;
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -34,7 +35,7 @@ public class DataSourceFileImplTest {
     @Before
     public void createDataSource() throws IOException {
         Path tempFile = temp.newFolder().toPath();
-        dataSource = new DataSourceFileImpl(tempFile);
+        dataSource = new DataSourceFile(tempFile);
     }
 
     @Test
@@ -142,7 +143,7 @@ public class DataSourceFileImplTest {
     }
 
     @Test
-    public void selectWhereUnsatisfiedableTest() {
+    public void selectWhereUnsatisfiableTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
         dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
@@ -209,7 +210,7 @@ public class DataSourceFileImplTest {
     }
 
     @Test
-    public void deleteWhereUnsatisfiedableTest() {
+    public void deleteWhereUnsatisfiableTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
         dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
@@ -242,7 +243,23 @@ public class DataSourceFileImplTest {
     }
 
     @Test
-    public void cleanUpDataTest() {
-        // TODO
+    public void cleanUpCollectionTest() throws IOException {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        Path collectionPath = dataSource.getCollection(TEST_COLLECTION_NAME).path;
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        long originalSize = Files.size(collectionPath);
+
+        dataSource.delete(TEST_COLLECTION_NAME, "person.name = \"John\"");
+
+        dataSource.cleanUpData();
+
+        long afterCleanUpSize = Files.size(collectionPath);
+
+        assertThat("Collection file size after cleanup should be less than before.", afterCleanUpSize < originalSize, is(true));
     }
 }

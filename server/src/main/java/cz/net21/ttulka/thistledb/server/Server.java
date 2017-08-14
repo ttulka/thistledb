@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import cz.net21.ttulka.thistledb.server.db.DataSource;
-import cz.net21.ttulka.thistledb.server.db.DataSourceFileImpl;
+import cz.net21.ttulka.thistledb.server.db.DataSourceFile;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
@@ -58,7 +58,7 @@ public class Server implements Runnable, AutoCloseable {
 
     public Server(int port, Path dataDir) {
         this.port = port;
-        this.dataSource = new DataSourceFileImpl(dataDir);
+        this.dataSource = new DataSourceFile(dataDir);
     }
 
     public int getPort() {

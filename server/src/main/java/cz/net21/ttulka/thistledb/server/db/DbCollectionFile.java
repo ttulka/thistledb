@@ -7,6 +7,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Collections;
@@ -22,19 +24,15 @@ import lombok.NonNull;
 /**
  * Created by ttulka
  */
-public class DbCollection {
+public class DbCollectionFile {
 
     static final char RECORD_SEPARATOR = '\1';
     static final char RECORD_DELETED = '\2';
 
-    private final Path path;
+    protected final Path path;
 
-    public DbCollection(@NonNull Path path) {
+    public DbCollectionFile(@NonNull Path path) {
         this.path = path;
-    }
-
-    public Path getPath() {
-        return path;
     }
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -91,6 +89,38 @@ public class DbCollection {
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    public void cleanUp() {
+        lock.writeLock().lock();
+        try {
+            new CleanUp().cleanUp();
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot clean up a collection: " + e.getMessage(), e);
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    protected void drop() {
+        try {
+            Files.delete(path);
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot drop a collection: " + e.getMessage(), e);
+        }
+        // TODO drop indexes etc.
+    }
+
+    protected void move(Path newPath) {
+        try {
+            Files.move(path, newPath, StandardCopyOption.REPLACE_EXISTING);
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot move a collection: " + e.getMessage(), e);
+        }
+        // TODO move indexes etc.
     }
 
     String serialize(String tson) {
@@ -347,6 +377,28 @@ public class DbCollection {
             } catch (Exception ignore) {
             }
             return value;
+        }
+    }
+
+    class CleanUp extends DbAccess {
+
+        private DbCollectionFile tempCollection;
+
+        public CleanUp() throws IOException {
+            super();
+            Path tempCollectionPath = Paths.get(path + ".tmp");
+            Files.createFile(tempCollectionPath);
+
+            this.tempCollection = new DbCollectionFile(tempCollectionPath);
+        }
+
+        public void cleanUp() {
+            String record;
+            while ((record = nextRecord()) != null) {
+                tempCollection.insert(record);
+            }
+            close();
+            tempCollection.move(path);
         }
     }
 }

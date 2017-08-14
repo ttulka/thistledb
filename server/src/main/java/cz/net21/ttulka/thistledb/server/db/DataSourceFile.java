@@ -19,13 +19,13 @@ import reactor.core.scheduler.Schedulers;
  * Service to the database access.
  */
 @CommonsLog
-public class DataSourceFileImpl implements DataSource {
+public class DataSourceFile implements DataSource {
 
-    private final Path dataDir;
+    protected final Path dataDir;
 
-    private final Map<String, DbCollection> collections = new HashMap<>();
+    protected final Map<String, DbCollectionFile> collections = new HashMap<>();
 
-    public DataSourceFileImpl(@NonNull Path dataDir) {
+    public DataSourceFile(@NonNull Path dataDir) {
         this.dataDir = dataDir;
 
         if (Files.exists(dataDir)) {
@@ -42,7 +42,7 @@ public class DataSourceFileImpl implements DataSource {
     void loadCollections(Path dataDir) {
         try {
             Files.list(dataDir).forEach(path -> {
-                DbCollection collection = new DbCollection(path);
+                DbCollectionFile collection = new DbCollectionFile(path);
                 collections.put(path.getFileName().toString(), collection);
             });
         } catch (IOException e) {
@@ -54,7 +54,7 @@ public class DataSourceFileImpl implements DataSource {
         return dataDir.resolve(collectionName);
     }
 
-    DbCollection getCollection(@NonNull String collectionName) {
+    DbCollectionFile getCollection(@NonNull String collectionName) {
         return collections.get(collectionName);
     }
 
@@ -62,7 +62,7 @@ public class DataSourceFileImpl implements DataSource {
         return collections.containsKey(collectionName);
     }
 
-    boolean addCollection(@NonNull String collectionName, @NonNull DbCollection collection) {
+    boolean addCollection(@NonNull String collectionName, @NonNull DbCollectionFile collection) {
         return collections.putIfAbsent(collectionName, collection) == null;
     }
 
@@ -77,7 +77,7 @@ public class DataSourceFileImpl implements DataSource {
             try {
                 Files.createFile(path);
 
-                addCollection(collectionName, new DbCollection(path));
+                addCollection(collectionName, new DbCollectionFile(path));
                 return true;
 
             } catch (IOException e) {
@@ -90,16 +90,11 @@ public class DataSourceFileImpl implements DataSource {
     @Override
     public boolean dropCollection(@NonNull String collectionName) {
         if (collectionExists(collectionName)) {
-            try {
-                Path path = getCollection(collectionName).getPath();
-                removeCollection(collectionName);
+            DbCollectionFile collection = getCollection(collectionName);
+            removeCollection(collectionName);
 
-                Files.delete(path);
-                return true;
-
-            } catch (IOException e) {
-                throw new DatabaseException("Cannot drop collection '" + collectionName + "': " + e.getMessage(), e);
-            }
+            collection.drop();
+            return true;
         }
         return false;
     }
@@ -108,7 +103,7 @@ public class DataSourceFileImpl implements DataSource {
     public Flux<String> select(@NonNull String collectionName, @NonNull String columns, String where) {
         checkIfCollectionExists(collectionName);
 
-        DbCollection.Select select = getCollection(collectionName).select(columns, where);
+        DbCollectionFile.Select select = getCollection(collectionName).select(columns, where);
 
         Flux<String> stream = Flux.generate(sink -> {
             String json = select.next();
@@ -185,6 +180,8 @@ public class DataSourceFileImpl implements DataSource {
 
     @Override
     public void cleanUpData() {
-        // TODO delete hard the soft deletes
+        collections.values().stream().forEach(DbCollectionFile::cleanUp);
+
+        // TODO reorganize indexes etc.
     }
 }
