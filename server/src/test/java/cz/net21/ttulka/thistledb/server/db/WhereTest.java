@@ -129,6 +129,9 @@ public class WhereTest {
         Where.ConditionDataPart nameEqualsJohn = new Where.ConditionDataPart("person.name", Where.Operators.EQUAL, "John");
         assertThat(nameEqualsJohn.matches(person), is(true));
 
+        Where.ConditionDataPart nameEqualsJohnCaseSensitive = new Where.ConditionDataPart("person.name", Where.Operators.EQUAL, "jOhN");
+        assertThat(nameEqualsJohnCaseSensitive.matches(person), is(false));
+
         Where.ConditionDataPart nameEqualsPeter = new Where.ConditionDataPart("person.name", Where.Operators.EQUAL, "Peter");
         assertThat(nameEqualsPeter.matches(person), is(false));
 
@@ -200,5 +203,8 @@ public class WhereTest {
 
         Where.ConditionDataPart nameLikeYJ_X = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "?J_*");
         assertThat(nameLikeYJ_X.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeCaseInsensitive = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "jOhN");
+        assertThat(nameLikeCaseInsensitive.matches(person), is(true));
     }
 }

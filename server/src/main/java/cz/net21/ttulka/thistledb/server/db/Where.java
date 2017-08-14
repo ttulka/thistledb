@@ -233,7 +233,7 @@ class Where {
                     .replaceAll("([^\\\\]?)(_)", "$1(.)")
                     .substring(1);
 
-            Matcher matcher = Pattern.compile(regex).matcher(valueToCompare);
+            Matcher matcher = Pattern.compile("(?i)" + regex).matcher(valueToCompare);
             return matcher.matches();
         }
     }
