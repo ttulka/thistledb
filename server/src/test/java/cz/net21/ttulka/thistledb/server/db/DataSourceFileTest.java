@@ -243,7 +243,7 @@ public class DataSourceFileTest {
     }
 
     @Test
-    public void cleanUpCollectionTest() throws IOException {
+    public void cleanUpCollectionFileTest() throws IOException {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
         Path collectionPath = dataSource.getCollection(TEST_COLLECTION_NAME).path;
