@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -90,13 +92,13 @@ class Where {
                 .collect(Collectors.toList());
     }
 
-    static List<DataPart> parseOrParts(String orPart) {
+    static List<ConditionDataPart> parseOrParts(String orPart) {
         return Arrays.stream(orPart.split(" OR "))
                 .map(Where::parseDataPart)
                 .collect(Collectors.toList());
     }
 
-    static DataPart parseDataPart(String data) {
+    static ConditionDataPart parseDataPart(String data) {
         String dataProcessed = truncateOperators(data);
 
         Optional<Operators> operator = Stream.of(Operators.values())
@@ -113,7 +115,7 @@ class Where {
         String key = data.substring(0, split[0].length());
         String value = data.substring(data.length() - split[1].length());
 
-        return new DataPart(key.trim(), operator.get(), removeQuotes(value.trim()));
+        return new ConditionDataPart(key.trim(), operator.get(), removeQuotes(value.trim()));
     }
 
     private static String truncateOperators(String s) {
@@ -154,7 +156,7 @@ class Where {
     @Data
     static class Condition {
 
-        private final List<DataPart> orClause;
+        private final List<ConditionDataPart> orClause;
 
         public boolean matches(TSONObject json) {
             return orClause.stream()
@@ -164,7 +166,7 @@ class Where {
     }
 
     @Data
-    static class DataPart {
+    static class ConditionDataPart {
 
         private final String key;
         private final Operators operator;
@@ -174,23 +176,65 @@ class Where {
             return valueMatches(json.findByPath(key));
         }
 
-        boolean valueMatches(Object o) {
+        private boolean valueMatches(Object o) {
             if (o != null) {
                 if (o instanceof JSONArray) {
                     JSONArray array = (JSONArray) o;
 
                     Iterator iterator = array.iterator();
                     while (iterator.hasNext()) {
-                        // TODO use the operator
-                        if (iterator.next().toString().equals(value)) {
+                        if (valueMatches(iterator.next().toString())) {
                             return true;
                         }
                     }
                 } else {
-                    return o.toString().equals(value);
+                    return valueMatches(o.toString());
                 }
             }
             return false;
+        }
+
+        private boolean valueMatches(String valueToCompare) {
+            try {
+                return valueMatches(Double.valueOf(this.value), Double.valueOf(valueToCompare));
+
+            } catch (NumberFormatException ignore) {
+            }
+            return valueMatches(this.value, valueToCompare);
+        }
+
+        private boolean valueMatches(Comparable value, Comparable valueToCompare) {
+            if (valueToCompare == null) {
+                return false;
+            }
+            switch (this.operator) {
+                case EQUAL:
+                    return valueToCompare.equals(value);
+                case NOT_EQUAL:
+                    return !valueToCompare.equals(value);
+                case GREATER:
+                    return valueToCompare.compareTo(value) > 0;
+                case GREATER_EQUAL:
+                    return valueToCompare.compareTo(value) >= 0;
+                case LESS:
+                    return valueToCompare.compareTo(value) < 0;
+                case LESS_EQUAL:
+                    return valueToCompare.compareTo(value) <= 0;
+                case LIKE:
+                    return like(valueToCompare.toString());
+            }
+            return false;
+        }
+
+        private boolean like(String valueToCompare) {
+            String regex = " ".concat(this.value)
+                    .replaceAll("([^\\\\]?)(\\*)", "$1(.*)")
+                    .replaceAll("([^\\\\]?)(\\?)", "$1(.?)")
+                    .replaceAll("([^\\\\]?)(_)", "$1(.)")
+                    .substring(1);
+
+            Matcher matcher = Pattern.compile(regex).matcher(valueToCompare);
+            return matcher.matches();
         }
     }
 }

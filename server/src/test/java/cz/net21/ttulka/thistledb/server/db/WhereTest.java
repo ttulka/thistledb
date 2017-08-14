@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.junit.Test;
 
+import cz.net21.ttulka.thistledb.server.TestData;
+import cz.net21.ttulka.thistledb.tson.TSONObject;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -24,7 +27,7 @@ public class WhereTest {
 
     @Test
     public void parseDataPartTest() {
-        Where.DataPart dataPart = Where.parseDataPart("person.name = \"John Smith\"");
+        Where.ConditionDataPart dataPart = Where.parseDataPart("person.name = \"John Smith\"");
 
         assertThat(dataPart, notNullValue());
         assertThat(dataPart.getKey(), is("person.name"));
@@ -33,7 +36,7 @@ public class WhereTest {
 
     @Test
     public void parseOrPartsTest() {
-        List<Where.DataPart> orParts = Where.parseOrParts("person.name = \"John Smith\" OR person.age = 42");
+        List<Where.ConditionDataPart> orParts = Where.parseOrParts("person.name = \"John Smith\" OR person.age = 42");
 
         assertThat(orParts, notNullValue());
         assertThat(orParts.size(), is(2));
@@ -121,6 +124,81 @@ public class WhereTest {
 
     @Test
     public void conditionValueMatchesTest() {
-        // TODO
+        TSONObject person = TestData.TSON_PERSON;
+
+        Where.ConditionDataPart nameEqualsJohn = new Where.ConditionDataPart("person.name", Where.Operators.EQUAL, "John");
+        assertThat(nameEqualsJohn.matches(person), is(true));
+
+        Where.ConditionDataPart nameEqualsPeter = new Where.ConditionDataPart("person.name", Where.Operators.EQUAL, "Peter");
+        assertThat(nameEqualsPeter.matches(person), is(false));
+
+        Where.ConditionDataPart nameNotEqualsJohn = new Where.ConditionDataPart("person.name", Where.Operators.NOT_EQUAL, "John");
+        assertThat(nameNotEqualsJohn.matches(person), is(false));
+
+        Where.ConditionDataPart nameNotEqualsPeter = new Where.ConditionDataPart("person.name", Where.Operators.NOT_EQUAL, "Peter");
+        assertThat(nameNotEqualsPeter.matches(person), is(true));
+
+        Where.ConditionDataPart nameGreaterThanA = new Where.ConditionDataPart("person.name", Where.Operators.GREATER, "A");
+        assertThat(nameGreaterThanA.matches(person), is(true));
+
+        Where.ConditionDataPart nameGreaterThanJohn = new Where.ConditionDataPart("person.name", Where.Operators.GREATER, "John");
+        assertThat(nameGreaterThanJohn.matches(person), is(false));
+
+        Where.ConditionDataPart nameGreaterOrEqualsJohn = new Where.ConditionDataPart("person.name", Where.Operators.GREATER_EQUAL, "John");
+        assertThat(nameGreaterOrEqualsJohn.matches(person), is(true));
+
+        Where.ConditionDataPart nameLessThanZ = new Where.ConditionDataPart("person.name", Where.Operators.LESS, "Z");
+        assertThat(nameLessThanZ.matches(person), is(true));
+
+        Where.ConditionDataPart nameLessThanJohn = new Where.ConditionDataPart("person.name", Where.Operators.LESS, "John");
+        assertThat(nameLessThanJohn.matches(person), is(false));
+
+        Where.ConditionDataPart nameLessOrEqualsJohn = new Where.ConditionDataPart("person.name", Where.Operators.LESS_EQUAL, "John");
+        assertThat(nameLessOrEqualsJohn.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeX = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "*");
+        assertThat(nameLikeX.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeJx = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "J*");
+        assertThat(nameLikeJx.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeXn = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "*n");
+        assertThat(nameLikeXn.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeJxn = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "J*n");
+        assertThat(nameLikeJxn.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeXoX = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "*o*");
+        assertThat(nameLikeXoX.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeJXoXhXn = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "J*o*h*n");
+        assertThat(nameLikeJXoXhXn.matches(person), is(true));
+
+        Where.ConditionDataPart nameLike_ohn = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "_ohn");
+        assertThat(nameLike_ohn.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeJoh_ = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "Joh_");
+        assertThat(nameLikeJoh_.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeJ_hn = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "J_hn");
+        assertThat(nameLikeJ_hn.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeJo_hn = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "Jo_hn");
+        assertThat(nameLikeJo_hn.matches(person), is(false));
+
+        Where.ConditionDataPart nameLike_o__ = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "_o__");
+        assertThat(nameLike_o__.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeYohn = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "?ohn");
+        assertThat(nameLikeYohn.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeYJohn = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "?John");
+        assertThat(nameLikeYJohn.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeYJohY = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "?Joh?");
+        assertThat(nameLikeYJohY.matches(person), is(true));
+
+        Where.ConditionDataPart nameLikeYJ_X = new Where.ConditionDataPart("person.name", Where.Operators.LIKE, "?J_*");
+        assertThat(nameLikeYJ_X.matches(person), is(true));
     }
 }
