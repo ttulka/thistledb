@@ -88,7 +88,7 @@ public class WhereTest {
                 "name >= \"A>=b\" AND " +
                 "name < \"Y<z\" AND " +
                 "name <= \"Y<=z\" AND " +
-                "name LIKE \"something*LIKE*you\"");
+                "name Like \"something*LIKE*you\"");
 
         assertThat(conditions, notNullValue());
         assertThat(conditions.size(), is(7));

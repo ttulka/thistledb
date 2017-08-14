@@ -99,11 +99,11 @@ class Where {
     }
 
     static ConditionDataPart parseDataPart(String data) {
-        String dataProcessed = truncateOperators(data);
+        String dataProcessed = truncateOperators(data).toUpperCase();
 
         Optional<Operators> operator = Stream.of(Operators.values())
                 .sorted((op1, op2) -> Integer.valueOf(op2.getSymbol().length()).compareTo(Integer.valueOf(op1.getSymbol().length())))
-                .filter(op -> dataProcessed.contains(op.getSymbol()))
+                .filter(op -> dataProcessed.contains(op.getSymbol().toUpperCase()))
                 .findFirst();
 
         if (!operator.isPresent()) {
