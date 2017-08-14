@@ -36,6 +36,7 @@ public class QueryParserTest {
         assertThat(QueryParser.SELECT.matcher("SELECT a_2 FROM test WHERE 1=1 AND 1=1").matches(), is(true));
         assertThat(QueryParser.SELECT.matcher("SELECT a_2 FROM test WHERE 1=1 AND 1=1 OR 1=1").matches(), is(true));
         assertThat(QueryParser.SELECT.matcher("SELECT a_2 FROM test WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.SELECT.matcher("SELECT a_2 FROM test WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1").matches(), is(true));
     }
 
     @Test
@@ -73,6 +74,7 @@ public class QueryParserTest {
         assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1").matches(), is(true));
         assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1 OR 1=1").matches(), is(true));
         assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1").matches(), is(true));
     }
 
     @Test
@@ -88,6 +90,7 @@ public class QueryParserTest {
         assertThat(QueryParser.DELETE.matcher("DELETE FROM test WHERE 1=1 AND 1=1").matches(), is(true));
         assertThat(QueryParser.DELETE.matcher("DELETE FROM test WHERE 1=1 AND 1=1 OR 1=1").matches(), is(true));
         assertThat(QueryParser.DELETE.matcher("DELETE FROM test WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.DELETE.matcher("DELETE FROM test WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1").matches(), is(true));
     }
 
     @Test

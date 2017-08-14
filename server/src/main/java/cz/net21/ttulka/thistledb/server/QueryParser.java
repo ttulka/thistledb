@@ -24,11 +24,11 @@ class QueryParser {
 
     private static final String COLLECTION = "[\\w\\d]+";
 
-    private static final String JSON = "\\{.*\\}";    // TODO
+    private static final String JSON = "\\{.*}";    // TODO
 
-    private static final String JSON_PATH = "[\\w\\d\\._\\-$]+";    // TODO
+    private static final String JSON_PATH = "[\\w\\d._\\-$]+";    // TODO
 
-    private static final String WHERE = "(" + JSON_PATH + "\\s*=\\s*((['\"](.+)['\"])|(\\d+)))+";
+    private static final String WHERE = "(" + JSON_PATH + "\\s*(=|!=|<|<=|>|>=|LIKE)\\s*((['\"](.+)['\"])|(\\d+)))+";
     private static final String WHERE_COMPOSITED = "(" + WHERE + ")(\\s+(AND|OR)\\s+(" + WHERE + "))*";
 
     static final Pattern SELECT = compile("SELECT\\s+(\\*|" + JSON_PATH + ")\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
