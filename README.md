@@ -77,12 +77,24 @@ SELECT {*|element[,element[...]]} FROM collection_name [WHERE element=value [{AN
 ```
 #### Delete a Document from a Collection
 ```
-DELETE FROM collection_name [WHERE element=value [{AND|OR} element=value [...]]]  
+DELETE FROM collection_name [WHERE element op value [{AND|OR} element op value [...]]]  
 ```
 #### Update a Document in a Collection
 ```
-UPDATE collection_name SET element=value[,element=value [...]] [WHERE element=value [{AND|OR} element=value [...]]]  
+UPDATE collection_name SET element op value[,element op value [...]] [WHERE element op value [{AND|OR} element op value [...]]]  
 ```
+
+### Operators
+
+| Operator   | Meaning                | Note                                                       | 
+| ---------- | ---------------------- | ---------------------------------------------------------- |
+| `=`        | Equal                  |                                                            |
+| `!=`       | Not equal              |                                                            |
+| `>`        | Greater                |                                                            |
+| `>=`       | Greater or equal       |                                                            |
+| `<`        | Less                   |                                                            |
+| `<=`       | Less or equal          |                                                            |
+| `LIKE`     | Equal by an expression | `*` any string, `_` one character, `?` any character (0,1) |
 
 ## Client
 

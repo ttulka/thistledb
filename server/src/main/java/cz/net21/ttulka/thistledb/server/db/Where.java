@@ -3,7 +3,9 @@ package cz.net21.ttulka.thistledb.server.db;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.json.JSONArray;
 
@@ -17,6 +19,27 @@ import lombok.NonNull;
  * Represent a where clause.
  */
 class Where {
+
+    enum Operators {
+
+        EQUAL("="),
+        NOT_EQUAL("!="),
+        GREATER(">"),
+        LESS("<"),
+        GREATER_EQUAL(">="),
+        LESS_EQUAL("<="),
+        LIKE("LIKE");
+
+        private final String symbol;
+
+        Operators(String symbol) {
+            this.symbol = symbol;
+        }
+
+        public String getSymbol() {
+            return this.symbol;
+        }
+    }
 
     public static final Where EMPTY = new Where() {
         public boolean matches(String json) {
@@ -49,7 +72,7 @@ class Where {
                 .allMatch(match -> match);
     }
 
-    private static List<Condition> parse(String where) {
+    protected static List<Condition> parse(String where) {
         where = upperCaseIgnoreAndOrInQuotes(where, "AND");
         where = upperCaseIgnoreAndOrInQuotes(where, "OR");
 
@@ -74,12 +97,51 @@ class Where {
     }
 
     static DataPart parseDataPart(String data) {
-        if (data.indexOf("=") == -1) {
+        String dataProcessed = truncateOperators(data);
+
+        Optional<Operators> operator = Stream.of(Operators.values())
+                .sorted((op1, op2) -> Integer.valueOf(op2.getSymbol().length()).compareTo(Integer.valueOf(op1.getSymbol().length())))
+                .filter(op -> dataProcessed.contains(op.getSymbol()))
+                .findFirst();
+
+        if (!operator.isPresent()) {
             throw new IllegalArgumentException("Cannot parse a condition: " + data);
         }
-        String[] split = data.split("=");
 
-        return new DataPart(split[0].trim(), removeQuotes(split[1].trim()));
+        String[] split = dataProcessed.split(operator.get().getSymbol());
+
+        String key = data.substring(0, split[0].length());
+        String value = data.substring(data.length() - split[1].length());
+
+        return new DataPart(key.trim(), operator.get(), removeQuotes(value.trim()));
+    }
+
+    private static String truncateOperators(String s) {
+        for (Operators op : Operators.values()) {
+            StringBuilder sb = new StringBuilder(s.length());
+            Character quote = null;
+            int i = 0;
+            while (i < s.length()) {
+                char ch = s.charAt(i);
+
+                if (ch == '"' || ch == '\'') {
+                    if (quote == null) {
+                        quote = ch;
+
+                    } else if (quote == ch) {
+                        quote = null;
+                    }
+                } else if (quote != null && s.substring(i).startsWith(op.getSymbol())) {    // we are inside quotes
+                    sb.append("replacementstring".substring(0, op.getSymbol().length()));
+                    i += op.getSymbol().length();
+                    continue;
+                }
+                sb.append(ch);
+                i++;
+            }
+            s = sb.toString();
+        }
+        return s;
     }
 
     private static String removeQuotes(String s) {
@@ -105,6 +167,7 @@ class Where {
     static class DataPart {
 
         private final String key;
+        private final Operators operator;
         private final String value;
 
         public boolean matches(TSONObject json) {
@@ -118,6 +181,7 @@ class Where {
 
                     Iterator iterator = array.iterator();
                     while (iterator.hasNext()) {
+                        // TODO use the operator
                         if (iterator.next().toString().equals(value)) {
                             return true;
                         }
