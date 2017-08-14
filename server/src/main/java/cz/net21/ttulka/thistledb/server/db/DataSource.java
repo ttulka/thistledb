@@ -128,4 +128,10 @@ public interface DataSource {
      * @throws DatabaseException if the collection doesn't exist
      */
     boolean dropIndex(String collectionName, String column);
+
+    /**
+     * Cleans up the data source.
+     * This method is called when the data source closing.
+     */
+    void cleanUpData();
 }
