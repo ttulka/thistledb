@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import cz.net21.ttulka.thistledb.server.db.DataSource;
 import cz.net21.ttulka.thistledb.server.db.DataSourceFileImpl;
 import lombok.extern.apachecommons.CommonsLog;
 
@@ -30,11 +31,11 @@ public class Server implements Runnable, AutoCloseable {
     public static final int DEFAULT_MAX_CONNECTION_POOL = 20;
     public static final int DEFAULT_MAX_TIMEOUT = 2 * 1000;     // 2 s
 
-    private final int port;
-    private final DataSourceFileImpl dataSource;
+    protected final int port;
+    protected final DataSource dataSource;
 
-    private int maxConnectionPoolThreads = DEFAULT_MAX_CONNECTION_POOL;
-    private int maxClientTimeout = DEFAULT_MAX_TIMEOUT;
+    protected int maxConnectionPoolThreads = DEFAULT_MAX_CONNECTION_POOL;
+    protected int maxClientTimeout = DEFAULT_MAX_TIMEOUT;
 
     private ServerSocket serverSocket;
     private AtomicBoolean listening = new AtomicBoolean(false);
