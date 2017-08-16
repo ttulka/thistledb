@@ -387,9 +387,17 @@ public class DbCollectionFile {
         public CleanUp() throws IOException {
             super();
             Path tempCollectionPath = Paths.get(path + ".tmp");
-            Files.createFile(tempCollectionPath);
+            createNewFileOrTruncateExisting(tempCollectionPath);
 
             this.tempCollection = new DbCollectionFile(tempCollectionPath);
+        }
+
+        private void createNewFileOrTruncateExisting(Path path) throws IOException {
+            Files.newByteChannel(path,
+                                 StandardOpenOption.WRITE,
+                                 StandardOpenOption.CREATE,
+                                 StandardOpenOption.TRUNCATE_EXISTING
+            ).close();
         }
 
         public void cleanUp() {
