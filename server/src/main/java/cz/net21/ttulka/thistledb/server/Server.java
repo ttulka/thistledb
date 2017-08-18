@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -162,8 +161,7 @@ public class Server implements Runnable, AutoCloseable {
                         } catch (Exception e) {
                             log.error("Error by serving a client.", e);
 
-                            key.cancel();
-                            closeClientChannel((SocketChannel)key.channel());
+                            closeClientChannel(key);
                         }
                     }
                 }
@@ -190,20 +188,18 @@ public class Server implements Runnable, AutoCloseable {
         queryProcessor.process(input, output -> writeToClientSocket(output, clientChannel));
     }
 
-    private void writeToClientSocket(String output, final SocketChannel channel) {
-        System.out.println("WRITING " + output);
-        ByteBuffer buffer = ByteBuffer.wrap((output + "\n").getBytes());
-        while (buffer.hasRemaining()) {
-            try {
-                channel.write(buffer);
+    private void writeToClientSocket(String output, SocketChannel channel) {
+        if (output != null) {
+            System.out.println("WRITING " + output);
+            ByteBuffer buffer = ByteBuffer.wrap((output + "\n").getBytes());
+            while (buffer.hasRemaining()) {
+                try {
+                    channel.write(buffer);
 
-            } catch (IOException e) {
-                throw new ServerException("Cannot write to a client socket.", e);
+                } catch (IOException e) {
+                    throw new ServerException("Cannot write to a client socket.", e);
+                }
             }
-        }
-
-        if ("\n".equals(output)) {
-            closeClientChannel(channel);
         }
     }
 
@@ -254,12 +250,13 @@ public class Server implements Runnable, AutoCloseable {
         return null;
     }
 
-    private void closeClientChannel(SocketChannel clientChannel) {
+    private void closeClientChannel(SelectionKey key) {
         System.out.println("closeClientChannel..............................");
         connectionPool.decrementAndGet();
         try {
-            clientChannel.socket().close();
-            clientChannel.close();
+            key.cancel();
+            ((SocketChannel)key.channel()).socket().close();
+            key.channel().close();
 
         } catch (Exception ignore) {
             log.warn("Exception by closing a client channel.", ignore);

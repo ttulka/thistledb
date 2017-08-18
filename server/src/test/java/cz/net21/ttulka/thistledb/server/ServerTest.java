@@ -77,12 +77,32 @@ public class ServerTest {
     }
 
     @Test
+    public void moreQueriesTest() throws Exception {
+        try (Server server = new Server(dataPath)) {
+            server.startAndWait(500);
+
+            try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
+                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                socket.setSoTimeout(1000);
+
+                out.println("SELECT * FROM test");
+                assertThat("First connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
+                assertThat("Result shouldn't be null.", in.readLine(), notNullValue());
+
+                out.println("SELECT * FROM test");
+                assertThat("First connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
+                assertThat("Result shouldn't be null.", in.readLine(), notNullValue());
+            }
+        }
+    }
+
+    @Test
     public void checkConnectionPoolMaxThreadsTest() throws Exception {
         try (Server server = new Server(dataPath)) {
+            server.startAndWait(500);
 
             server.setMaxClientConnections(2);
-
-            server.startAndWait(500);
 
             try (Socket socket1 = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out1 = new PrintWriter(socket1.getOutputStream(), true);
