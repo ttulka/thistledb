@@ -1,7 +1,7 @@
 package cz.net21.ttulka.thistledb.server;
 
-import java.io.PrintWriter;
 import java.util.List;
+import java.util.function.Consumer;
 
 import cz.net21.ttulka.thistledb.server.db.DataSource;
 import cz.net21.ttulka.thistledb.tson.TSONObject;
@@ -29,16 +29,16 @@ class QueryProcessor {
         this.dataSource = dataSource;
     }
 
-    public void process(@NonNull String input, @NonNull PrintWriter out) {
+    public void process(@NonNull String input, @NonNull Consumer<String> out) {
         if (log.isDebugEnabled()) {
             log.debug("Processing a client request: " + input);
         }
         try {
-            out.println(ACCEPTED);
+            out.accept(ACCEPTED);
 
             QueryParser parser = new QueryParser(input);
             processQuery(parser).subscribe(
-                    result -> out.println(result),
+                    result -> out.accept(result),
                     error -> {
                         log.error("Error by executing a query: " + input + ".", error);
                         printEOF(out, ERROR + " " + error.getMessage());
@@ -54,11 +54,9 @@ class QueryProcessor {
         }
     }
 
-    private void printEOF(PrintWriter out, String message) {
+    private void printEOF(Consumer<String> out, String message) {
         try {
-            out.println(message);
-            out.println();
-            out.flush();
+            out.accept(message);
         } catch (Throwable t) {
             // ignore
         }

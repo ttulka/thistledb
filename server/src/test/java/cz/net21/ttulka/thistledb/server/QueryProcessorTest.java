@@ -1,8 +1,8 @@
 package cz.net21.ttulka.thistledb.server;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class QueryProcessorTest {
     @Test
     public void selectTest() {
         List<String> out = new ArrayList<>();
-        PrintWriter writer = mockPrintWriter(out);
+        Consumer<String> writer = mockWriter(out);
 
         queryProcessor.process("SELECT * FROM test", writer);
 
@@ -66,7 +66,7 @@ public class QueryProcessorTest {
     @Test
     public void selectMultipleResultTest() {
         List<String> out = new ArrayList<>();
-        PrintWriter writer = mockPrintWriter(out);
+        Consumer<String> writer = mockWriter(out);
 
         queryProcessor.process("SELECT * FROM test_multiple", writer);
 
@@ -82,7 +82,7 @@ public class QueryProcessorTest {
     @Test
     public void updateTest() {
         List<String> out = new ArrayList<>();
-        PrintWriter writer = mockPrintWriter(out);
+        Consumer<String> writer = mockWriter(out);
 
         queryProcessor.process("UPDATE test SET a=1", writer);
 
@@ -97,7 +97,7 @@ public class QueryProcessorTest {
     @Test
     public void deleteTest() {
         List<String> out = new ArrayList<>();
-        PrintWriter writer = mockPrintWriter(out);
+        Consumer<String> writer = mockWriter(out);
 
         queryProcessor.process("DELETE FROM test", writer);
 
@@ -112,7 +112,7 @@ public class QueryProcessorTest {
     @Test
     public void createTest() {
         List<String> out = new ArrayList<>();
-        PrintWriter writer = mockPrintWriter(out);
+        Consumer<String> writer = mockWriter(out);
 
         queryProcessor.process("CREATE test", writer);
 
@@ -127,7 +127,7 @@ public class QueryProcessorTest {
     @Test
     public void dropTest() {
         List<String> out = new ArrayList<>();
-        PrintWriter writer = mockPrintWriter(out);
+        Consumer<String> writer = mockWriter(out);
 
         queryProcessor.process("DROP test", writer);
 
@@ -142,7 +142,7 @@ public class QueryProcessorTest {
     @Test
     public void createIndexTest() {
         List<String> out = new ArrayList<>();
-        PrintWriter writer = mockPrintWriter(out);
+        Consumer<String> writer = mockWriter(out);
 
         queryProcessor.process("CREATE INDEX a ON test", writer);
 
@@ -157,7 +157,7 @@ public class QueryProcessorTest {
     @Test
     public void dropIndexTest() {
         List<String> out = new ArrayList<>();
-        PrintWriter writer = mockPrintWriter(out);
+        Consumer<String> writer = mockWriter(out);
 
         queryProcessor.process("DROP INDEX a ON test", writer);
 
@@ -169,9 +169,9 @@ public class QueryProcessorTest {
         assertThat(out.get(2), is(QueryProcessor.FINISHED));
     }
 
-    private PrintWriter mockPrintWriter(List<String> out) {
-        PrintWriter writer = mock(PrintWriter.class);
-        Mockito.doAnswer((s) -> out.add(s.getArgumentAt(0, String.class))).when(writer).println(anyString());
+    private Consumer<String> mockWriter(List<String> out) {
+        Consumer<String> writer = mock(Consumer.class);
+        Mockito.doAnswer((s) -> out.add(s.getArgumentAt(0, String.class))).when(writer).accept(anyString());
         return writer;
     }
 }
