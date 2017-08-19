@@ -10,17 +10,15 @@ import java.nio.file.Paths;
 
 import org.junit.Test;
 
+import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -97,7 +95,7 @@ public class ServerTest {
         }
     }
 
-    @Test
+    @Test(expected = SocketException.class)
     public void checkConnectionPoolMaxThreadsTest() throws Exception {
         try (Server server = new Server(dataPath)) {
             server.startAndWait(500);
@@ -133,61 +131,11 @@ public class ServerTest {
                         assertThat("Third connection should be refused.", in3.readLine(), startsWith("REFUSED"));
                         assertThat("Result should be null.", in3.readLine(), nullValue());
 
-                    } catch (SocketException e) {
-                        // ignore
+                        out3.println("SELECT * FROM test");
+                        fail("After the connection was refused any attempt to query the server will fail.");
                     }
                 }
             }
         }
     }
-
-//    @Test
-//    public void maxClientTimeoutTest() throws Exception {
-//        try (Server server = new Server(dataPath)) {
-//
-//            server.startAndWait(500);
-//
-//            // default timeout
-//
-//            try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
-//                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-//                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-//                Thread.sleep(500);
-//
-//                out.println("SELECT * FROM test");
-//                assertThat("Connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
-//                assertThat("Result shouldn't be null.", in.readLine(), notNullValue());
-//            }
-//
-//            // small timeout
-//
-//            server.setMaxClientTimeout(10);
-//
-//            try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
-//                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-//                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-//                Thread.sleep(500);
-//
-//                out.println("SELECT * FROM test");
-//                assertThat("Result should be null.", in.readLine(), nullValue());
-//
-//            } catch (SocketException e){
-//                // ignore
-//            }
-//
-//            // normal timeout
-//
-//            server.setMaxClientTimeout(1000);
-//
-//            try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
-//                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-//                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-//                Thread.sleep(500);
-//
-//                out.println("SELECT * FROM test");
-//                assertThat("Connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
-//                assertThat("Result shouldn't be null.", in.readLine(), notNullValue());
-//            }
-//        }
-//    }
 }

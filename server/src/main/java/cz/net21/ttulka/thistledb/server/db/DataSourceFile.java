@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import lombok.NonNull;
@@ -23,7 +24,7 @@ public class DataSourceFile implements DataSource {
 
     protected final Path dataDir;
 
-    protected final Map<String, DbCollectionFile> collections = new HashMap<>();
+    protected final Map<String, DbCollection> collections = new HashMap<>();
 
     public DataSourceFile(@NonNull Path dataDir) {
         this.dataDir = dataDir;
@@ -41,20 +42,20 @@ public class DataSourceFile implements DataSource {
 
     void loadCollections(Path dataDir) {
         try {
-            Files.list(dataDir).forEach(path -> {
-                DbCollectionFile collection = new DbCollectionFile(path);
-                collections.put(path.getFileName().toString(), collection);
-            });
+            Files.list(dataDir).forEach(path -> collections.put(path.getFileName().toString(), new DbCollectionFile(path)));
+
         } catch (IOException e) {
             throw new DatabaseException("Cannot read a data directory '" + dataDir.toAbsolutePath() + "': " + e.getMessage(), e);
         }
+        // add the dual table
+        collections.put(DualCollection.NAME, DualCollection.getInstance());
     }
 
     Path resolveCollection(@NonNull String collectionName) {
         return dataDir.resolve(collectionName);
     }
 
-    DbCollectionFile getCollection(@NonNull String collectionName) {
+    DbCollection getCollection(@NonNull String collectionName) {
         return collections.get(collectionName);
     }
 
@@ -62,7 +63,7 @@ public class DataSourceFile implements DataSource {
         return collections.containsKey(collectionName);
     }
 
-    boolean addCollection(@NonNull String collectionName, @NonNull DbCollectionFile collection) {
+    boolean addCollection(@NonNull String collectionName, @NonNull DbCollection collection) {
         return collections.putIfAbsent(collectionName, collection) == null;
     }
 
@@ -90,10 +91,12 @@ public class DataSourceFile implements DataSource {
     @Override
     public boolean dropCollection(@NonNull String collectionName) {
         if (collectionExists(collectionName)) {
-            DbCollectionFile collection = getCollection(collectionName);
+            DbCollection collection = getCollection(collectionName);
             removeCollection(collectionName);
 
-            collection.drop();
+            if (collection instanceof DbCollectionFile) {
+                ((DbCollectionFile)collection).drop();
+            }
             return true;
         }
         return false;
@@ -103,15 +106,14 @@ public class DataSourceFile implements DataSource {
     public Flux<String> select(@NonNull String collectionName, @NonNull String columns, String where) {
         checkIfCollectionExists(collectionName);
 
-        DbCollectionFile.Select select = getCollection(collectionName).select(columns, where);
+        Iterator<String> select = getCollection(collectionName).select(columns, where);
 
         Flux<String> stream = Flux.generate(sink -> {
-            String json = select.next();
-            if (json != null) {
+            if (select.hasNext()) {
+                String json = select.next();
                 sink.next(json);
             } else {
                 sink.complete();
-                select.close();
             }
         });
         return stream.parallel().runOn(Schedulers.parallel()).sequential();
@@ -180,7 +182,7 @@ public class DataSourceFile implements DataSource {
 
     @Override
     public void cleanUpData() {
-        collections.values().stream().forEach(DbCollectionFile::cleanUp);
+        collections.values().stream().forEach(DbCollection::cleanUp);
 
         // TODO reorganize indexes etc.
     }

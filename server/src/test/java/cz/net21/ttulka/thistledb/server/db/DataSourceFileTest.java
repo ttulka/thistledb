@@ -1,7 +1,6 @@
 package cz.net21.ttulka.thistledb.server.db;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -240,26 +239,5 @@ public class DataSourceFileTest {
         } catch (InterruptedException e) {
             // ignore
         }
-    }
-
-    @Test
-    public void cleanUpCollectionFileTest() throws IOException {
-        dataSource.createCollection(TEST_COLLECTION_NAME);
-
-        Path collectionPath = dataSource.getCollection(TEST_COLLECTION_NAME).path;
-
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
-        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
-
-        long originalSize = Files.size(collectionPath);
-
-        dataSource.delete(TEST_COLLECTION_NAME, "person.name = \"John\"");
-
-        dataSource.cleanUpData();
-
-        long afterCleanUpSize = Files.size(collectionPath);
-
-        assertThat("Collection file size after cleanup should be less than before.", afterCleanUpSize < originalSize, is(true));
     }
 }

@@ -12,8 +12,10 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,7 +26,7 @@ import lombok.NonNull;
 /**
  * Created by ttulka
  */
-public class DbCollectionFile {
+public class DbCollectionFile implements DbCollection {
 
     static final char RECORD_SEPARATOR = '\1';
     static final char RECORD_DELETED = '\2';
@@ -37,7 +39,8 @@ public class DbCollectionFile {
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public Select select(@NonNull String element, String where) {
+    @Override
+    public Iterator<String> select(@NonNull String element, String where) {
         lock.readLock().lock();
         try {
             return new Select(element, where);
@@ -49,6 +52,7 @@ public class DbCollectionFile {
         }
     }
 
+    @Override
     public void insert(@NonNull Collection<String> jsonData) {
         lock.writeLock().lock();
         try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
@@ -67,6 +71,7 @@ public class DbCollectionFile {
         insert(Collections.singleton(json));
     }
 
+    @Override
     public boolean delete(String where) {
         lock.writeLock().lock();
         try {
@@ -79,6 +84,7 @@ public class DbCollectionFile {
         }
     }
 
+    @Override
     public int update(String[] columns, String[] values, String where) {
         lock.writeLock().lock();
         try {
@@ -91,6 +97,7 @@ public class DbCollectionFile {
         }
     }
 
+    @Override
     public void cleanUp() {
         lock.writeLock().lock();
         try {
@@ -105,6 +112,7 @@ public class DbCollectionFile {
 
     protected void drop() {
         try {
+
             Files.delete(path);
 
         } catch (IOException e) {
@@ -227,28 +235,47 @@ public class DbCollectionFile {
         }
     }
 
-    class Select extends DbAccess {
+    class Select extends DbAccess implements Iterator<String> {
 
         private final Where where;
         private final String elementKey;
+
+        private String next;
 
         public Select(String elementKey, String where) throws IOException {
             super();
             this.where = Where.create(where);
             this.elementKey = elementKey;
+
+            next = getNext();
         }
 
-        public String next() {
-            String json = nextRecord();
+        @Override
+        public boolean hasNext() {
+            return next != null;
+        }
 
+        @Override
+        public String next() {
+            if (next != null) {
+                String toReturn = next;
+                next = getNext();
+                return toReturn;
+            }
+            return null;
+        }
+
+        private String getNext() {
+            String json = nextRecord();
             if (json != null) {
                 if (where.matches(json)) {
                     return selectElement(deserialize(json));
 
                 } else {
-                    return next();
+                    return getNext();
                 }
             }
+            close();
             return null;
         }
 
@@ -276,7 +303,6 @@ public class DbCollectionFile {
             }
             return elementKey;
         }
-
     }
 
     class Delete extends DbAccess {

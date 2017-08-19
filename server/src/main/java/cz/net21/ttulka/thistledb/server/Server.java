@@ -1,9 +1,7 @@
 package cz.net21.ttulka.thistledb.server;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -161,7 +159,7 @@ public class Server implements Runnable, AutoCloseable {
                         } catch (Exception e) {
                             log.error("Error by serving a client.", e);
 
-                            closeClientChannel(key);
+                            closeClientConnection(key);
                         }
                     }
                 }
@@ -170,13 +168,7 @@ public class Server implements Runnable, AutoCloseable {
                     throw new ServerException("Cannot listen on port " + port + ".", e);
                 }
             } finally {
-                if (serverChannel != null) {
-                    try {
-                        serverChannel.close();
-                    } catch (IOException e) {
-                        log.warn("Cannot close a serverChannel", e);
-                    }
-                }
+                closeServerChannel();
             }
         } else {
             throw new ServerException("Server already closed.");
@@ -184,13 +176,11 @@ public class Server implements Runnable, AutoCloseable {
     }
 
     void processClientInput(String input, SocketChannel clientChannel) {
-        System.out.println("PROCESSING " + input);
         queryProcessor.process(input, output -> writeToClientSocket(output, clientChannel));
     }
 
     private void writeToClientSocket(String output, SocketChannel channel) {
         if (output != null) {
-            System.out.println("WRITING " + output);
             ByteBuffer buffer = ByteBuffer.wrap((output + "\n").getBytes());
             while (buffer.hasRemaining()) {
                 try {
@@ -204,16 +194,15 @@ public class Server implements Runnable, AutoCloseable {
     }
 
     private void acceptNewClientConnection() throws IOException {
-        System.out.println("acceptNewClientConnection");
-        SocketChannel channel = serverChannel.accept();
-        channel.configureBlocking(false);
+        SocketChannel clientChannel = serverChannel.accept();
+        clientChannel.configureBlocking(false);
 
         if (connectionPool.get() >= maxClientConnections) {
-            refuseConnectionOverMaxPool(channel.socket());
+            refuseConnectionOverMaxPool(clientChannel);
             return;
         }
         connectionPool.getAndIncrement();
-        channel.register(this.selector, SelectionKey.OP_READ);
+        clientChannel.register(this.selector, SelectionKey.OP_READ);
     }
 
     private final StringBuilder clientInputBuffer = new StringBuilder();
@@ -250,32 +239,47 @@ public class Server implements Runnable, AutoCloseable {
         return null;
     }
 
-    private void closeClientChannel(SelectionKey key) {
-        System.out.println("closeClientChannel..............................");
+    private void closeClientConnection(SelectionKey key) {
         connectionPool.decrementAndGet();
+        key.cancel();
+        closeClientChannel((SocketChannel) key.channel());
+    }
+
+    private void closeClientChannel(SocketChannel clientChannel) {
         try {
-            key.cancel();
-            ((SocketChannel)key.channel()).socket().close();
-            key.channel().close();
+            clientChannel.socket().close();
+            clientChannel.close();
 
         } catch (Exception ignore) {
             log.warn("Exception by closing a client channel.", ignore);
         }
     }
 
-    private void refuseConnectionOverMaxPool(Socket clientSocket) {
-// TODO write NIO???
-        try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-            out.println("REFUSED Connection Pool exceeded");
-
-        } catch (Throwable t) {
-            // ignore
-        } finally {
+    private void closeServerChannel() {
+        if (selector != null) {
             try {
-                clientSocket.close();
+                selector.close();
             } catch (IOException e) {
-                // ignore
+                log.warn("Cannot close a selector", e);
             }
+        }
+        if (serverChannel != null) {
+            try {
+                serverChannel.socket().close();
+                serverChannel.close();
+
+            } catch (Exception ignore) {
+                log.warn("Exception by closing a server channel.", ignore);
+            }
+        }
+    }
+
+    private void refuseConnectionOverMaxPool(SocketChannel clientChannel) {
+        try {
+            writeToClientSocket("REFUSED Connection Pool exceeded", clientChannel);
+
+        } finally {
+            closeClientChannel(clientChannel);
         }
     }
 
@@ -287,22 +291,7 @@ public class Server implements Runnable, AutoCloseable {
 
         listening.set(false);
 
-        if (selector != null) {
-            try {
-                selector.close();
-            } catch (IOException e) {
-                log.warn("Cannot close a selector", e);
-            }
-        }
-
-        if (serverChannel != null) {
-            try {
-                serverChannel.socket().close();
-                serverChannel.close();
-            } catch (IOException e) {
-                log.warn("Cannot close a serverChannel", e);
-            }
-        }
+        closeServerChannel();
 
         dataSource.cleanUpData();
     }

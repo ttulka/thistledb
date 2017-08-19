@@ -35,6 +35,33 @@ public class WhereTest {
     }
 
     @Test
+    public void parseDataPartWithQuotesTest() {
+        Where.ConditionDataPart dataPart = Where.parseDataPart("person.name = \"John 'Mad dog' Smith\"");
+
+        assertThat(dataPart, notNullValue());
+        assertThat(dataPart.getKey(), is("person.name"));
+        assertThat(dataPart.getValue(), is("John 'Mad dog' Smith"));
+
+        dataPart = Where.parseDataPart("person.name = \"John O'Smith\"");
+
+        assertThat(dataPart, notNullValue());
+        assertThat(dataPart.getKey(), is("person.name"));
+        assertThat(dataPart.getValue(), is("John O'Smith"));
+
+        dataPart = Where.parseDataPart("person.name = 'John \"Mad dog\" Smith'");
+
+        assertThat(dataPart, notNullValue());
+        assertThat(dataPart.getKey(), is("person.name"));
+        assertThat(dataPart.getValue(), is("John \"Mad dog\" Smith"));
+
+        dataPart = Where.parseDataPart("quote = '\"'");
+
+        assertThat(dataPart, notNullValue());
+        assertThat(dataPart.getKey(), is("quote"));
+        assertThat(dataPart.getValue(), is("\""));
+    }
+
+    @Test
     public void parseOrPartsTest() {
         List<Where.ConditionDataPart> orParts = Where.parseOrParts("person.name = \"John Smith\" OR person.age = 42");
 
