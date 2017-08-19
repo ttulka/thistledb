@@ -1,5 +1,7 @@
 # ThistleDB - Server
 
+Server is non-blocking.
+
 ## Server Protocol
 
 Server protocol is text-based.
