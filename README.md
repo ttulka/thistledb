@@ -2,6 +2,8 @@
 
 A simple JSON database based on the file-access with server-client approach. 
 
+With the non-blocking server and the reactive (asynchronous non-blocking) client.
+
 **!!! IN PROGRESS !!!**
 
 ## Prerequisites
@@ -99,9 +101,7 @@ UPDATE collection_name SET element op value[,element op value [...]] [WHERE elem
 
 ### DUAL Collection
 
-DUAL collection is a system "echo" collection which returns what it gets.
-
-For testing purposes.
+DUAL collection is an immutable system "echo" collection which returns what it gets.
 
 | Query                  | Result              |
 | ---------------------- | ------------------- |
@@ -122,6 +122,8 @@ There are special element to be returned.
 ## Client
 
 ThistleDB provides a Java driver to build a client from a Java application.
+
+Client implements [Reactive Streams, Version 1.0.0](http://www.reactive-streams.org).
 
 Copy the Maven dependency into your project:
 ```xml
