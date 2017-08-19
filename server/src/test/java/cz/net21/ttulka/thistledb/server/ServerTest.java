@@ -5,10 +5,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
@@ -27,11 +27,12 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
  */
 public class ServerTest {
 
-    private static final Path dataPath = Paths.get("src/test/resources/data");
+    @Rule
+    public TemporaryFolder temp = new TemporaryFolder();
 
     @Test
-    public void startServerTest() throws InterruptedException {
-        Server server = new Server(dataPath);
+    public void startServerTest() throws Exception {
+        Server server = new Server(temp.newFolder().toPath());
 
         assertThat("Server doesn't listen before been started.", server.listening(), is(false));
 
@@ -48,7 +49,7 @@ public class ServerTest {
     public void readDataTest() throws Exception {
         QueryProcessor queryProcessorMock = mock(QueryProcessor.class);
 
-        try (Server server = new Server(dataPath) {
+        try (Server server = new Server(temp.newFolder().toPath()) {
             @Override
             protected QueryProcessor createQueryProcessor() {
                 return queryProcessorMock;
@@ -59,16 +60,16 @@ public class ServerTest {
             try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
                 socket.setSoTimeout(1000);
-                out.println("SELECT * FROM test1");
-                out.println("SELECT * FROM test2");
-                out.println("SELECT * FROM test3");
+                out.println("SELECT 1 FROM dual");
+                out.println("SELECT 2 FROM dual");
+                out.println("SELECT 3 FROM dual");
             }
 
             Thread.sleep(1000);
 
-            verify(queryProcessorMock).process(eq("SELECT * FROM test1"), any());
-            verify(queryProcessorMock).process(eq("SELECT * FROM test2"), any());
-            verify(queryProcessorMock).process(eq("SELECT * FROM test3"), any());
+            verify(queryProcessorMock).process(eq("SELECT 1 FROM dual"), any());
+            verify(queryProcessorMock).process(eq("SELECT 2 FROM dual"), any());
+            verify(queryProcessorMock).process(eq("SELECT 3 FROM dual"), any());
 
             verifyNoMoreInteractions(queryProcessorMock);
         }
@@ -76,7 +77,7 @@ public class ServerTest {
 
     @Test
     public void moreQueriesTest() throws Exception {
-        try (Server server = new Server(dataPath)) {
+        try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
 
             try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
@@ -84,20 +85,22 @@ public class ServerTest {
                  BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 socket.setSoTimeout(1000);
 
-                out.println("SELECT * FROM test");
-                assertThat("First connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
-                assertThat("Result shouldn't be null.", in.readLine(), notNullValue());
+                out.println("SELECT name FROM dual");
+                assertThat("First connection should be accepted.", in.readLine(), is("ACCEPTED"));
+                assertThat("First result shouldn't be null.", in.readLine(), is("{\"name\":\"DUAL\"}"));
+                assertThat("First connection should be finished.", in.readLine(), is("FINISHED"));
 
-                out.println("SELECT * FROM test");
-                assertThat("First connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
-                assertThat("Result shouldn't be null.", in.readLine(), notNullValue());
+                out.println("SELECT name FROM dual");
+                assertThat("Second connection should be accepted.", in.readLine(), startsWith("ACCEPTED"));
+                assertThat("Second result shouldn't be null.", in.readLine(), is("{\"name\":\"DUAL\"}"));
+                assertThat("Second connection should be finished.", in.readLine(), is("FINISHED"));
             }
         }
     }
 
     @Test(expected = SocketException.class)
     public void checkConnectionPoolMaxThreadsTest() throws Exception {
-        try (Server server = new Server(dataPath)) {
+        try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
 
             server.setMaxClientConnections(2);
@@ -117,21 +120,23 @@ public class ServerTest {
                         socket3.setSoTimeout(1000);
 
                         // okay
-                        out1.println("SELECT * FROM test");
-                        assertThat("First connection should be accepted.", in1.readLine(), startsWith("ACCEPTED"));
-                        assertThat("Result shouldn't be null.", in1.readLine(), notNullValue());
+                        out1.println("SELECT 1 FROM dual");
+                        assertThat("First connection should be accepted.", in1.readLine(), is("ACCEPTED"));
+                        assertThat("First result shouldn't be null.", in1.readLine(), is("{\"value\":1}"));
+                        assertThat("First connection should be finished.", in1.readLine(), is("FINISHED"));
 
                         // okay
-                        out2.println("SELECT * FROM test");
-                        assertThat("Second connection should be accepted.", in2.readLine(), startsWith("ACCEPTED"));
-                        assertThat("Result shouldn't be null.", in2.readLine(), notNullValue());
+                        out2.println("SELECT 2 FROM dual");
+                        assertThat("Second connection should be accepted.", in2.readLine(), is("ACCEPTED"));
+                        assertThat("Second result shouldn't be null.", in2.readLine(), is("{\"value\":2}"));
+                        assertThat("Second connection should be finished.", in2.readLine(), is("FINISHED"));
 
                         // refused
-                        out3.println("SELECT * FROM test");
+                        out3.println("SELECT 3 FROM dual");
                         assertThat("Third connection should be refused.", in3.readLine(), startsWith("REFUSED"));
-                        assertThat("Result should be null.", in3.readLine(), nullValue());
+                        assertThat("Third result should be null.", in3.readLine(), nullValue());
 
-                        out3.println("SELECT * FROM test");
+                        out3.println("SELECT 4 FROM dual");
                         fail("After the connection was refused any attempt to query the server will fail.");
                     }
                 }
