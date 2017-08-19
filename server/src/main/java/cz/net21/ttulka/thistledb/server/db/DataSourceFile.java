@@ -48,27 +48,27 @@ public class DataSourceFile implements DataSource {
             throw new DatabaseException("Cannot read a data directory '" + dataDir.toAbsolutePath() + "': " + e.getMessage(), e);
         }
         // add the dual table
-        collections.put(DualCollection.NAME, DualCollection.getInstance());
+        collections.put(DualCollection.NAME.toLowerCase(), DualCollection.getInstance());
     }
 
     Path resolveCollection(@NonNull String collectionName) {
-        return dataDir.resolve(collectionName);
+        return dataDir.resolve(collectionName.toLowerCase());
     }
 
     DbCollection getCollection(@NonNull String collectionName) {
-        return collections.get(collectionName);
+        return collections.get(collectionName.toLowerCase());
     }
 
     boolean collectionExists(@NonNull String collectionName) {
-        return collections.containsKey(collectionName);
+        return collections.containsKey(collectionName.toLowerCase());
     }
 
     boolean addCollection(@NonNull String collectionName, @NonNull DbCollection collection) {
-        return collections.putIfAbsent(collectionName, collection) == null;
+        return collections.putIfAbsent(collectionName.toLowerCase(), collection) == null;
     }
 
     boolean removeCollection(@NonNull String collectionName) {
-        return collections.remove(collectionName) != null;
+        return collections.remove(collectionName.toLowerCase()) != null;
     }
 
     @Override
