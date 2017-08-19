@@ -96,6 +96,29 @@ UPDATE collection_name SET element op value[,element op value [...]] [WHERE elem
 | `<=`       | Less or equal          |                                                            |
 | `LIKE`     | Equal by an expression | `*` any string, `_` one character, `?` any character (0,1) |
 
+
+### DUAL Collection
+
+DUAL collection is a system "echo" collection which returns what it gets.
+
+For testing purposes.
+
+| Query                  | Result              |
+| ---------------------- | ------------------- |
+| SELECT 123 FROM dual   | { "value" : 123 }   |
+| SELECT 1.23 FROM dual  | { "value" : 1.23 }  |
+| SELECT true FROM dual  | { "value" : true }  |
+| SELECT "abc" FROM dual | { "value" : "abc" } |
+
+There are special element to be returned.
+
+| Query                   | Result                                  | Example                                |
+| ----------------------- | --------------------------------------- | -------------------------------------- |
+| SELECT * FROM dual      | *empty*                                 | {}                                     |
+| SELECT name FROM dual   | name of the collection                  | { "name" : "DUAL" }                    |
+| SELECT random FROM dual | a random integer                        | { "random" : 980456651 }               |
+| SELECT date FROM dual   | datetime in format `yyyy-mm-dd H:m:s.ms`| { "date" : "2017-02-19 14:25:02.122" } |
+
 ## Client
 
 ThistleDB provides a Java driver to build a client from a Java application.
