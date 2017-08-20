@@ -161,7 +161,27 @@ client.executeQuery(query).subscribe(System.out::println);
 ```
 
 ## Server
-Server could be started from the command line (see Get Started) or dynamically from a Java code.
+
+Default server port is **9658**. 
+
+Default data folder is `data`, the path relative to the executing directory.
+
+Server could be started from the command line or dynamically from a Java code.
+
+### Starting from a command line
+
+*To be done... (see Get Started)*
+
+#### Changing the default port
+```
+-p, --port <port>
+```
+#### Changing the default data folder
+```
+-d, --dataDir <path>
+```
+
+### Starting from a Java code
 
 Copy the Maven dependency into your project:
 ```xml
@@ -171,13 +191,26 @@ Copy the Maven dependency into your project:
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
-Create a server instance:
+#### Create a server instance
 ```
 import cz.net21.ttulka.thistledb.server.Server;
 // ...
 Server server = new Server();
 ```
-Start and stop the server:
+
+Server port could be change by using a sever's constructor:
+```
+int port = 1234;
+Server server = new Server(port);
+```
+
+Data folder could be changed by using a sever's constructor:
+```
+Path dataFolder = java.nio.file.Paths.get("/thistledb/data");
+Server server = new Server(port);
+```
+
+#### Start and stop the server
 ```
 server.start();
 server.stop();
