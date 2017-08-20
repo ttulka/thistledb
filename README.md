@@ -166,22 +166,27 @@ Default server port is **9658**.
 
 Default data folder is `data`, the path relative to the executing directory.
 
+Maximum client connections the server accepts is **20**.
+
 Server could be started from the command line or dynamically from a Java code.
 
-### Starting from a command line
+### Starting from a Command Line
 
 *To be done... (see Get Started)*
 
-#### Changing the default port
+#### Changing the Default Port
 ```
 -p, --port <port>
 ```
-#### Changing the default data folder
+#### Changing the Default Data Folder
 ```
 -d, --dataDir <path>
 ```
-
-### Starting from a Java code
+#### Maximum Client Connections
+```
+-m, --max <maximum>
+```
+### Starting from a Java Code
 
 Copy the Maven dependency into your project:
 ```xml
@@ -198,18 +203,22 @@ import cz.net21.ttulka.thistledb.server.Server;
 Server server = new Server();
 ```
 
-Server port could be change by using a sever's constructor:
+Server port could be change by a sever's constructor:
 ```
 int port = 1234;
 Server server = new Server(port);
 ```
 
-Data folder could be changed by using a sever's constructor:
+Data folder could be changed by a sever's constructor:
 ```
 Path dataFolder = java.nio.file.Paths.get("/thistledb/data");
 Server server = new Server(port);
 ```
-
+Maximum client connections could be changed by a setter:
+```
+int maxClientConnections = 10;
+server.setMaxClientConnections(maxClientConnections);
+```
 #### Start and stop the server
 ```
 server.start();

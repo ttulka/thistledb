@@ -24,6 +24,7 @@ public final class Application {
         Options cmdOptions = new Options();
         cmdOptions.addOption("p", "port", true, "Port to listen on.");
         cmdOptions.addOption("d", "dataDir", true, "Data directory to store DB files into.");
+        cmdOptions.addOption("m", "max", true, "Maximum client connections.");
         cmdOptions.addOption("h", "help", false, "Help.");
 
         try {
@@ -63,6 +64,11 @@ public final class Application {
             server = new Server(dataDir);
         } else {
             server = new Server();
+        }
+
+        if (cmdLine.hasOption("m")) {
+            int maxClientConnections = Integer.parseInt(cmdLine.getOptionValue("m"));
+            server.setMaxClientConnections(maxClientConnections);
         }
 
         server.startAndWait(5000);
