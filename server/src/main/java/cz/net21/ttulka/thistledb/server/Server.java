@@ -150,9 +150,7 @@ public class Server implements Runnable, AutoCloseable {
     }
 
     private void afterClosed() {
-        log.info("**************** afterClosed"); // TODO remove
         closeServerChannel();
-
         dataSource.cleanUpData();
     }
 
@@ -208,15 +206,12 @@ public class Server implements Runnable, AutoCloseable {
                 log.warn("Server was stopped while serving client connections.", e);
             }
         } finally {
-            log.info("EXECUTOR shutdown"); // TODO remove
             shutdownClientConnections();
             executor.shutdown();
             while (!executor.isTerminated()) {
             }
-            log.info("EXECUTOR is finally down"); // TODO remove
             afterClosed();
 
-            log.info("STOP latch countdown"); // TODO remove
             stopLatch.countDown(); // server is stopped
         }
     }
@@ -285,7 +280,6 @@ public class Server implements Runnable, AutoCloseable {
             try {
                 serverChannel.socket().close();
                 serverChannel.close();
-                log.info("Server socket closed"); // TODO remove
 
             } catch (Exception ignore) {
                 log.warn("Exception by closing a server channel.", ignore);
