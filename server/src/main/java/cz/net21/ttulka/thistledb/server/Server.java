@@ -74,15 +74,15 @@ public class Server implements Runnable, AutoCloseable {
         return maxClientConnections;
     }
 
-    public boolean listening() {
-        return listening;
-    }
-
     public void setMaxClientConnections(int maxClientConnections) {
         if (maxClientConnections <= 0) {
             throw new ServerException("Max client connections must be greater than zero.");
         }
         this.maxClientConnections = maxClientConnections;
+    }
+
+    public boolean listening() {
+        return listening;
     }
 
     /**
