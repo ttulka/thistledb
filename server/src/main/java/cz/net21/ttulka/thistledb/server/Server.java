@@ -29,7 +29,7 @@ import lombok.extern.apachecommons.CommonsLog;
 @CommonsLog
 public class Server implements Runnable, AutoCloseable {
 
-    public static final int DEFAULT_PORT = 8758;    // 9658
+    public static final int DEFAULT_PORT = 9658;
     public static final Path DEFAULT_DATA_DIR = Paths.get("data");
 
     public static final int DEFAULT_MAX_CONNECTION_POOL = 20;
