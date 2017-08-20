@@ -24,9 +24,14 @@ public final class Application {
         Options cmdOptions = new Options();
         cmdOptions.addOption("p", "port", true, "Port to listen on.");
         cmdOptions.addOption("d", "dataDir", true, "Data directory to store DB files into.");
+        cmdOptions.addOption("h", "help", false, "Help.");
 
         try {
             CommandLine cmdLine = new DefaultParser().parse(cmdOptions, args);
+            if (cmdLine.hasOption("h")) {
+                printHelp(cmdOptions);
+                System.exit(0);
+            }
 
             startServer(cmdLine);
 
