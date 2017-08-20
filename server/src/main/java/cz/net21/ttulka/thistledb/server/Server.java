@@ -2,32 +2,34 @@ package cz.net21.ttulka.thistledb.server;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import cz.net21.ttulka.thistledb.server.db.DataSource;
-import cz.net21.ttulka.thistledb.server.db.DataSourceFile;
+import cz.net21.ttulka.thistledb.server.db.DataSourceFactory;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
- * Created by ttulka
- * <p>
  * The server.
+ * <p>
+ * Created by ttulka
  */
 @CommonsLog
 public class Server implements Runnable, AutoCloseable {
 
-    public static final int DEFAULT_PORT = 9658;
+    public static final int DEFAULT_PORT = 8758;    // 9658
     public static final Path DEFAULT_DATA_DIR = Paths.get("data");
 
     public static final int DEFAULT_MAX_CONNECTION_POOL = 20;
@@ -35,17 +37,17 @@ public class Server implements Runnable, AutoCloseable {
     protected final int port;
 
     protected final DataSource dataSource;
-    protected final QueryProcessor queryProcessor;
 
     protected int maxClientConnections = DEFAULT_MAX_CONNECTION_POOL;
 
     private ServerSocketChannel serverChannel;
     private Selector selector;
-    private AtomicBoolean listening = new AtomicBoolean(false);
+    private boolean listening = false;
 
-    private final AtomicInteger connectionPool = new AtomicInteger(0);
+    private final List<ClientConnectionThread> connectionPool = new ArrayList<>();
 
     private CountDownLatch startLatch;
+    private CountDownLatch stopLatch;
 
     public Server() {
         this(DEFAULT_PORT);
@@ -61,16 +63,7 @@ public class Server implements Runnable, AutoCloseable {
 
     public Server(int port, Path dataDir) {
         this.port = port;
-        this.dataSource = createDataSource(dataDir);
-        this.queryProcessor = createQueryProcessor();
-    }
-
-    protected DataSource createDataSource(Path dataDir) {
-        return new DataSourceFile(dataDir);
-    }
-
-    protected QueryProcessor createQueryProcessor() {
-        return new QueryProcessor(dataSource);
+        this.dataSource = DataSourceFactory.getDataSource(dataDir);
     }
 
     public int getPort() {
@@ -79,6 +72,10 @@ public class Server implements Runnable, AutoCloseable {
 
     public int getMaxClientConnections() {
         return maxClientConnections;
+    }
+
+    public boolean listening() {
+        return listening;
     }
 
     public void setMaxClientConnections(int maxClientConnections) {
@@ -92,8 +89,13 @@ public class Server implements Runnable, AutoCloseable {
      * Starts the server listener.
      */
     public final void start() {
-        listening.set(false);
+        if (listening) {
+            throw new IllegalStateException("Server already started.");
+        }
+        listening = true;
+
         startLatch = new CountDownLatch(1);
+        stopLatch = new CountDownLatch(1);
 
         new Thread(this).start();
     }
@@ -113,136 +115,155 @@ public class Server implements Runnable, AutoCloseable {
     }
 
     /**
+     * Stops the server listener.
+     */
+    public void stop() {
+        log.info("Closing a serverChannel and stopping the server...");
+        listening = false;
+        try {
+            selector.close();
+        } catch (IOException e) {
+            log.warn("Cannot close a selector", e);
+        }
+    }
+
+    /**
+     * Stops the server listener and waits until it's down.
+     *
+     * @param timeout the waiting timeout in milliseconds
+     */
+    public void stopAndWait(int timeout) {
+        stop();
+        try {
+            stopLatch.await(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            log.warn("Waiting for the server stop interrupted.", e);
+        }
+    }
+
+    /**
+     * Calls {@link #stop()}.
+     */
+    @Override
+    public final void close() {
+        stopAndWait(5000);
+    }
+
+    private void afterClosed() {
+        log.info("**************** afterClosed"); // TODO remove
+        closeServerChannel();
+
+        dataSource.cleanUpData();
+    }
+
+    /**
      * Run method of the server listening.
      *
      * @throws ServerException when something goes wrong
      */
     @Override
     public void run() {
-        if (listening.compareAndSet(false, true)) {
+        log.info("Opening a serverChannel on " + port + " and waiting for client requests...");
+        ExecutorService executor = Executors.newCachedThreadPool();
+        try {
+            selector = Selector.open();
 
-            log.info("Opening a serverChannel on " + port + " and waiting for client requests...");
-            try {
-                selector = Selector.open();
+            serverChannel = ServerSocketChannel.open();
+            serverChannel.configureBlocking(false);
+            serverChannel.socket().bind(new InetSocketAddress(port));
+            serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-                serverChannel = ServerSocketChannel.open();
-                serverChannel.configureBlocking(false);
-                serverChannel.socket().bind(new InetSocketAddress(port));
-                serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+            startLatch.countDown(); // server is started
 
-                startLatch.countDown(); // server is started
+            while (listening) {
+                selector.select();
 
-                while (listening.get()) {
-                    selector.select();
+                Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
+                while (keys.hasNext()) {
+                    SelectionKey key = keys.next();
+                    keys.remove(); // prevent the same key from coming up again the next time around
 
-                    Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
-                    while (keys.hasNext()) {
-                        SelectionKey key = keys.next();
-                        keys.remove(); // prevent the same key from coming up again the next time around
-
-                        try {
-                            if (!key.isValid()) {
-                                continue;
-                            }
-
-                            if (key.isAcceptable()) {
-                                acceptNewClientConnection();
-
-                            } else if (key.isReadable()) {
-                                bufferFromClientSocket(key);
-
-                                String input;
-                                while ((input = readLineFromBuffer()) != null) {
-                                    processClientInput(input, (SocketChannel) key.channel());
-                                }
-                            }
-                        } catch (Exception e) {
-                            log.error("Error by serving a client.", e);
-
-                            closeClientConnection(key);
+                    try {
+                        if (!key.isValid()) {
+                            continue;
                         }
+
+                        if (key.isAcceptable()) {
+                            executor.execute(acceptNewClientConnection());
+                        }
+                    } catch (Exception e) {
+                        log.error("Error by accepting a client connection.", e);
+                        key.cancel();
                     }
                 }
-            } catch (Exception e) {
-                if (listening.getAndSet(false)) {
-                    throw new ServerException("Cannot listen on port " + port + ".", e);
-                }
-            } finally {
-                closeServerChannel();
             }
-        } else {
-            throw new ServerException("Server already closed.");
+        } catch (ClosedSelectorException ignore) {
+            // this happens when selector is waiting and server was stopped
+        } catch (Exception e) {
+            if (listening) {
+                listening = false;
+                e.printStackTrace();
+                throw new ServerException("Exception while serving client connections.", e);
+            } else {
+                log.warn("Server was stopped while serving client connections.", e);
+            }
+        } finally {
+            log.info("EXECUTOR shutdown"); // TODO remove
+            shutdownClientConnections();
+            executor.shutdown();
+            while (!executor.isTerminated()) {
+            }
+            log.info("EXECUTOR is finally down"); // TODO remove
+            afterClosed();
+
+            log.info("STOP latch countdown"); // TODO remove
+            stopLatch.countDown(); // server is stopped
         }
     }
 
-    void processClientInput(String input, SocketChannel clientChannel) {
-        queryProcessor.process(input, output -> writeToClientSocket(output, clientChannel));
-    }
+    private int clientNumber = 0;
 
-    private void writeToClientSocket(String output, SocketChannel channel) {
-        if (output != null) {
-            ByteBuffer buffer = ByteBuffer.wrap((output + "\n").getBytes());
-            while (buffer.hasRemaining()) {
-                try {
-                    channel.write(buffer);
-
-                } catch (IOException e) {
-                    throw new ServerException("Cannot write to a client socket.", e);
-                }
-            }
-        }
-    }
-
-    private void acceptNewClientConnection() throws IOException {
+    private ClientConnectionThread acceptNewClientConnection() throws IOException {
+        log.info("Accepting a new connection " + clientNumber); // TODO debug
         SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
 
-        if (connectionPool.get() >= maxClientConnections) {
+        if (!connectionPoolFree()) {
             refuseConnectionOverMaxPool(clientChannel);
-            return;
+            throw new IllegalStateException("Maximum client connection pool exceeded.");
         }
-        connectionPool.getAndIncrement();
-        clientChannel.register(this.selector, SelectionKey.OP_READ);
+        ClientConnectionThread thread = new ClientConnectionThread(clientNumber++, clientChannel, dataSource);
+        addToConnectionPool(thread);
+        return thread;
     }
 
-    private final StringBuilder clientInputBuffer = new StringBuilder();
+    // TODO refactor the connection pool as a new class
+    private boolean connectionPoolFree() {
+        int countOpenConnections = 0;
 
-    private void bufferFromClientSocket(SelectionKey key) {
-        SocketChannel clientChannel = (SocketChannel) key.channel();
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
-        int numRead;
+        Iterator<ClientConnectionThread> iterator = connectionPool.iterator();
+        while (iterator.hasNext()) {
+            ClientConnectionThread thread = iterator.next();
+            if (thread.isLive()) {
+                countOpenConnections++;
+            } else {
+                iterator.remove();
+            }
+        }
+        return countOpenConnections < maxClientConnections;
+    }
+
+    private void addToConnectionPool(ClientConnectionThread thread) {
+        connectionPool.add(thread);
+    }
+
+    private void refuseConnectionOverMaxPool(SocketChannel clientChannel) {
         try {
-            do {
-                numRead = clientChannel.read(buffer);
-                if (numRead > 0) {
-                    byte[] data = new byte[numRead];
-                    System.arraycopy(buffer.array(), 0, data, 0, numRead);
-                    buffer.clear();
+            SocketUtils.printlnIntoChannel("REFUSED Connection Pool exceeded", clientChannel);
 
-                    clientInputBuffer.append(new String(data));
-                }
-            } while (numRead > 0);
-
-        } catch (IOException e) {
-            throw new ServerException("Exception by reading from a client socket.", e);
+        } finally {
+            closeClientChannel(clientChannel);
         }
-    }
-
-    private String readLineFromBuffer() {
-        if (clientInputBuffer.length() > 0) {
-            int newLinePosition = clientInputBuffer.indexOf("\n");
-            String line = clientInputBuffer.substring(0, newLinePosition + 1);
-            clientInputBuffer.delete(0, newLinePosition + 1);
-
-            return line.trim();
-        }
-        return null;
-    }
-
-    private void closeClientConnection(SelectionKey key) {
-        connectionPool.decrementAndGet();
-        key.cancel();
-        closeClientChannel((SocketChannel) key.channel());
     }
 
     private void closeClientChannel(SocketChannel clientChannel) {
@@ -255,56 +276,20 @@ public class Server implements Runnable, AutoCloseable {
         }
     }
 
+    private void shutdownClientConnections() {
+        connectionPool.stream().forEach(ClientConnectionThread::stop);
+    }
+
     private void closeServerChannel() {
-        if (selector != null) {
-            try {
-                selector.close();
-            } catch (IOException e) {
-                log.warn("Cannot close a selector", e);
-            }
-        }
         if (serverChannel != null) {
             try {
                 serverChannel.socket().close();
                 serverChannel.close();
+                log.info("Server socket closed"); // TODO remove
 
             } catch (Exception ignore) {
                 log.warn("Exception by closing a server channel.", ignore);
             }
         }
-    }
-
-    private void refuseConnectionOverMaxPool(SocketChannel clientChannel) {
-        try {
-            writeToClientSocket("REFUSED Connection Pool exceeded", clientChannel);
-
-        } finally {
-            closeClientChannel(clientChannel);
-        }
-    }
-
-    /**
-     * Stops the server listener.
-     */
-    public void stop() {
-        log.info("Closing a serverChannel and stopping the server...");
-
-        listening.set(false);
-
-        closeServerChannel();
-
-        dataSource.cleanUpData();
-    }
-
-    public boolean listening() {
-        return listening.get();
-    }
-
-    /**
-     * Calls {@link #stop()}.
-     */
-    @Override
-    public final void close() {
-        stop();
     }
 }
