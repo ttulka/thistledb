@@ -12,7 +12,6 @@ ACCEPTED
 JSON result
 [...]
 FINISHED
-new line
 ```
 
 ### Executing a command
@@ -20,19 +19,16 @@ new line
 ACCEPTED
 OKAY
 FINISHED
-new line
 ```             
 
 ### Invalid input
 ```
 ACCEPTED
 INVALID feedback message
-new line
 ```
 
 ### Error
 ```
 ACCEPTED
 ERROR error message
-new line
 ```

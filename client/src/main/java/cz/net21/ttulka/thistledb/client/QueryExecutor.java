@@ -114,7 +114,6 @@ class QueryExecutor {
     }
 
     private void stopListening() throws IOException {
-        in.readLine();
         listening = false;
     }
 
