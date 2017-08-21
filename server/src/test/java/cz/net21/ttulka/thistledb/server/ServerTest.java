@@ -93,7 +93,7 @@ public class ServerTest {
     }
 
     @Test(expected = SocketException.class)
-    public void checkConnectionPoolMaxConnectionsTest() throws Exception {
+    public void maxConnectionsPoolTest() throws Exception {
         try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
 
@@ -140,7 +140,7 @@ public class ServerTest {
     }
 
     @Test
-    public void checkConnectionPoolMaxConnectionsAfterPreviousConnectionsWereClosedTest() throws Exception {
+    public void maxConnectionsPoolAfterPreviousWereClosedTest() throws Exception {
         try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
 
@@ -175,12 +175,13 @@ public class ServerTest {
     @Test
     public void multipleConcurrentConnectionsTest() throws Exception {
         int numberOfClients = 100;
+
+        AtomicInteger sucessConnections = new AtomicInteger();
+        List<String> errors = new CopyOnWriteArrayList<>();
+
         try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
             server.setMaxClientConnections(numberOfClients);
-
-            AtomicInteger sucessConnections = new AtomicInteger();
-            List<String> errors = new CopyOnWriteArrayList<>();
 
             IntStream.range(0, numberOfClients).forEach(i ->
                 new Thread(() -> {
@@ -204,10 +205,10 @@ public class ServerTest {
                     }
                 }).start()
             );
-            Thread.sleep(numberOfClients + 3000);
-
-            errors.forEach(error -> fail(error));
-            assertThat("Count of successful connections must be " + numberOfClients + ".", sucessConnections.get(), is(numberOfClients));
         }
+        Thread.sleep(numberOfClients + 3000);
+
+        errors.forEach(error -> fail(error));
+        assertThat("Count of successful connections must be " + numberOfClients + ".", sucessConnections.get(), is(numberOfClients));
     }
 }
