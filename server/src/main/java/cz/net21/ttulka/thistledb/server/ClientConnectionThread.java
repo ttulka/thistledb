@@ -108,10 +108,12 @@ class ClientConnectionThread implements Runnable {
     private String readLineFromBuffer() {
         if (input.length() > 0) {
             int newLinePosition = input.indexOf("\n");
-            String line = input.substring(0, newLinePosition + 1);
-            input.delete(0, newLinePosition + 1);
+            if (newLinePosition > 0) {
+                String line = input.substring(0, newLinePosition + 1);
+                input.delete(0, newLinePosition + 1);
 
-            return line.trim();
+                return line.trim();
+            }
         }
         return null;
     }
