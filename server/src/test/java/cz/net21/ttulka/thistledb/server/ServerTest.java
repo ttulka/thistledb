@@ -179,34 +179,35 @@ public class ServerTest {
         AtomicInteger sucessConnections = new AtomicInteger();
         List<String> errors = new CopyOnWriteArrayList<>();
 
-        try (Server server = new Server(temp.newFolder().toPath())) {
-            server.startAndWait(500);
-            server.setMaxClientConnections(numberOfClients);
+        Server server = new Server(temp.newFolder().toPath());
+        server.startAndWait(500);
+        server.setMaxClientConnections(numberOfClients);
 
-            IntStream.range(0, numberOfClients).forEach(i ->
-                new Thread(() -> {
-                    try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
-                         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-                        socket.setSoTimeout(1000);
+        IntStream.range(0, numberOfClients).forEach(i ->
+            new Thread(() -> {
+                try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
+                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                    socket.setSoTimeout(1000);
 
-                        out.println("SELECT " + i + " FROM dual");
-                        Thread.sleep(100);
-                        assertThat("First connection should be accepted.", in.readLine(), is("ACCEPTED"));
-                        Thread.sleep(100);
-                        assertThat("First result shouldn't be null.", in.readLine(), is("{\"value\":" + i + "}"));
-                        Thread.sleep(100);
-                        assertThat("First connection should be finished.", in.readLine(), is("FINISHED"));
-                        sucessConnections.incrementAndGet();
+                    out.println("SELECT " + i + " FROM dual");
+                    Thread.sleep(100);
+                    assertThat("First connection should be accepted.", in.readLine(), is("ACCEPTED"));
+                    Thread.sleep(100);
+                    assertThat("First result shouldn't be null.", in.readLine(), is("{\"value\":" + i + "}"));
+                    Thread.sleep(100);
+                    assertThat("First connection should be finished.", in.readLine(), is("FINISHED"));
+                    sucessConnections.incrementAndGet();
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        errors.add("Client connection " + i + " failed: " + e.getMessage());
-                    }
-                }).start()
-            );
-        }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    errors.add("Client connection " + i + " failed: " + e.getMessage());
+                }
+            }).start()
+        );
         Thread.sleep(numberOfClients + 3000);
+
+        server.stopAndWait(5000);
 
         errors.forEach(error -> fail(error));
         assertThat("Count of successful connections must be " + numberOfClients + ".", sucessConnections.get(), is(numberOfClients));
