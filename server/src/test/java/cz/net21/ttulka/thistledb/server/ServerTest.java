@@ -93,7 +93,7 @@ public class ServerTest {
     }
 
     @Ignore
-    @Test
+    @Test(expected = SocketException.class)
     public void maxConnectionsPoolTest() throws Exception {
         try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
@@ -130,11 +130,9 @@ public class ServerTest {
                         // refused
                         out3.println("SELECT 3.1 FROM dual");
                         assertThat("Third connection should be refused.", in3.readLine(), startsWith("REFUSED"));
-                        assertThat("Third result should be null.", in3.readLine(), nullValue());
 
                         out3.println("SELECT 3.2 FROM dual");
-                        assertThat("Third connection should be refused.", in3.readLine(), startsWith("REFUSED"));
-                        assertThat("Third result should be null.", in3.readLine(), nullValue());
+
                     }
                 }
             }

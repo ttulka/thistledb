@@ -257,13 +257,13 @@ public class Server implements Runnable, AutoCloseable {
             SocketUtils.printlnIntoChannel("REFUSED Connection Pool exceeded", clientChannel);
 
         } finally {
+            // TODO if a client is closed, the REFUSED message is not delivered
             closeClientChannel(clientChannel);
         }
     }
 
     private void closeClientChannel(SocketChannel clientChannel) {
         try {
-            clientChannel.socket().close();
             clientChannel.close();
 
         } catch (Exception ignore) {
