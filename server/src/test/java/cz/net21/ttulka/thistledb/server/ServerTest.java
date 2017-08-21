@@ -93,9 +93,9 @@ public class ServerTest {
     }
 
     @Ignore
-    @Test(expected = SocketException.class)
+    @Test
     public void maxConnectionsPoolTest() throws Exception {
-        try (Server server = new Server(96581, temp.newFolder().toPath())) {
+        try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
 
             server.setMaxClientConnections(2); // only two connections in time are accepted
@@ -128,12 +128,13 @@ public class ServerTest {
                         assertThat("Second connection should be finished.", in2.readLine(), is("FINISHED"));
 
                         // refused
-                        out3.println("SELECT 3 FROM dual");
+                        out3.println("SELECT 3.1 FROM dual");
                         assertThat("Third connection should be refused.", in3.readLine(), startsWith("REFUSED"));
                         assertThat("Third result should be null.", in3.readLine(), nullValue());
 
-                        out3.println("SELECT 4 FROM dual");
-                        fail("After the connection was refused any attempt to query the server will fail.");
+                        out3.println("SELECT 3.2 FROM dual");
+                        assertThat("Third connection should be refused.", in3.readLine(), startsWith("REFUSED"));
+                        assertThat("Third result should be null.", in3.readLine(), nullValue());
                     }
                 }
             }
