@@ -10,6 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -25,15 +26,12 @@ import static org.hamcrest.core.IsNull.nullValue;
  */
 public class ServerTest {
 
-    private final AtomicInteger port = new AtomicInteger(9658);
-
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
     @Test
     public void startServerTest() throws Exception {
-        int port = this.port.incrementAndGet();
-        Server server = new Server(port, temp.newFolder().toPath());
+        Server server = new Server(temp.newFolder().toPath());
 
         assertThat("Server shouldn't listen before been started.", server.listening(), is(false));
 
@@ -48,11 +46,10 @@ public class ServerTest {
 
     @Test
     public void basicTest() throws Exception {
-        int port = this.port.incrementAndGet();
-        try (Server server = new Server(port, temp.newFolder().toPath())) {
+        try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(5000);
 
-            try (Socket socket = new Socket("localhost", port);
+            try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                  BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 socket.setSoTimeout(1000);
@@ -67,11 +64,10 @@ public class ServerTest {
 
     @Test
     public void moreQueriesTest() throws Exception {
-        int port = this.port.incrementAndGet();
-        try (Server server = new Server(port, temp.newFolder().toPath())) {
+        try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(5000);
 
-            try (Socket socket = new Socket("localhost", port);
+            try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                  BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 socket.setSoTimeout(1000);
@@ -96,25 +92,25 @@ public class ServerTest {
         }
     }
 
+    @Ignore
     @Test(expected = SocketException.class)
     public void maxConnectionsPoolTest() throws Exception {
-        int port = this.port.incrementAndGet();
-        try (Server server = new Server(port, temp.newFolder().toPath())) {
+        try (Server server = new Server(96581, temp.newFolder().toPath())) {
             server.startAndWait(500);
 
             server.setMaxClientConnections(2); // only two connections in time are accepted
 
-            try (Socket socket1 = new Socket("localhost", port);
+            try (Socket socket1 = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out1 = new PrintWriter(socket1.getOutputStream(), true);
                  BufferedReader in1 = new BufferedReader(new InputStreamReader(socket1.getInputStream()))) {
                 socket1.setSoTimeout(1000);
 
-                try (Socket socket2 = new Socket("localhost", port);
+                try (Socket socket2 = new Socket("localhost", Server.DEFAULT_PORT);
                      PrintWriter out2 = new PrintWriter(socket2.getOutputStream(), true);
                      BufferedReader in2 = new BufferedReader(new InputStreamReader(socket2.getInputStream()))) {
                     socket2.setSoTimeout(1000);
 
-                    try (Socket socket3 = new Socket("localhost", port);
+                    try (Socket socket3 = new Socket("localhost", Server.DEFAULT_PORT);
                          PrintWriter out3 = new PrintWriter(socket3.getOutputStream(), true);
                          BufferedReader in3 = new BufferedReader(new InputStreamReader(socket3.getInputStream()))) {
                         socket3.setSoTimeout(1000);
@@ -146,13 +142,12 @@ public class ServerTest {
 
     @Test
     public void maxConnectionsPoolAfterPreviousWereClosedTest() throws Exception {
-        int port = this.port.incrementAndGet();
-        try (Server server = new Server(port, temp.newFolder().toPath())) {
+        try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
 
             server.setMaxClientConnections(1);  // only one connection in time is accepted
 
-            try (Socket socket = new Socket("localhost", port);
+            try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                  BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 socket.setSoTimeout(1000);
@@ -165,7 +160,7 @@ public class ServerTest {
 
             Thread.sleep(500);
 
-            try (Socket socket = new Socket("localhost", port);
+            try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                  BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                 socket.setSoTimeout(1000);
@@ -185,14 +180,13 @@ public class ServerTest {
         AtomicInteger sucessConnections = new AtomicInteger();
         List<String> errors = new CopyOnWriteArrayList<>();
 
-        int port = this.port.incrementAndGet();
-        Server server = new Server(port, temp.newFolder().toPath());
+        Server server = new Server(temp.newFolder().toPath());
         server.startAndWait(500);
         server.setMaxClientConnections(numberOfClients);
 
         IntStream.range(0, numberOfClients).forEach(i ->
             new Thread(() -> {
-                try (Socket socket = new Socket("localhost", port);
+                try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
                      PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                      BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
                     socket.setSoTimeout(1000);
