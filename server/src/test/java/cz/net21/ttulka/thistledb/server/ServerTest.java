@@ -66,7 +66,7 @@ public class ServerTest {
     public void moreQueriesTest() throws Exception {
         try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(5000);
-System.out.println("moreQueriesTest started");
+
             try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                  BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
@@ -174,7 +174,7 @@ System.out.println("moreQueriesTest started");
 
     @Test
     public void multipleConcurrentConnectionsTest() throws Exception {
-        int numberOfClients = 100;
+        int numberOfClients = 50;
         try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
             server.setMaxClientConnections(numberOfClients);
