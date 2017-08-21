@@ -174,7 +174,7 @@ public class ServerTest {
 
     @Test
     public void multipleConcurrentConnectionsTest() throws Exception {
-        int numberOfClients = 50;
+        int numberOfClients = 100;
         try (Server server = new Server(temp.newFolder().toPath())) {
             server.startAndWait(500);
             server.setMaxClientConnections(numberOfClients);
@@ -190,8 +190,11 @@ public class ServerTest {
                         socket.setSoTimeout(1000);
 
                         out.println("SELECT " + i + " FROM dual");
+                        Thread.sleep(100);
                         assertThat("First connection should be accepted.", in.readLine(), is("ACCEPTED"));
+                        Thread.sleep(100);
                         assertThat("First result shouldn't be null.", in.readLine(), is("{\"value\":" + i + "}"));
+                        Thread.sleep(100);
                         assertThat("First connection should be finished.", in.readLine(), is("FINISHED"));
                         sucessConnections.incrementAndGet();
 
@@ -201,7 +204,7 @@ public class ServerTest {
                     }
                 }).start()
             );
-            Thread.sleep(numberOfClients + 1000);
+            Thread.sleep(numberOfClients + 3000);
 
             errors.forEach(error -> fail(error));
             assertThat("Count of successful connections must be " + numberOfClients + ".", sucessConnections.get(), is(numberOfClients));
