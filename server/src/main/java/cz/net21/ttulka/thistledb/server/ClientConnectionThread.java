@@ -8,12 +8,15 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import cz.net21.ttulka.thistledb.server.db.DataSource;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
+ * A client connection thread is created for each client connection to server client requests in concurrent manner.
+ * <p>
+ * With this approach the sever can serve more clients in parallel even for long-time executing requests.
+ * <p>
  * Created by ttulka
  */
 @CommonsLog
