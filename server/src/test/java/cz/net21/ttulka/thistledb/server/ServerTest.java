@@ -176,7 +176,7 @@ public class ServerTest {
 
     @Test
     public void multipleConcurrentConnectionsTest() throws Exception {
-        int numberOfClients = 500;
+        int numberOfClients = 100;
 
         AtomicInteger sucessConnections = new AtomicInteger();
         List<String> errors = new CopyOnWriteArrayList<>();
