@@ -103,21 +103,21 @@ UPDATE collection_name SET element op value[,element op value [...]] [WHERE elem
 
 DUAL collection is an immutable system "echo" collection which returns what it gets.
 
-| Query                  | Result              |
-| ---------------------- | ------------------- |
-| SELECT 123 FROM dual   | { "value" : 123 }   |
-| SELECT 1.23 FROM dual  | { "value" : 1.23 }  |
-| SELECT true FROM dual  | { "value" : true }  |
-| SELECT "abc" FROM dual | { "value" : "abc" } |
+| Query                    | Result                |
+| ------------------------ | --------------------- |
+| `SELECT 123 FROM dual`   | `{ "value" : 123 }`   |
+| `SELECT 1.23 FROM dual`  | `{ "value" : 1.23 }`  |
+| `SELECT true FROM dual`  | `{ "value" : true }`  |
+| `SELECT "abc" FROM dual` | `{ "value" : "abc" }` |
 
 There are special element to be returned.
 
-| Query                   | Result                                  | Example                                |
-| ----------------------- | --------------------------------------- | -------------------------------------- |
-| SELECT * FROM dual      | *empty*                                 | {}                                     |
-| SELECT name FROM dual   | name of the collection                  | { "name" : "DUAL" }                    |
-| SELECT random FROM dual | a random integer                        | { "random" : 980456651 }               |
-| SELECT date FROM dual   | datetime in format `yyyy-mm-dd H:m:s.ms`| { "date" : "2017-02-19 14:25:02.122" } |
+| Query                   | Result                                    | Example                                  |
+| ----------------------- | ----------------------------------------- | ---------------------------------------- |
+| `SELECT * FROM dual`      | *empty*                                 | `{}`                                     |
+| `SELECT name FROM dual`   | name of the collection                  | `{ "name" : "DUAL" }`                    |
+| `SELECT random FROM dual` | a random integer                        | `{ "random" : 980456651 }`               |
+| `SELECT date FROM dual`   | datetime in format `yyyy-mm-dd H:m:s.ms`| `{ "date" : "2017-02-19 14:25:02.122" }` |
 
 ## Client
 
