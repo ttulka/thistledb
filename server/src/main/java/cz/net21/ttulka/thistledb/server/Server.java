@@ -140,7 +140,7 @@ public class Server implements Runnable, AutoCloseable {
     }
 
     /**
-     * Calls {@link #stop()}.
+     * Calls {@link #stop(int timeout)}.
      */
     @Override
     public final void close() {
