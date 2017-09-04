@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,11 +36,11 @@ public class ServerTest {
 
         assertThat("Server shouldn't listen before been started.", server.listening(), is(false));
 
-        server.startAndWait(500);
+        server.start(500);
 
         assertThat("Server should listen after been started.", server.listening(), is(true));
 
-        server.stopAndWait(500);
+        server.stop(500);
 
         assertThat("Server shouldn't listen after been stopped.", server.listening(), is(false));
     }
@@ -47,7 +48,7 @@ public class ServerTest {
     @Test
     public void basicTest() throws Exception {
         try (Server server = new Server(temp.newFolder().toPath())) {
-            server.startAndWait(5000);
+            server.start(5000);
 
             try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -65,7 +66,7 @@ public class ServerTest {
     @Test
     public void moreQueriesTest() throws Exception {
         try (Server server = new Server(temp.newFolder().toPath())) {
-            server.startAndWait(5000);
+            server.start(5000);
 
             try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -92,11 +93,10 @@ public class ServerTest {
         }
     }
 
-    @Ignore
-    @Test(expected = SocketException.class)
+    @Test(expected = SocketTimeoutException.class)
     public void maxConnectionsPoolTest() throws Exception {
         try (Server server = new Server(temp.newFolder().toPath())) {
-            server.startAndWait(500);
+            server.start(500);
 
             server.setMaxClientConnections(2); // only two connections in time are accepted
 
@@ -132,7 +132,9 @@ public class ServerTest {
                         assertThat("Third connection should be refused.", in3.readLine(), startsWith("REFUSED"));
 
                         out3.println("SELECT 3.2 FROM dual");
+                        assertThat("Third connection shouldn't get any result.", in3.readLine(), is(nullValue()));
 
+                        fail("After the connection was refused any attempt to get a result will fail with timeout.");
                     }
                 }
             }
@@ -142,7 +144,7 @@ public class ServerTest {
     @Test
     public void maxConnectionsPoolAfterPreviousWereClosedTest() throws Exception {
         try (Server server = new Server(temp.newFolder().toPath())) {
-            server.startAndWait(500);
+            server.start(500);
 
             server.setMaxClientConnections(1);  // only one connection in time is accepted
 
@@ -174,13 +176,13 @@ public class ServerTest {
 
     @Test
     public void multipleConcurrentConnectionsTest() throws Exception {
-        int numberOfClients = 100;
+        int numberOfClients = 500;
 
         AtomicInteger sucessConnections = new AtomicInteger();
         List<String> errors = new CopyOnWriteArrayList<>();
 
         Server server = new Server(temp.newFolder().toPath());
-        server.startAndWait(500);
+        server.start(500);
         server.setMaxClientConnections(numberOfClients);
 
         IntStream.range(0, numberOfClients).forEach(i ->
@@ -207,7 +209,7 @@ public class ServerTest {
         );
         Thread.sleep(numberOfClients + 3000);
 
-        server.stopAndWait(5000);
+        server.stop(5000);
 
         errors.forEach(error -> fail(error));
         assertThat("Count of successful connections must be " + numberOfClients + ".", sucessConnections.get(), is(numberOfClients));

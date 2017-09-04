@@ -13,9 +13,9 @@ import cz.net21.ttulka.thistledb.console.Console;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
- * Created by ttulka
- * <p>
  * Application to start/stop a sever from the command line.
+ * <p>
+ * Created by ttulka
  */
 @CommonsLog
 public final class Application {
@@ -71,7 +71,7 @@ public final class Application {
             server.setMaxClientConnections(maxClientConnections);
         }
 
-        server.startAndWait(5000);
+        server.start(5000);
 
         startCommandConsole(server.getPort());
 

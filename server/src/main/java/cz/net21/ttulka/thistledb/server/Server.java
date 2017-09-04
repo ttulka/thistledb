@@ -9,9 +9,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,7 +42,7 @@ public class Server implements Runnable, AutoCloseable {
     private Selector selector;
     private boolean listening = false;
 
-    private final List<ClientConnectionThread> connectionPool = new ArrayList<>();
+    private ServerConnectionPool connectionPool = new ServerConnectionPool();
 
     private CountDownLatch startLatch;
     private CountDownLatch stopLatch;
@@ -101,11 +99,11 @@ public class Server implements Runnable, AutoCloseable {
     }
 
     /**
-     * Starts the server listener and waits until it's up and running.
+     * Starts the server listener and waits until it's up and running. Blocking variant.
      *
      * @param timeout the waiting timeout in milliseconds
      */
-    public void startAndWait(int timeout) {
+    public void start(int timeout) {
         start();
         try {
             startLatch.await(timeout, TimeUnit.MILLISECONDS);
@@ -128,11 +126,11 @@ public class Server implements Runnable, AutoCloseable {
     }
 
     /**
-     * Stops the server listener and waits until it's down.
+     * Stops the server listener and waits until it's down. Blocking variant.
      *
      * @param timeout the waiting timeout in milliseconds
      */
-    public void stopAndWait(int timeout) {
+    public void stop(int timeout) {
         stop();
         try {
             stopLatch.await(timeout, TimeUnit.MILLISECONDS);
@@ -146,12 +144,7 @@ public class Server implements Runnable, AutoCloseable {
      */
     @Override
     public final void close() {
-        stopAndWait(5000);
-    }
-
-    private void afterClosed() {
-        closeServerChannel();
-        dataSource.cleanUpData();
+        stop(5000);
     }
 
     /**
@@ -206,14 +199,23 @@ public class Server implements Runnable, AutoCloseable {
                 log.warn("Server was stopped while serving client connections.", e);
             }
         } finally {
-            shutdownClientConnections();
+            connectionPool.shutdownClientConnections();
             executor.shutdown();
             while (!executor.isTerminated()) {
             }
-            afterClosed();
+
+            closeServerChannel();
+            afterServerClosed();
 
             stopLatch.countDown(); // server is stopped
         }
+    }
+
+    /**
+     * Tidy up after the server was closed.
+     */
+    protected void afterServerClosed() {
+        dataSource.cleanUpData();
     }
 
     private int clientNumber = 0;
@@ -223,43 +225,17 @@ public class Server implements Runnable, AutoCloseable {
         SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
 
-        if (!connectionPoolFree()) {
+        if (!connectionPool.isConnectionPoolFree(maxClientConnections)) {
             refuseConnectionOverMaxPool(clientChannel);
             throw new IllegalStateException("Maximum client connection pool exceeded.");
         }
         ClientConnectionThread thread = new ClientConnectionThread(clientNumber++, clientChannel, dataSource);
-        addToConnectionPool(thread);
+        connectionPool.addClientConnection(thread);
         return thread;
     }
 
-    // TODO refactor the connection pool as a new class
-    private boolean connectionPoolFree() {
-        int countOpenConnections = 0;
-
-        Iterator<ClientConnectionThread> iterator = connectionPool.iterator();
-        while (iterator.hasNext()) {
-            ClientConnectionThread thread = iterator.next();
-            if (thread.isLive()) {
-                countOpenConnections++;
-            } else {
-                iterator.remove();
-            }
-        }
-        return countOpenConnections < maxClientConnections;
-    }
-
-    private void addToConnectionPool(ClientConnectionThread thread) {
-        connectionPool.add(thread);
-    }
-
     private void refuseConnectionOverMaxPool(SocketChannel clientChannel) {
-        try {
-            SocketUtils.printlnIntoChannel("REFUSED Connection Pool exceeded", clientChannel);
-
-        } finally {
-            // TODO if a client is closed, the REFUSED message is not delivered
-            closeClientChannel(clientChannel);
-        }
+        SocketUtils.printlnIntoChannel("REFUSED Connection Pool exceeded", clientChannel);
     }
 
     private void closeClientChannel(SocketChannel clientChannel) {
@@ -269,10 +245,6 @@ public class Server implements Runnable, AutoCloseable {
         } catch (Exception ignore) {
             log.warn("Exception by closing a client channel.", ignore);
         }
-    }
-
-    private void shutdownClientConnections() {
-        connectionPool.stream().forEach(ClientConnectionThread::stop);
     }
 
     private void closeServerChannel() {
