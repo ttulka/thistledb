@@ -159,6 +159,10 @@ Select the document from the collection (non-blocking):
 ```
 client.executeQuery(query).subscribe(System.out::println);
 ```
+Close the client:
+```
+client.close();
+```
 
 ## Server
 

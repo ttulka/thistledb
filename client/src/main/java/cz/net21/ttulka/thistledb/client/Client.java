@@ -2,21 +2,21 @@ package cz.net21.ttulka.thistledb.client;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Client driver.
- * <p>
+ *
  * @author ttulka
  */
-public class Client {
+public class Client implements AutoCloseable {
 
     public static final String DEFAULT_HOST = "localhost";
     public static final int DEFAULT_PORT = 9658;
 
-    private final String host;
-    private final int port;
+    private final Socket serverSocket;
 
     private int timeout = 2 * 60 * 1000;    // 2 minutes
 
@@ -33,18 +33,54 @@ public class Client {
     }
 
     public Client(String host, int port) {
-        this.host = host;
-        this.port = port;
+        try {
+            serverSocket = new Socket(host, port);
+            serverSocket.setSoTimeout(timeout);
+
+        } catch (IOException e) {
+            throw new ClientException("Cannot open a socket on " + host + ":" + port + ".", e);
+        }
     }
 
     /**
-     * Sets timeout for a client response.
-     * The timeout must be greater then zero. A timeout of zero is interpreted as an infinite timeout.
+     * Close the client.
+     *
+     * @throws ClientException when an exception occurs by closing
+     */
+    @Override
+    public void close() {
+        try {
+            serverSocket.close();
+
+        } catch (IOException e) {
+            throw new ClientException("Cannot close a socket to " + serverSocket.getRemoteSocketAddress() + ".", e);
+        }
+    }
+
+    /**
+     * Gets timeout for a client response.
+     *
+     * @return the timeout
+     */
+    public int getTimeout() {
+        return timeout;
+    }
+
+    /**
+     * Sets timeout for a client response. The timeout must be greater then zero. A timeout of zero is interpreted as an infinite timeout.
      *
      * @param timeout the specified timeout, in milliseconds
+     * @throws ClientException          when the client is closed
+     * @throws IllegalArgumentException when the timeout value is less than zero
      */
     public void setTimeout(int timeout) {
         this.timeout = timeout;
+        try {
+            serverSocket.setSoTimeout(timeout);
+
+        } catch (SocketException e) {
+            throw new ClientException("Client is closed.", e);
+        }
     }
 
     /**
@@ -78,13 +114,7 @@ public class Client {
      */
     public JsonPublisher executeQuery(String nativeQuery) {
         checkQuery(nativeQuery);
-        try (Socket socket = new Socket(host, port)) {
-            socket.setSoTimeout(timeout);
-            return new JsonPublisher(new QueryExecutor(socket, nativeQuery));
-
-        } catch (IOException e) {
-            throw new ClientException("Cannot open a socket on " + host + ":" + port + ".", e);
-        }
+        return new JsonPublisher(new QueryExecutor(serverSocket, nativeQuery));
     }
 
     /**
@@ -96,13 +126,7 @@ public class Client {
      */
     public List<String> executeQueryBlocking(String nativeQuery) {
         checkQuery(nativeQuery);
-        try (Socket socket = new Socket(host, port)) {
-            socket.setSoTimeout(timeout);
-            return executeProcessorBlocking(new QueryExecutor(socket, nativeQuery));
-
-        } catch (IOException e) {
-            throw new ClientException("Cannot open a socket on " + host + ":" + port + ".", e);
-        }
+        return executeProcessorBlocking(new QueryExecutor(serverSocket, nativeQuery));
     }
 
     /**
@@ -110,6 +134,7 @@ public class Client {
      *
      * @param query the query command to be executed
      * @throws ClientException if the command cannot be sent to socket
+     * @throws ClientException if the command returns more than one response
      */
     public void executeCommand(Query query) {
         checkQuery(query);
@@ -121,19 +146,52 @@ public class Client {
      *
      * @param nativeQuery the native query command to be executed
      * @throws ClientException if the command cannot be sent to socket
+     * @throws ClientException if the command returns more than one response
      */
     public void executeCommand(String nativeQuery) {
         checkQuery(nativeQuery);
-        try (Socket socket = new Socket(host, port)) {
-            socket.setSoTimeout(timeout);
-            new Thread(() -> {
-                new QueryExecutor(socket, nativeQuery).executeQuery();
-            }).start();
-        } catch (IOException e) {
-            throw new ClientException("Cannot open a socket on " + host + ":" + port + ".", e);
-        } catch (Exception e) {
-            throw new ClientException("Cannot send a command [" + nativeQuery + "] to socket.", e);
+        new Thread(() -> {
+            QueryExecutor queryExecutor = new QueryExecutor(serverSocket, nativeQuery);
+            queryExecutor.executeQuery();
+            queryExecutor.getNextResult();  // status response
+
+            if (queryExecutor.getNextResult() != null) {
+                throw new ClientException("Command cannot return more than one response.");
+            }
+        }).start();
+    }
+
+    /**
+     * Executes a command, waits for a response.
+     *
+     * @param query the query command to be executed
+     * @return the server response
+     * @throws ClientException if the command cannot be sent to socket
+     * @throws ClientException if the command returns more than one response
+     */
+    public String executeCommandBlocking(Query query) {
+        checkQuery(query);
+        return executeCommandBlocking(query.getNativeQuery());
+    }
+
+    /**
+     * Sends a command to the server, waits for a response.
+     *
+     * @param nativeQuery the native query command to be executed
+     * @return the server response
+     * @throws ClientException if the command cannot be sent to socket
+     * @throws ClientException if the command returns more than one response
+     */
+    public String executeCommandBlocking(String nativeQuery) {
+        checkQuery(nativeQuery);
+        QueryExecutor queryExecutor = new QueryExecutor(serverSocket, nativeQuery);
+        queryExecutor.executeQuery();
+        String response = queryExecutor.getNextResult();
+
+        if (queryExecutor.getNextResult() != null) {
+            throw new ClientException("Command cannot return more than one response.");
         }
+        return response;
     }
 
     /**
@@ -142,9 +200,10 @@ public class Client {
      * @return true if connection successfully created, otherwise false
      */
     public boolean test() {
-        try (Socket socket = new Socket(host, port)) {
-            socket.setSoTimeout(timeout);
-            return true;
+        final String testQuery = "SELECT name FROM DUAL";
+        try {
+            List<String> result = executeProcessorBlocking(new QueryExecutor(serverSocket, testQuery));
+            return result != null && result.size() == 1;
 
         } catch (Throwable t) {
             return false;
