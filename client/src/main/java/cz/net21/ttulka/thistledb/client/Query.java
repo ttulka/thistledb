@@ -87,18 +87,13 @@ public class Query {
          * Builds an insert query.
          *
          * @param into the collection to insert into
-         * @param data the JSON data to insert
          * @return the insert query builder
          */
-        public InsertQueryBuilder insertInto(String into, String data) {
+        public InsertQueryBuilder insertInto(String into) {
             if (into == null || into.isEmpty()) {
                 throw new IllegalArgumentException("Collection name cannot be empty.");
             }
-            if (data == null || data.isEmpty()) {
-                throw new IllegalArgumentException("JSON data cannot be empty.");
-            }
-            ready = true;
-            sb.append("INSERT INTO ").append(into).append(" VALUES ").append(data);
+            sb.append("INSERT INTO ").append(into);
             return new InsertQueryBuilder();
         }
 
@@ -298,6 +293,31 @@ public class Query {
          * Insert Query Builder.
          */
         public class InsertQueryBuilder extends BuildableBuilder {
+
+            private boolean hasValues = false;
+
+            public InsertQueryBuilder values(String data) {
+                if (data == null || data.isEmpty()) {
+                    throw new IllegalArgumentException("JSON data cannot be empty.");
+                }
+                if (!hasValues) {
+                    sb.append(" VALUES ");
+                } else {
+                    sb.append(",");
+                }
+                sb.append(data);
+                hasValues = true;
+                ready = true;
+                return this;
+            }
+
+            @Override
+            public Query build() {
+                if (!hasValues) {
+                    throw new IllegalStateException("INSERT clause must contain VALUES.");
+                }
+                return super.build();
+            }
         }
 
         /**
