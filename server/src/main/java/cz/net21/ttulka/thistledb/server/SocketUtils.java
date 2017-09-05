@@ -6,7 +6,7 @@ import java.nio.channels.SocketChannel;
 
 /**
  * Utilities for working with sockets.
- * <p>
+ *
  * @author ttulka
  */
 class SocketUtils {

@@ -18,7 +18,7 @@ import org.json.JSONTokener;
 
 /**
  * JSON implementation keeping an order of elements.
- * <p>
+ *
  * @author ttulka
  */
 public class TSONObject extends JSONObject {

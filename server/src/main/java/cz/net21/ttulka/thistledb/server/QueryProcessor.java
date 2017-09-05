@@ -11,7 +11,7 @@ import reactor.core.publisher.Flux;
 
 /**
  * Processing a request.
- * <p>
+ *
  * @author ttulka
  */
 @CommonsLog

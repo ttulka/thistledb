@@ -9,6 +9,8 @@ import java.net.Socket;
 /**
  * Processing a query.
  * <p>
+ * Uses blocking IO approach to offer both blocking and non-blocking (via Reactive Streams) variants.
+ *
  * @author ttulka
  */
 class QueryExecutor {
@@ -29,8 +31,8 @@ class QueryExecutor {
     /**
      * Creates a {@link QueryExecutor}
      *
-     * @param serverSocket      the server serverSocket
-     * @param nativeQuery the query
+     * @param serverSocket the server serverSocket
+     * @param nativeQuery  the query
      * @throws QueryException when the query is invalid
      */
     public QueryExecutor(Socket serverSocket, String nativeQuery) {

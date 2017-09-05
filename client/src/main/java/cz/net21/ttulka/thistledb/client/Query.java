@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 /**
  * Builder of queries.
- * <p>
+ *
  * @author ttulka
  */
 public class Query {

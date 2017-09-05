@@ -37,6 +37,12 @@
             <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>cz.net21.ttulka.thistledb</groupId>
+            <artifactId>thistledb-server</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <developers>

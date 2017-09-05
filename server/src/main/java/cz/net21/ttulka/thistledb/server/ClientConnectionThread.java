@@ -16,7 +16,7 @@ import lombok.extern.apachecommons.CommonsLog;
  * A client connection thread is created for each client connection to server client requests in concurrent manner.
  * <p>
  * With this approach the sever can serve more clients in parallel even for long-time executing requests.
- * <p>
+ *
  * @author ttulka
  */
 @CommonsLog

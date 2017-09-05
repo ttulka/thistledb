@@ -2,7 +2,7 @@ package cz.net21.ttulka.thistledb.client;
 
 /**
  * Exception thrown from the server.
- * <p>
+ *
  * @author ttulka
  */
 public class ClientException extends RuntimeException {

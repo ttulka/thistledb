@@ -10,7 +10,7 @@ import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Application to start/stop a console from the command line.
- * <p>
+ *
  * @author ttulka
  */
 @CommonsLog

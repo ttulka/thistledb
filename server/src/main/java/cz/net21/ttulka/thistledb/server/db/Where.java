@@ -17,7 +17,7 @@ import lombok.NonNull;
 
 /**
  * Represent a where clause.
- * <p>
+ *
  * @author ttulka
  */
 class Where {

@@ -21,7 +21,7 @@ import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * The server.
- * <p>
+ *
  * @author ttulka
  */
 @CommonsLog

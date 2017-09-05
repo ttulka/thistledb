@@ -8,7 +8,7 @@ import static java.util.regex.Pattern.compile;
 
 /**
  * Query validator.
- * <p>
+ *
  * @author ttulka
  */
 public class QueryValidator {

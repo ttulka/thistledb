@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * Pool holder of the server connections.
- * <p>
+ *
  * @author ttulka
  */
 class ServerConnectionPool {

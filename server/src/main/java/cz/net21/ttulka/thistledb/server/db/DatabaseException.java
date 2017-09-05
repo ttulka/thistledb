@@ -4,7 +4,7 @@ import cz.net21.ttulka.thistledb.server.ServerException;
 
 /**
  * Exception thrown by the database access.
- * <p>
+ *
  * @author ttulka
  */
 public class DatabaseException extends ServerException {

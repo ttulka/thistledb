@@ -14,7 +14,7 @@ import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * The command-line console.
- * <p>
+ *
  * @author ttulka
  */
 @CommonsLog

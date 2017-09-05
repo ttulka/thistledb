@@ -4,7 +4,7 @@ import cz.net21.ttulka.thistledb.tson.TSONObject;
 
 /**
  * Data for testing purposes.
- * <p>
+ *
  * @author ttulka
  */
 public abstract class TestData {

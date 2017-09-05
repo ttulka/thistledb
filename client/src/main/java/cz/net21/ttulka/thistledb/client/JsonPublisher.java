@@ -12,7 +12,7 @@ import org.reactivestreams.Subscriber;
 
 /**
  * Reactive JSON publisher.
- * <p>
+ *
  * @author ttulka
  */
 public class JsonPublisher implements Publisher<String> {

@@ -6,7 +6,7 @@ import reactor.core.publisher.Flux;
 
 /**
  * Service to the database access.
- * <p>
+ *
  * @author ttulka
  */
 public interface DataSource {

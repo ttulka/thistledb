@@ -16,7 +16,7 @@ import reactor.core.scheduler.Schedulers;
 
 /**
  * Service to the database access.
- * <p>
+ *
  * @author ttulka
  */
 @CommonsLog
