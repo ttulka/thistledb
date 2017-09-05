@@ -3,9 +3,9 @@ package cz.net21.ttulka.thistledb.server;
 import cz.net21.ttulka.thistledb.tson.TSONObject;
 
 /**
- * Created by ttulka
- * <p>
  * Data for testing purposes.
+ * <p>
+ * @author ttulka
  */
 public abstract class TestData {
 

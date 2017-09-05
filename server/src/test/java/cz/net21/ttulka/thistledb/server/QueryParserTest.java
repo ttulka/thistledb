@@ -9,7 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 public class QueryParserTest {
 

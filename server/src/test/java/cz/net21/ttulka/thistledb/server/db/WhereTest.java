@@ -12,7 +12,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 public class WhereTest {
 

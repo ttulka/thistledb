@@ -13,7 +13,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 @Test // Must be here for TestNG to find and run this, do not remove
 public class AsyncSupplierPublisherTest extends PublisherVerification<Integer> {

@@ -10,9 +10,9 @@ import lombok.extern.apachecommons.CommonsLog;
 import reactor.core.publisher.Flux;
 
 /**
- * Created by ttulka
- * <p>
  * Processing a request.
+ * <p>
+ * @author ttulka
  */
 @CommonsLog
 class QueryProcessor {

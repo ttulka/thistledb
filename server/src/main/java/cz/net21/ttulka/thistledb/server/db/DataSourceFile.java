@@ -15,9 +15,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
 /**
- * Created by ttulka
- * <p>
  * Service to the database access.
+ * <p>
+ * @author ttulka
  */
 @CommonsLog
 public class DataSourceFile implements DataSource {

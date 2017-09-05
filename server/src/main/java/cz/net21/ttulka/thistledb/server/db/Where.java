@@ -16,9 +16,9 @@ import lombok.Data;
 import lombok.NonNull;
 
 /**
- * Created by ttulka
- * <p>
  * Represent a where clause.
+ * <p>
+ * @author ttulka
  */
 class Where {
 

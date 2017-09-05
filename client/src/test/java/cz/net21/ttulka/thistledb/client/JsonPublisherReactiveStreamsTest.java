@@ -16,7 +16,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 @Test
 public class JsonPublisherReactiveStreamsTest extends PublisherVerification<String> {

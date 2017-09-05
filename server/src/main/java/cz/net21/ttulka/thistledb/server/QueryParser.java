@@ -17,7 +17,7 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 @CommonsLog
 class QueryParser {

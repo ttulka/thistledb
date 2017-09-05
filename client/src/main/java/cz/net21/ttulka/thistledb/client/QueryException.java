@@ -1,7 +1,7 @@
 package cz.net21.ttulka.thistledb.client;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 public class QueryException extends ClientException {
 

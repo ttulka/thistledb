@@ -7,9 +7,9 @@ import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
 
 /**
- * Created by ttulka
- * <p>
  * Query validator.
+ * <p>
+ * @author ttulka
  */
 public class QueryValidator {
 

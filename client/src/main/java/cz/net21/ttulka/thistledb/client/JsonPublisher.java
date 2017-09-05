@@ -11,9 +11,9 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 
 /**
- * Created by ttulka
- * <p>
  * Reactive JSON publisher.
+ * <p>
+ * @author ttulka
  */
 public class JsonPublisher implements Publisher<String> {
 

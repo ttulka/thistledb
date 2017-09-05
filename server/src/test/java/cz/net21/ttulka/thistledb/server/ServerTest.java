@@ -23,7 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNull.nullValue;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 public class ServerTest {
 

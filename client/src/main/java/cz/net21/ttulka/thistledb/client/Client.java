@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by ttulka
- * <p>
  * Client driver.
+ * <p>
+ * @author ttulka
  */
 public class Client {
 

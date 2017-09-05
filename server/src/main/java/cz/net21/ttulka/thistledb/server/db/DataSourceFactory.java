@@ -6,9 +6,8 @@ import lombok.NonNull;
 
 /**
  * Data Source Factory.
- *
- * Created by ttulka
- *
+ * <p>
+ * @author ttulka
  */
 public class DataSourceFactory {
 

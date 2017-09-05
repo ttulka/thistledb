@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 public class DataSourceFileTest {
 

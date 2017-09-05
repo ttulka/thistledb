@@ -15,7 +15,7 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 /**
  * DUAL collection.
  * <p>
- * Created by ttulka
+ * @author ttulka
  */
 public class DualCollection implements DbCollection {
 

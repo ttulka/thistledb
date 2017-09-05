@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Pool holder of the server connections.
  * <p>
- * Created by ttulka
+ * @author ttulka
  */
 class ServerConnectionPool {
 

@@ -8,7 +8,7 @@ import org.json.JSONArray;
 import cz.net21.ttulka.thistledb.tson.TSONObject;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 class JsonFormatter {
 

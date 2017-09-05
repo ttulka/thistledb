@@ -15,7 +15,7 @@ import lombok.extern.apachecommons.CommonsLog;
 /**
  * Application to start/stop a sever from the command line.
  * <p>
- * Created by ttulka
+ * @author ttulka
  */
 @CommonsLog
 public final class Application {

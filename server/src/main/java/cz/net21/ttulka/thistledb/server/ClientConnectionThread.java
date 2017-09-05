@@ -17,7 +17,7 @@ import lombok.extern.apachecommons.CommonsLog;
  * <p>
  * With this approach the sever can serve more clients in parallel even for long-time executing requests.
  * <p>
- * Created by ttulka
+ * @author ttulka
  */
 @CommonsLog
 class ClientConnectionThread implements Runnable {

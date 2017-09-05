@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 @RunWith(MockitoJUnitRunner.class)
 public class JsonPublisherTest {

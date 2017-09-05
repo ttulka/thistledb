@@ -5,9 +5,9 @@ import java.util.Collection;
 import reactor.core.publisher.Flux;
 
 /**
- * Created by ttulka
- * <p>
  * Service to the database access.
+ * <p>
+ * @author ttulka
  */
 public interface DataSource {
 

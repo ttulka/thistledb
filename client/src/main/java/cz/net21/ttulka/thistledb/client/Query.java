@@ -3,9 +3,9 @@ package cz.net21.ttulka.thistledb.client;
 import java.util.Arrays;
 
 /**
- * Created by ttulka
- * <p>
  * Builder of queries.
+ * <p>
+ * @author ttulka
  */
 public class Query {
 

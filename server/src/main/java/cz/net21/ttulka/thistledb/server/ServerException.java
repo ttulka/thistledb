@@ -1,7 +1,7 @@
 package cz.net21.ttulka.thistledb.server;
 
 /**
- * Created by ttulka
+ * @author ttulka
  * <p>
  * Exception thrown from the server.
  */

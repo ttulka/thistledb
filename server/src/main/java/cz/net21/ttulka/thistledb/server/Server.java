@@ -22,7 +22,7 @@ import lombok.extern.apachecommons.CommonsLog;
 /**
  * The server.
  * <p>
- * Created by ttulka
+ * @author ttulka
  */
 @CommonsLog
 public class Server implements Runnable, AutoCloseable {

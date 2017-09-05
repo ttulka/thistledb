@@ -24,7 +24,7 @@ import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.NonNull;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 public class DbCollectionFile implements DbCollection {
 

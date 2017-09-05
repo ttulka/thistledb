@@ -6,7 +6,7 @@ import java.util.Iterator;
 import lombok.NonNull;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 interface DbCollection {
 

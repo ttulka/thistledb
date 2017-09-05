@@ -13,9 +13,9 @@ import cz.net21.ttulka.thistledb.client.ClientException;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
- * Created by ttulka
- * <p>
  * The command-line console.
+ * <p>
+ * @author ttulka
  */
 @CommonsLog
 public class Console {

@@ -3,9 +3,9 @@ package cz.net21.ttulka.thistledb.server.db;
 import cz.net21.ttulka.thistledb.server.ServerException;
 
 /**
- * Created by ttulka
- *
  * Exception thrown by the database access.
+ * <p>
+ * @author ttulka
  */
 public class DatabaseException extends ServerException {
 

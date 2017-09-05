@@ -16,7 +16,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * Created by ttulka
+ * @author ttulka
  */
 public class DbCollectionFileTest {
 

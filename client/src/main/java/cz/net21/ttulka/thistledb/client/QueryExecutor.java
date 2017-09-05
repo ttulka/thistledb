@@ -7,9 +7,9 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 /**
- * Created by ttulka
- * <p>
  * Processing a query.
+ * <p>
+ * @author ttulka
  */
 class QueryExecutor {
 
@@ -19,7 +19,7 @@ class QueryExecutor {
     public static final String OKAY = "OKAY";
     public static final String FINISHED = "FINISHED";
 
-    private final Socket socket;
+    private final Socket serverSocket;
     private final String query;
 
     private BufferedReader in;
@@ -29,12 +29,12 @@ class QueryExecutor {
     /**
      * Creates a {@link QueryExecutor}
      *
-     * @param socket      the server socket
+     * @param serverSocket      the server serverSocket
      * @param nativeQuery the query
      * @throws QueryException when the query is invalid
      */
-    public QueryExecutor(Socket socket, String nativeQuery) {
-        this.socket = socket;
+    public QueryExecutor(Socket serverSocket, String nativeQuery) {
+        this.serverSocket = serverSocket;
         this.query = cleanQuery(nativeQuery);
 
         if (!QueryValidator.validate(query)) {
@@ -57,13 +57,13 @@ class QueryExecutor {
      */
     public void executeQuery() {
         try {
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            PrintWriter out = new PrintWriter(serverSocket.getOutputStream(), true);
             out.println(query);
 
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            in = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()));
 
         } catch (Exception e) {
-            throw new ClientException("Cannot send a query to socket: " + query, e);
+            throw new ClientException("Cannot send a query to serverSocket: " + query, e);
         }
     }
 
