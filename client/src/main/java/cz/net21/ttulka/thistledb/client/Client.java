@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Client driver.
@@ -132,31 +133,36 @@ public class Client implements AutoCloseable {
     /**
      * Executes a command, doesn't wait for a response.
      *
-     * @param query the query command to be executed
+     * @param query    the query command to be executed
+     * @param consumer the response consumer
      * @throws ClientException if the command cannot be sent to socket
      * @throws ClientException if the command returns more than one response
      */
-    public void executeCommand(Query query) {
+    public void executeCommand(Query query, Consumer<String> consumer) {
         checkQuery(query);
-        executeCommand(query.getNativeQuery());
+        executeCommand(query.getNativeQuery(), consumer);
     }
 
     /**
      * Sends a command to the server, doesn't wait for a response.
      *
      * @param nativeQuery the native query command to be executed
+     * @param consumer    the response consumer
      * @throws ClientException if the command cannot be sent to socket
      * @throws ClientException if the command returns more than one response
      */
-    public void executeCommand(String nativeQuery) {
+    public void executeCommand(String nativeQuery, Consumer<String> consumer) {
         checkQuery(nativeQuery);
         new Thread(() -> {
             QueryExecutor queryExecutor = new QueryExecutor(serverSocket, nativeQuery);
             queryExecutor.executeQuery();
-            queryExecutor.getNextResult();  // status response
+            String response = queryExecutor.getNextResult();  // status response
 
             if (queryExecutor.getNextResult() != null) {
                 throw new ClientException("Command cannot return more than one response.");
+            }
+            if (consumer != null) {
+                consumer.accept(response);
             }
         }).start();
     }

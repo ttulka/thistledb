@@ -52,10 +52,10 @@ public class ClientITest {
 
     @Test
     public void basicTest() {
-        client.executeCommand("CREATE test");
+        client.executeCommand("CREATE test", null);
         sleep(500);
 
-        client.executeCommand("INSERT INTO test VALUES {\"v\":1},{\"v\":2}");
+        client.executeCommand("INSERT INTO test VALUES {\"v\":1},{\"v\":2}", null);
         sleep(500);
 
         JsonPublisher publisher = client.executeQuery("SELECT v FROM test");
@@ -71,11 +71,11 @@ public class ClientITest {
     @Test
     public void basicQueryTest() {
         Query createQuery = Query.builder().createCollection("test").build();
-        client.executeCommand(createQuery);
+        client.executeCommand(createQuery, null);
         sleep(500);
 
         Query insertQuery = Query.builder().insertInto("test").values("{\"v\":1}").values("{\"v\":2}").build();
-        client.executeCommand(insertQuery);
+        client.executeCommand(insertQuery, null);
         sleep(500);
 
         Query selectQuery = Query.builder().selectFrom("test").build();
