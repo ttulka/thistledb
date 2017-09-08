@@ -141,7 +141,7 @@ Prints always:
 {"value":4}
 {"value":5}
 ```
-When the same code is change to the parallel processing:
+When the same code is changed to run in parallel:
 ```
 publisher.parallel().subscribe(System.out::println);
 ```
