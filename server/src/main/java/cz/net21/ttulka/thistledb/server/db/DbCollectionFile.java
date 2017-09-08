@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Supplier;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -24,6 +23,8 @@ import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.NonNull;
 
 /**
+ * Collection implementation for the file-access.
+ *
  * @author ttulka
  */
 public class DbCollectionFile implements DbCollection {
