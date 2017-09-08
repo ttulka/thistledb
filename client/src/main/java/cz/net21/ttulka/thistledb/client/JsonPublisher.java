@@ -19,6 +19,8 @@ public class JsonPublisher implements Publisher<String> {
 
     private final Publisher<String> publisher;
 
+    private boolean parallel = false;
+
     private final CountDownLatch started = new CountDownLatch(1);
     private final CountDownLatch finished = new CountDownLatch(1);
     private final CountDownLatch initialized = new CountDownLatch(1);
@@ -49,8 +51,6 @@ public class JsonPublisher implements Publisher<String> {
             }
         }).start();
     }
-
-    boolean parallel = false;
 
     /**
      * Changes the publisher to parallel processing.

@@ -19,6 +19,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 /**
+ * Client integration tests.
+ *
  * @author ttulka
  */
 public class ClientITest {
