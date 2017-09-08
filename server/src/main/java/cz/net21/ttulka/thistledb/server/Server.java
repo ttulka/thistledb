@@ -25,7 +25,7 @@ import lombok.extern.apachecommons.CommonsLog;
  * @author ttulka
  */
 @CommonsLog
-public class Server implements Runnable, AutoCloseable {
+public class Server implements AutoCloseable {
 
     public static final int DEFAULT_PORT = 9658;
     public static final Path DEFAULT_DATA_DIR = Paths.get("data");
@@ -95,7 +95,7 @@ public class Server implements Runnable, AutoCloseable {
         startLatch = new CountDownLatch(1);
         stopLatch = new CountDownLatch(1);
 
-        new Thread(this).start();
+        new Thread(this::run).start();
     }
 
     /**
@@ -119,7 +119,9 @@ public class Server implements Runnable, AutoCloseable {
         log.info("Closing a serverChannel and stopping the server...");
         listening = false;
         try {
-            selector.close();
+            if (selector != null) {
+                selector.close();
+            }
         } catch (IOException e) {
             log.warn("Cannot close a selector", e);
         }
@@ -152,8 +154,7 @@ public class Server implements Runnable, AutoCloseable {
      *
      * @throws ServerException when something goes wrong
      */
-    @Override
-    public void run() {
+    protected void run() {
         log.info("Opening a serverChannel on " + port + " and waiting for client requests...");
         ExecutorService executor = Executors.newCachedThreadPool();
         try {
