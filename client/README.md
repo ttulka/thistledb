@@ -44,7 +44,6 @@ try (Client client = new Client()) {
 ```
 
 ## Querying
-
 There are two types of requests: queries and commands.
 
 **Queries** ask the database for data response:
@@ -70,7 +69,6 @@ Based on a request the response can be a result of query or status information.
 | ERROR            | Error                 | `{"status":"error", "message":"Description of the error."}`     |
 
 ### Query Builder
-
 Besides native String-based queries a intuitive Query-Builder could be used to prepare a query.
 
 Example:
@@ -92,7 +90,6 @@ client.executeCommand(insertQuery, null);
 ```
 
 ### Asynchronous Methods
-
 Asynchronous methods are based on Reactive Streams.
 
 | Method           | Callback           | Meaning                           |
@@ -103,7 +100,6 @@ Asynchronous methods are based on Reactive Streams.
 There are always overloaded variants for native String-based and Query-Builder-based queries.
 
 #### JSON Publisher
-
 Class `JsonPublisher` implements `org.reactivestreams.Publisher`. 
 
 Besides the method for subscribing an object of class `org.reactivestreams.Subscriber` offers a convenient method for subscribing an object of the standard Java class `Consumer`:
@@ -113,7 +109,6 @@ public JsonPublisher subscribe(Consumer<String> onNext)
 This methods create a subscriber based on the gotten consumer.
 
 ##### Serial vs Parallel
-
 As default runs the JSON Publisher in serial mode but it can run in parallel as well:
 ```
 jsonPublisher.parallel();
@@ -155,7 +150,6 @@ The result could look like this (or similar):
 ```
 
 ##### Waiting for the Publisher to be finished
-
 We can wait for the publisher to be finished in the blocking mode using the method `await()`:
 ```
 // Create a publisher
@@ -175,7 +169,6 @@ System.exit(0);
 ```
 
 ### Blocking Methods
-
 | Method                   | Return type    | Meaning                          |
 | ------------------------ | -------------- | -------------------------------- |
 | `executeQueryBlocking`   | `List<String>` | Executes a query synchronously   |
