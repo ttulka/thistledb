@@ -175,8 +175,10 @@ Maximum client connections the server accepts is **20**.
 Server could be started from the command line or dynamically from a Java code.
 
 ### Starting from a Command Line
-
-*To be done... (see Get Started)*
+```
+$ cd server-app/target/server/bin
+$ server
+```
 
 #### Changing the Default Port
 ```
