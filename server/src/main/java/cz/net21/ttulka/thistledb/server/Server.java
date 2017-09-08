@@ -38,8 +38,8 @@ public class Server implements AutoCloseable {
 
     protected int maxClientConnections = DEFAULT_MAX_CONNECTION_POOL;
 
-    private ServerSocketChannel serverChannel;
     private Selector selector;
+
     private boolean listening = false;
 
     private ServerConnectionPool connectionPool = new ServerConnectionPool();
@@ -79,6 +79,11 @@ public class Server implements AutoCloseable {
         this.maxClientConnections = maxClientConnections;
     }
 
+    /**
+     * Is the server listening (running).
+     *
+     * @return true if the server is listening, otherwise false
+     */
     public boolean listening() {
         return listening;
     }
@@ -118,13 +123,8 @@ public class Server implements AutoCloseable {
     public void stop() {
         log.info("Closing a serverChannel and stopping the server...");
         listening = false;
-        try {
-            if (selector != null) {
-                selector.close();
-            }
-        } catch (IOException e) {
-            log.warn("Cannot close a selector", e);
-        }
+
+        selector.wakeup();  // for the case the selector is currently blocking
     }
 
     /**
@@ -156,7 +156,10 @@ public class Server implements AutoCloseable {
      */
     protected void run() {
         log.info("Opening a serverChannel on " + port + " and waiting for client requests...");
+
         ExecutorService executor = Executors.newCachedThreadPool();
+
+        ServerSocketChannel serverChannel = null;
         try {
             selector = Selector.open();
 
@@ -181,7 +184,8 @@ public class Server implements AutoCloseable {
                         }
 
                         if (key.isAcceptable()) {
-                            executor.execute(acceptNewClientConnection());
+                            ClientConnectionThread clientConnectionThread = acceptNewClientConnection(serverChannel);
+                            executor.execute(clientConnectionThread);
                         }
                     } catch (Exception e) {
                         log.error("Error by accepting a client connection.", e);
@@ -205,10 +209,33 @@ public class Server implements AutoCloseable {
             while (!executor.isTerminated()) {
             }
 
-            closeServerChannel();
+            closeSelector(selector);
+            closeServerChannel(serverChannel);
             afterServerClosed();
 
             stopLatch.countDown(); // server is stopped
+        }
+    }
+
+    private void closeSelector(Selector selector) {
+        if (selector != null) {
+            try {
+                selector.close();
+
+            } catch (IOException e) {
+                log.warn("Cannot close a selector", e);
+            }
+        }
+    }
+
+    private void closeServerChannel(ServerSocketChannel serverChannel) {
+        if (serverChannel != null) {
+            try {
+                serverChannel.close();
+
+            } catch (Exception ignore) {
+                log.warn("Exception by closing a server channel.", ignore);
+            }
         }
     }
 
@@ -221,8 +248,9 @@ public class Server implements AutoCloseable {
 
     private int clientNumber = 0;
 
-    private ClientConnectionThread acceptNewClientConnection() throws IOException {
-        log.info("Accepting a new connection " + clientNumber); // TODO debug
+    private ClientConnectionThread acceptNewClientConnection(ServerSocketChannel serverChannel) throws IOException {
+        log.debug("Accepting a new connection.");
+
         SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
 
@@ -237,17 +265,5 @@ public class Server implements AutoCloseable {
 
     private void refuseConnectionOverMaxPool(SocketChannel clientChannel) {
         SocketUtils.printlnIntoChannel("REFUSED Connection Pool exceeded", clientChannel);
-    }
-
-    private void closeServerChannel() {
-        if (serverChannel != null) {
-            try {
-                serverChannel.socket().close();
-                serverChannel.close();
-
-            } catch (Exception ignore) {
-                log.warn("Exception by closing a server channel.", ignore);
-            }
-        }
     }
 }
