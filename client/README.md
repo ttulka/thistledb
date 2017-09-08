@@ -59,7 +59,7 @@ There are two types of requests: queries and commands.
 - CREATE INDEX
 - DROP INDEX
 
-### Types of response
+### Types of Response
 Based on a request the response can be a result of query or status information.
 
 | Type of response | Meaning               | Example                                                         |
@@ -69,11 +69,119 @@ Based on a request the response can be a result of query or status information.
 | INVALID          | Invalid request       | `{"status":"invalid", "message":"Description of the problem."}` |
 | ERROR            | Error                 | `{"status":"error", "message":"Description of the error."}`     |
 
-### Asynchronous methods
+### Query Builder
+
+Besides native String-based queries a intuitive Query-Builder could be used to prepare a query.
+
+Example:
+```
+import cz.net21.ttulka.thistledb.client.Query;
+// ...
+Query insertQuery = Query.builder()
+                        .insertInto("test")
+                        .values("{\"v\":1}")
+                        .values("{\"v\":2}")
+                        .build();
+                        
+client.executeCommand(insertQuery, null);
+```
+The snippet above has the same meaning as following:
+```
+String insertQuery = "INSERT INTO test VALUES {\"v\":1},{\"v\":2}";
+client.executeCommand(insertQuery, null);
+```
+
+### Asynchronous Methods
+
+Asynchronous methods are based on Reactive Streams.
+
+| Method           | Callback           | Meaning                           |
+| ---------------- | ------------------ | --------------------------------- |
+| `executeQuery`   | `JsonPublisher`    | Executes a query asynchronously   |
+| `executeCommand` | `Consumer<String>` | Executes a command asynchronously |
+
+There are always overloaded variants for native String-based and Query-Builder-based queries.
 
 #### JSON Publisher
 
-### Blocking methods
+Class `JsonPublisher` implements `org.reactivestreams.Publisher`. 
+
+Besides the method for subscribing an object of class `org.reactivestreams.Subscriber` offers a convenient method for subscribing an object of the standard Java class `Consumer`:
+```
+public JsonPublisher subscribe(Consumer<String> onNext)
+```
+This methods create a subscriber based on the gotten consumer.
+
+##### Serial vs Parallel
+
+As default runs the JSON Publisher in serial mode but it can run in parallel as well:
+```
+jsonPublisher.parallel();
+```
+Publisher could be set back to the serial mode:
+```
+jsonPublisher.serial();
+```
+
+If run in **serial** the order of elements always matchs the order the elements are consumed from a source.
+If run in **parallel** the order of elements is unpredictable.
+
+Examples:
+```
+// Consider a collection `test` containing values from 1 to 5
+JsonPublisher publisher = client.executeQuery("SELECT value FROM test");
+
+publisher.subscribe(System.out::println);
+```
+Prints always:
+```
+{"value":1}
+{"value":2}
+{"value":3}
+{"value":4}
+{"value":5}
+```
+When the same code is change to the parallel processing:
+```
+publisher.parallel().subscribe(System.out::println);
+```
+The result could look like this (or similar):
+```
+{"value":2}
+{"value":3}
+{"value":5}
+{"value":1}
+{"value":4}
+```
+
+##### Waiting for the Publisher to be finished
+
+We can wait for the publisher to be finished in the blocking mode using the method `await()`:
+```
+// Create a publisher
+JsonPublisher publisher = client.executeQuery("SELECT * FROM test");
+
+// Subscribe a consumer to the publisher
+publisher.subscribe(System.out::println);
+
+// Do some work meanwhile...
+doSomeStuff();
+
+// All work is done, let's wait for the publisher
+publisher.await();
+
+// The end
+System.exit(0);
+```
+
+### Blocking Methods
+
+| Method                   | Return type    | Meaning                          |
+| ------------------------ | -------------- | -------------------------------- |
+| `executeQueryBlocking`   | `List<String>` | Executes a query synchronously   |
+| `executeCommandBlocking` | `String`       | Executes a command synchronously |
+
+There are always overloaded variants for native String-based and Query-Builder-based queries.
 
 ## License
 
