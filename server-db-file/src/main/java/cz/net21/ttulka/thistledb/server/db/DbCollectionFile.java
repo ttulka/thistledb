@@ -156,6 +156,19 @@ public class DbCollectionFile implements DbCollection {
 
         private boolean finished = false;
 
+        protected String nextRecord(Where where) {
+            String json;
+            do {
+                json = nextRecord();
+
+                if (where.matches(json)) {
+                    return json;
+                }
+            } while (json != null);
+
+            return null;
+        }
+
         protected String nextRecord() {
             if (finished) {
                 return null;
@@ -267,14 +280,10 @@ public class DbCollectionFile implements DbCollection {
         }
 
         private String getNext() {
-            String json = nextRecord();
-            if (json != null) {
-                if (where.matches(json)) {
-                    return selectElement(deserialize(json));
+            String json = nextRecord(where);
 
-                } else {
-                    return getNext();
-                }
+            if (json != null) {
+                return selectElement(deserialize(json));
             }
             close();
             return null;
@@ -319,15 +328,13 @@ public class DbCollectionFile implements DbCollection {
             boolean deleted = false;
             String json;
             do {
-                json = nextRecord();
+                json = nextRecord(where);
 
                 if (json != null) {
-                    if (where.matches(json)) {
-                        delete(json);
-                        deleteRecord();
+                    delete(json);
+                    deleteRecord();
 
-                        deleted = true;
-                    }
+                    deleted = true;
                 }
             } while (json != null);
 
@@ -358,16 +365,14 @@ public class DbCollectionFile implements DbCollection {
             int updated = 0;
             String json;
             do {
-                json = nextRecord();
+                json = nextRecord(where);
 
                 if (json != null) {
-                    if (where.matches(json)) {
-                        json = update(json, columns, values);
-                        deleteRecord();
-                        insert(json);
+                    json = update(json, columns, values);
+                    deleteRecord();
+                    insert(json);
 
-                        updated++;
-                    }
+                    updated++;
                 }
             } while (json != null);
 

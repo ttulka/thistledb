@@ -63,7 +63,7 @@ class Where {
         andConditions = null;
     }
 
-    public boolean matches(@NonNull String json) {
+    public boolean matches(String json) {
         if (json == null) {
             return false;
         }
