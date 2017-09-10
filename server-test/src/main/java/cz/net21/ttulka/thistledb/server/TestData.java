@@ -14,5 +14,6 @@ public abstract class TestData {
     public static final String JSON_PERSON = "{\"person\":{\"name\":\"John\",\"surname\":\"Smith\",\"age\":42}}";
 
     public static final TSONObject TSON_BASIC = new TSONObject(JSON_BASIC);
+
     public static final TSONObject TSON_PERSON = new TSONObject(JSON_PERSON);
 }

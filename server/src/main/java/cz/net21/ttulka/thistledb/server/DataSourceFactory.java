@@ -1,7 +1,9 @@
-package cz.net21.ttulka.thistledb.server.db;
+package cz.net21.ttulka.thistledb.server;
 
 import java.nio.file.Path;
 
+import cz.net21.ttulka.thistledb.server.db.DataSource;
+import cz.net21.ttulka.thistledb.server.db.DataSourceFile;
 import lombok.NonNull;
 
 /**
@@ -9,7 +11,7 @@ import lombok.NonNull;
  *
  * @author ttulka
  */
-public class DataSourceFactory {
+final class DataSourceFactory {
 
     private DataSourceFactory() {
     }

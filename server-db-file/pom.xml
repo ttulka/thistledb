@@ -8,13 +8,13 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>cz.net21.ttulka.thistledb</groupId>
-    <artifactId>thistledb-server</artifactId>
+    <artifactId>thistledb-server-db-file</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
             <groupId>cz.net21.ttulka.thistledb</groupId>
-            <artifactId>thistledb-server-db-file</artifactId>
+            <artifactId>thistledb-server-db</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>

@@ -1,13 +1,11 @@
 package cz.net21.ttulka.thistledb.server.db;
 
-import cz.net21.ttulka.thistledb.server.ServerException;
-
 /**
  * Exception thrown by the database access.
  *
  * @author ttulka
  */
-public class DatabaseException extends ServerException {
+public class DatabaseException extends RuntimeException {
 
     public DatabaseException() {
     }
