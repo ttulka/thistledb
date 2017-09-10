@@ -116,7 +116,7 @@ There are special element to be returned.
 | ----------------------- | ----------------------------------------- | ---------------------------------------- |
 | `SELECT * FROM dual`      | *empty*                                 | `{}`                                     |
 | `SELECT name FROM dual`   | name of the collection                  | `{ "name" : "DUAL" }`                    |
-| `SELECT random FROM dual` | a random integer                        | `{ "random" : 980456651 }`               |
+| `SELECT random FROM dual` | a random integer                        | `{ "random" : -980456651 }`              |
 | `SELECT date FROM dual`   | datetime in format `yyyy-mm-dd H:m:s.ms`| `{ "date" : "2017-02-19 14:25:02.122" }` |
 
 ## Client
