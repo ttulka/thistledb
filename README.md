@@ -81,6 +81,7 @@ DELETE FROM collection_name [WHERE element op value [{AND|OR} element op value [
 ```
 UPDATE collection_name SET element op value[,element op value [...]] [WHERE element op value [{AND|OR} element op value [...]]]  
 ```
+Element is updated only when exists.
 
 ### Operators
 | Operator   | Meaning                | Note                                                       | 
@@ -203,8 +204,8 @@ $ server
 ```
 -m, --max <maximum>
 ```
-### Starting from a Java Code
 
+### Starting from a Java Code
 Copy the Maven dependency into your project:
 ```xml
 <dependency>
