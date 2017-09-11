@@ -101,6 +101,17 @@ public class DualCollection implements DbCollection {
     }
 
     @Override
+    public boolean createIndex(String column) {
+        throw new DatabaseException("Cannot create an index for the collection '" + NAME + "'.");
+    }
+
+    @Override
+    public boolean dropIndex(String column) {
+        throw new DatabaseException("Cannot drop an index for the collection '" + NAME + "'.");
+    }
+
+    @Override
     public void cleanUp() {
+        // nothing here
     }
 }

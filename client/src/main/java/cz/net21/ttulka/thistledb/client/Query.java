@@ -157,11 +157,11 @@ public class Query {
         }
 
         /**
-         * Builds a create index query.
+         * Builds a create insert query.
          *
          * @param collectionName the collection to be created on
          * @param column         the column to be indexed
-         * @return the create index query builder
+         * @return the create insert query builder
          */
         public CreateIndexQueryBuilder createIndex(String collectionName, String column) {
             if (collectionName == null || collectionName.isEmpty()) {
@@ -173,11 +173,11 @@ public class Query {
         }
 
         /**
-         * Builds a drop index query.
+         * Builds a drop insert query.
          *
          * @param collectionName the collection to be dropped on
-         * @param column         the column of index to be dropped
-         * @return the drop index query builder
+         * @param column         the column of insert to be dropped
+         * @return the drop insert query builder
          */
         public DropIndexQueryBuilder dropIndex(String collectionName, String column) {
             if (collectionName == null || collectionName.isEmpty()) {
@@ -361,13 +361,13 @@ public class Query {
         }
 
         /**
-         * Create index Query Builder.
+         * Create insert Query Builder.
          */
         public class CreateIndexQueryBuilder extends BuildableBuilder {
         }
 
         /**
-         * Drop index Query Builder.
+         * Drop insert Query Builder.
          */
         public class DropIndexQueryBuilder extends BuildableBuilder {
         }

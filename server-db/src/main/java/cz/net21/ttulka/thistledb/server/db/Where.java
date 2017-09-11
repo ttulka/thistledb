@@ -20,6 +20,7 @@ import lombok.NonNull;
  *
  * @author ttulka
  */
+@Data
 class Where {
 
     enum Operators {

@@ -7,6 +7,7 @@ With the non-blocking server and the reactive (asynchronous non-blocking) client
 **!!! IN PROGRESS !!!**
 
 ## Prerequisites
+
 - Java 8
 - Maven 
 
@@ -30,21 +31,17 @@ $ server
 Type your command/query or stop the server and exit the console by typing `quit`.
 
 ### Data Structures
-
 ThistleDB is based on the file-access. All the data are persistent on a disk.
 
 #### Collections
-
 Collections are separated data spaces with schema-less structures.
 
 A collection contains a set of documents.
 
 #### Documents
-
 Documents are JSON objects in a collection.
 
 ##### Elements
-
 Elements are paths in a document.
 
 Example: `patient.name` is an element addressing a patient name in the document:
@@ -58,7 +55,6 @@ Example: `patient.name` is an element addressing a patient name in the document:
 ```
 
 ### Commands and Queries
-
 All the commands and queries are SQL-like.
 
 #### Create a Collection
@@ -87,7 +83,6 @@ UPDATE collection_name SET element op value[,element op value [...]] [WHERE elem
 ```
 
 ### Operators
-
 | Operator   | Meaning                | Note                                                       | 
 | ---------- | ---------------------- | ---------------------------------------------------------- |
 | `=`        | Equal                  |                                                            |
@@ -98,9 +93,24 @@ UPDATE collection_name SET element op value[,element op value [...]] [WHERE elem
 | `<=`       | Less or equal          |                                                            |
 | `LIKE`     | Equal by an expression | `*` any string, `_` one character, `?` any character (0,1) |
 
+### Indexes 
+For accelerating the speed of searching could be used indexes on a collection.
+
+Only simple-value elements (numbers, strings, ...) can be indexed.
+Indexes are applied only on conditions with the equals operator `=`.
+
+As usual, indexes accelerate reading but degrading speed of data modifications - use them cleverly!  
+
+#### Create an Index for a Collection
+```
+CREATE INDEX indexed_element ON collection_name  
+```
+#### Drop an Index for a Collection
+```
+DROP INDEX indexed_element ON collection_name  
+```
 
 ### DUAL Collection
-
 DUAL collection is an immutable system "echo" collection which returns what it gets.
 
 | Query                    | Result                |
@@ -203,6 +213,7 @@ Copy the Maven dependency into your project:
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
+
 #### Create a server instance
 ```
 import cz.net21.ttulka.thistledb.server.Server;

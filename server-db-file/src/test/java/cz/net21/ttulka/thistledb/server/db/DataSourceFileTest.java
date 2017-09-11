@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import cz.net21.ttulka.thistledb.server.TestData;
+import cz.net21.ttulka.thistledb.tson.TSONObject;
 import reactor.core.publisher.Flux;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -53,11 +53,10 @@ public class DataSourceFileTest {
 
     @Test(expected = DatabaseException.class)
     public void createIndexOnNotExistingCollectionTest() {
-        dataSource.createIndex(TEST_COLLECTION_NAME, "test.index");
+        dataSource.createIndex(TEST_COLLECTION_NAME, "test.insert");
     }
 
     @Test
-    @Ignore // TODO
     public void createIndexTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
 
@@ -66,7 +65,6 @@ public class DataSourceFileTest {
     }
 
     @Test
-    @Ignore // TODO
     public void dropIndexTest() {
         dataSource.createCollection(TEST_COLLECTION_NAME);
         dataSource.createIndex(TEST_COLLECTION_NAME, "test.index");
@@ -228,6 +226,98 @@ public class DataSourceFileTest {
 
         assertThat("Should return two records.", results.size(), is(2));
         assertThat("Should contain both items.", results, containsInAnyOrder(TestData.JSON_BASIC, TestData.JSON_PERSON));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void updateTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.name"},
+                                        new String[]{"Peter"});
+
+        assertThat("Three records should be update.", updated, is(3));
+
+        List<String> results = new CopyOnWriteArrayList<>();
+
+        dataSource.select(TEST_COLLECTION_NAME, "*")
+                .map(TSONObject::new)
+                .filter(tson -> tson.findByPath("person") != null)
+                .map(person -> person.findByPath("person.name").toString())
+                .subscribe(results::add);
+
+        waitForSeconds(1);
+
+        assertThat("Should contain new values.", results, contains("Peter", "Peter", "Peter"));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void updateWhereTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.name"},
+                                        new String[]{"Peter"},
+                                        "person.surname=\"Smith\"");
+
+        assertThat("Three records should be update.", updated, is(3));
+
+        List<String> results = new CopyOnWriteArrayList<>();
+
+        dataSource.select(TEST_COLLECTION_NAME, "*")
+                .map(TSONObject::new)
+                .filter(tson -> tson.findByPath("person") != null)
+                .map(person -> person.findByPath("person.name").toString())
+                .subscribe(results::add);
+
+        waitForSeconds(1);
+
+        assertThat("Should contain new values.", results, contains("Peter", "Peter", "Peter"));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void updateWhereUnsatisfiableTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.name"},
+                                        new String[]{"Peter"},
+                                        "person.surname=\"XXX\"");
+
+        assertThat("No record should be update.", updated, is(0));
+
+        List<String> results = new CopyOnWriteArrayList<>();
+
+        dataSource.select(TEST_COLLECTION_NAME, "*")
+                .map(TSONObject::new)
+                .filter(tson -> tson.findByPath("person") != null)
+                .map(person -> person.findByPath("person.name").toString())
+                .subscribe(results::add);
+
+        waitForSeconds(1);
+
+        assertThat("Should contain new values.", results, contains("John", "John", "John"));
 
         dataSource.dropCollection(TEST_COLLECTION_NAME);
     }

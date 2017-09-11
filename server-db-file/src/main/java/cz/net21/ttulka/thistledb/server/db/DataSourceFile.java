@@ -95,7 +95,7 @@ public class DataSourceFile implements DataSource {
             removeCollection(collectionName);
 
             if (collection instanceof DbCollectionFile) {
-                ((DbCollectionFile)collection).drop();
+                ((DbCollectionFile) collection).drop();
             }
             return true;
         }
@@ -163,15 +163,13 @@ public class DataSourceFile implements DataSource {
     @Override
     public boolean createIndex(@NonNull String collectionName, @NonNull String column) {
         checkIfCollectionExists(collectionName);
-        // TODO
-        return true;
+        return getCollection(collectionName).createIndex(column);
     }
 
     @Override
     public boolean dropIndex(@NonNull String collectionName, @NonNull String column) {
         checkIfCollectionExists(collectionName);
-        // TODO
-        return true;
+        return getCollection(collectionName).dropIndex(column);
     }
 
     private void checkIfCollectionExists(String collectionName) {

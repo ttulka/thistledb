@@ -116,6 +116,7 @@ public interface DataSource {
      * @param column         the column to create the index on
      * @return true if a new index was created, otherwise false
      * @throws DatabaseException if the collection doesn't exist
+     * @throws DatabaseException if cannot create the index
      */
     boolean createIndex(String collectionName, String column);
 
@@ -126,6 +127,7 @@ public interface DataSource {
      * @param column         the column of the index
      * @return true if the index was dropped, otherwise false
      * @throws DatabaseException if the collection doesn't exist
+     * @throws DatabaseException if cannot drop the index
      */
     boolean dropIndex(String collectionName, String column);
 
