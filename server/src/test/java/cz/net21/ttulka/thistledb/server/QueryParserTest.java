@@ -70,13 +70,47 @@ public class QueryParserTest {
 
         assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 1").matches(), is(true));
         assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = '1'").matches(), is(true));
-        assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = y.a_1").matches(), is(true));
+        assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = \"y.a_1\"").matches(), is(true));
         assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1'").matches(), is(true));
-        assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1").matches(), is(true));
-        assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1").matches(), is(true));
-        assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1 OR 1=1").matches(), is(true));
-        assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").matches(), is(true));
-        assertThat(QueryParser.UPDATE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1").matches(), is(true));
+        assertThat(QueryParser.UPDATE_WHERE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1").matches(), is(true));
+        assertThat(QueryParser.UPDATE_WHERE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.UPDATE_WHERE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1 OR 1=1").matches(), is(true));
+        assertThat(QueryParser.UPDATE_WHERE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.UPDATE_WHERE.matcher("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1").matches(), is(true));
+    }
+
+    @Test
+    public void validateAddTest() {
+        assertThat(QueryParser.ADD.matcher("ALTER").matches(), is(false));
+        assertThat(QueryParser.ADD.matcher("ALTER *").matches(), is(false));
+        assertThat(QueryParser.ADD.matcher("ALTER test").matches(), is(false));
+        assertThat(QueryParser.ADD.matcher("ALTER test ADD").matches(), is(false));
+        assertThat(QueryParser.ADD.matcher("ALTER test ADD x.a_1 WHERE").matches(), is(false));
+        assertThat(QueryParser.ADD.matcher("ALTER test ADD x+a?1").matches(), is(false));
+
+        assertThat(QueryParser.ADD.matcher("ALTER test ADD x.a_1").matches(), is(true));
+        assertThat(QueryParser.ADD.matcher("ALTER test ADD x.a_1 WHERE 1=1").matches(), is(true));
+        assertThat(QueryParser.ADD.matcher("ALTER test ADD x.a_1 WHERE 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.ADD.matcher("ALTER test ADD x.a_1 WHERE 1=1 AND 1=1 OR 1=1").matches(), is(true));
+        assertThat(QueryParser.ADD.matcher("ALTER test ADD x.a_1 WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.ADD.matcher("ALTER test ADD x.a_1 WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1").matches(), is(true));
+    }
+
+    @Test
+    public void validateRemoveTest() {
+        assertThat(QueryParser.ADD.matcher("ALTER").matches(), is(false));
+        assertThat(QueryParser.REMOVE.matcher("ALTER *").matches(), is(false));
+        assertThat(QueryParser.REMOVE.matcher("ALTER test").matches(), is(false));
+        assertThat(QueryParser.REMOVE.matcher("ALTER test REMOVE").matches(), is(false));
+        assertThat(QueryParser.REMOVE.matcher("ALTER test REMOVE x.a_1 WHERE").matches(), is(false));
+        assertThat(QueryParser.REMOVE.matcher("ALTER test REMOVE x+a?1").matches(), is(false));
+
+        assertThat(QueryParser.REMOVE.matcher("ALTER test REMOVE x.a_1").matches(), is(true));
+        assertThat(QueryParser.REMOVE.matcher("ALTER test REMOVE x.a_1 WHERE 1=1").matches(), is(true));
+        assertThat(QueryParser.REMOVE.matcher("ALTER test REMOVE x.a_1 WHERE 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.REMOVE.matcher("ALTER test REMOVE x.a_1 WHERE 1=1 AND 1=1 OR 1=1").matches(), is(true));
+        assertThat(QueryParser.REMOVE.matcher("ALTER test REMOVE x.a_1 WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1").matches(), is(true));
+        assertThat(QueryParser.REMOVE.matcher("ALTER test REMOVE x.a_1 WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1").matches(), is(true));
     }
 
     @Test
@@ -179,6 +213,9 @@ public class QueryParserTest {
     public void parseCollectionForUpdateTest() {
         String result = new QueryParser("UPDATE test SET 1=1").parseCollection();
         assertThat(result, is("test"));
+
+        result = new QueryParser("UPDATE test SET v = 3 WHERE v = 2").parseCollection();
+        assertThat(result, is("test"));
     }
 
     @Test
@@ -234,10 +271,25 @@ public class QueryParserTest {
         result = new QueryParser("SELECT col1 FROM test wHeRe 1=1 AND 2=2").parseWhere();
         assertThat(result, is("1=1 AND 2=2"));
 
+        result = new QueryParser("UPDATE test SET a.b='abc' WHERE 1=1 AND 2=2").parseWhere();
+        assertThat(result, is("1=1 AND 2=2"));
+
         result = new QueryParser("UPDATE test SET a.b='1', b.c=2 WHERE 1=1 AND 2=2").parseWhere();
         assertThat(result, is("1=1 AND 2=2"));
 
+        result = new QueryParser("UPDATE test SET v=3 WHERE v=2").parseWhere();
+        assertThat(result, is("v=2"));
+
+        result = new QueryParser("UPDATE test SET v=\"3\" WHERE v=\"2\"").parseWhere();
+        assertThat(result, is("v=\"2\""));
+
         result = new QueryParser("DELETE FROM test WHERE 1=1 AND 2=2").parseWhere();
+        assertThat(result, is("1=1 AND 2=2"));
+
+        result = new QueryParser("ALTER test ADD a.b WHERE 1=1 AND 2=2").parseWhere();
+        assertThat(result, is("1=1 AND 2=2"));
+
+        result = new QueryParser("ALTER test REMOVE a.b WHERE 1=1 AND 2=2").parseWhere();
         assertThat(result, is("1=1 AND 2=2"));
     }
 
@@ -252,7 +304,16 @@ public class QueryParserTest {
 
     @Test
     public void parseSetColumnsTest() {
-        String[] result = new QueryParser("UPDATE test SET a.b='1', b.c=2 WHERE 1=1 AND 2=2").parseSetColumns();
+        String[] result = new QueryParser("UPDATE test SET a.b='1'").parseSetColumns();
+        assertThat(String.join(",", result), is("a.b"));
+
+        result = new QueryParser("UPDATE test SET a.b='1' WHERE 1=1 AND 2=2").parseSetColumns();
+        assertThat(String.join(",", result), is("a.b"));
+
+        result = new QueryParser("UPDATE test SET a.b='1', b.c=2").parseSetColumns();
+        assertThat(String.join(",", result), is("a.b,b.c"));
+
+        result = new QueryParser("UPDATE test SET a.b='1', b.c=2 WHERE 1=1 AND 2=2").parseSetColumns();
         assertThat(String.join(",", result), is("a.b,b.c"));
     }
 
@@ -266,5 +327,20 @@ public class QueryParserTest {
 
         result = new QueryParser("UPDATE test SET a='{\"aa\":1,\"ab\":2}', b=3").parseSetValues();
         assertThat(String.join(",", result), is("{\"aa\":1,\"ab\":2},3"));
+    }
+
+    @Test
+    public void parseElementTest() {
+        String result = new QueryParser("ALTER test ADD abc").parseElement();
+        assertThat(String.join(",", result), is("abc"));
+
+        result = new QueryParser("ALTER test ADD a.b WHERE 1=1 AND 2=2").parseElement();
+        assertThat(String.join(",", result), is("a.b"));
+
+        result = new QueryParser("ALTER test REMOVE abc").parseElement();
+        assertThat(String.join(",", result), is("abc"));
+
+        result = new QueryParser("ALTER test REMOVE a.b WHERE 1=1 AND 2=2").parseElement();
+        assertThat(String.join(",", result), is("a.b"));
     }
 }

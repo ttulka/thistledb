@@ -14,6 +14,8 @@ enum Commands {
 
     CREATE,
     DROP,
+    ADD,
+    REMOVE,
 
     CREATE_INDEX,
     DROP_INDEX

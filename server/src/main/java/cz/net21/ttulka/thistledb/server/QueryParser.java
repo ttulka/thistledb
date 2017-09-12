@@ -22,23 +22,26 @@ import static java.util.regex.Pattern.compile;
 @CommonsLog
 class QueryParser {
 
-    private static final String COLLECTION = "[\\w\\d]+";
+    private static final String COLLECTION = "[\\w\\d_]+";
 
-    private static final String JSON = "\\{.*}";    // TODO
+    private static final String JSON = "\\{.*}";
+    private static final String JSON_ELEMENT = "[\\w\\d._\\-$]+";
+    private static final String JSON_VALUE = "((null)|(\".+\")|('.+')|(true)|(false)|(\\d+)|([\\d]*[.]?[\\d]+))";
 
-    private static final String JSON_PATH = "[\\w\\d._\\-$]+";
-
-    private static final String WHERE = "(" + JSON_PATH + "\\s*(=|!=|<|<=|>|>=|LIKE)\\s*((['\"](.+)['\"])|(\\d+)))+";
+    private static final String WHERE = "(" + JSON_ELEMENT + "\\s*(=|!=|<|<=|>|>=|LIKE)\\s*" + JSON_VALUE + ")+";
     private static final String WHERE_COMPOSITED = "(" + WHERE + ")(\\s+(AND|OR)\\s+(" + WHERE + "))*";
 
-    static final Pattern SELECT = compile("SELECT\\s+(\\*|" + JSON_PATH + ")\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern SELECT = compile("SELECT\\s+(\\*|" + JSON_ELEMENT + ")\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern INSERT = compile("INSERT\\s+INTO\\s+(" + COLLECTION + ")\\s+VALUES\\s+(" + JSON + ")", CASE_INSENSITIVE);
-    static final Pattern UPDATE = compile("UPDATE\\s+(" + COLLECTION + ")\\s+SET((\\s+((?!.WHERE).)+)\\s*=\\s*(((?!.WHERE).)+))(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern UPDATE = compile("UPDATE\\s+(" + COLLECTION + ")\\s+SET\\s+((" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")(\\s*,\\s*" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")*)", CASE_INSENSITIVE);
+    static final Pattern UPDATE_WHERE = compile("UPDATE\\s+(" + COLLECTION + ")\\s+SET\\s+((" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")(\\s*,\\s*" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")*)\\s+WHERE\\s+(" + WHERE_COMPOSITED + ")", CASE_INSENSITIVE);
     static final Pattern DELETE = compile("DELETE\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern CREATE = compile("CREATE\\s+(?!.*INDEX)(" + COLLECTION + ")", CASE_INSENSITIVE);
     static final Pattern DROP = compile("DROP\\s+((?!.*INDEX)" + COLLECTION + ")", CASE_INSENSITIVE);
-    static final Pattern CREATE_INDEX = compile("CREATE\\s+INDEX\\s+(" + JSON_PATH + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
-    static final Pattern DROP_INDEX = compile("DROP\\s+INDEX\\s+(" + JSON_PATH + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
+    static final Pattern ADD = compile("ALTER\\s+(" + COLLECTION + ")\\s+ADD((\\s+((?!.WHERE)(" + JSON_ELEMENT + "))+)\\s*)(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern REMOVE = compile("ALTER\\s+(" + COLLECTION + ")\\s+REMOVE((\\s+((?!.WHERE)(" + JSON_ELEMENT + "))+)\\s*)(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern CREATE_INDEX = compile("CREATE\\s+INDEX\\s+(" + JSON_ELEMENT + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
+    static final Pattern DROP_INDEX = compile("DROP\\s+INDEX\\s+(" + JSON_ELEMENT + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
 
     private final String ql;
 
@@ -76,7 +79,7 @@ class QueryParser {
         if (INSERT.matcher(input).matches()) {
             return Commands.INSERT;
         }
-        if (UPDATE.matcher(input).matches()) {
+        if (UPDATE.matcher(input).matches() || UPDATE_WHERE.matcher(input).matches()) {
             return Commands.UPDATE;
         }
         if (DELETE.matcher(input).matches()) {
@@ -88,6 +91,12 @@ class QueryParser {
         if (DROP.matcher(input).matches()) {
             return Commands.DROP;
         }
+        if (ADD.matcher(input).matches()) {
+            return Commands.ADD;
+        }
+        if (REMOVE.matcher(input).matches()) {
+            return Commands.REMOVE;
+        }
         if (CREATE_INDEX.matcher(input).matches()) {
             return Commands.CREATE_INDEX;
         }
@@ -98,9 +107,14 @@ class QueryParser {
     }
 
     private static String getMatchingGroup(Pattern pattern, String input, int group) {
-        Matcher matcher = pattern.matcher(input);
-        matcher.matches();
-        return matcher.group(group);
+        try {
+            Matcher matcher = pattern.matcher(input);
+            matcher.matches();
+            return matcher.group(group);
+
+        } catch (Exception ignore) {
+            return null;
+        }
     }
 
     public String parseCollection() {
@@ -110,13 +124,19 @@ class QueryParser {
             case INSERT:
                 return getMatchingGroup(INSERT, ql, 1);
             case UPDATE:
-                return getMatchingGroup(UPDATE, ql, 1);
+                return UPDATE_WHERE.matcher(ql).matches()
+                       ? getMatchingGroup(UPDATE_WHERE, ql, 1)
+                       : getMatchingGroup(UPDATE, ql, 1);
             case DELETE:
                 return getMatchingGroup(DELETE, ql, 1);
             case CREATE:
                 return getMatchingGroup(CREATE, ql, 1);
             case DROP:
                 return getMatchingGroup(DROP, ql, 1);
+            case ADD:
+                return getMatchingGroup(ADD, ql, 1);
+            case REMOVE:
+                return getMatchingGroup(REMOVE, ql, 1);
             case CREATE_INDEX:
                 return getMatchingGroup(CREATE_INDEX, ql, 2);
             case DROP_INDEX:
@@ -145,10 +165,14 @@ class QueryParser {
         switch (command) {
             case SELECT:
                 return getMatchingGroup(SELECT, ql, 4);
-            case UPDATE:
-                return getMatchingGroup(UPDATE, ql, 8);
             case DELETE:
                 return getMatchingGroup(DELETE, ql, 3);
+            case ADD:
+                return getMatchingGroup(ADD, ql, 7);
+            case REMOVE:
+                return getMatchingGroup(REMOVE, ql, 7);
+            case UPDATE:
+                return getMatchingGroup(UPDATE_WHERE, ql, 21);
             default:
                 throw new IllegalArgumentException("The query has no where clause: " + ql);
         }
@@ -175,6 +199,17 @@ class QueryParser {
         return toReturn;
     }
 
+    public String parseElement() {
+        switch (command) {
+            case ADD:
+                return getMatchingGroup(ADD, ql, 4);
+            case REMOVE:
+                return getMatchingGroup(REMOVE, ql, 4);
+            default:
+                throw new IllegalArgumentException("The query has no element: " + ql);
+        }
+    }
+
     public String[] parseSetColumns() {
         return parseUpdateSet(s -> s.substring(0, s.indexOf("=")).trim());
     }
@@ -194,7 +229,9 @@ class QueryParser {
         if (command != Commands.UPDATE) {
             throw new IllegalArgumentException("The query has no SET clause: " + ql);
         }
-        String setClause = getMatchingGroup(UPDATE, ql, 2).trim();
+        String setClause = UPDATE_WHERE.matcher(ql).matches()
+                           ? getMatchingGroup(UPDATE_WHERE, ql, 2).trim()
+                           : getMatchingGroup(UPDATE, ql, 2).trim();
 
         List<String> columns = new ArrayList<>();
 

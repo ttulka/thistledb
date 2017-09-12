@@ -107,6 +107,30 @@ public class DataSourceFile implements DataSource {
     }
 
     @Override
+    public int add(String collectionName, String element) {
+        return add(collectionName, element, null);
+    }
+
+    @Override
+    public int add(String collectionName, String element, String where) {
+        checkIfCollectionExists(collectionName);
+
+        return getCollection(collectionName).add(element, where);
+    }
+
+    @Override
+    public int remove(String collectionName, String element) {
+        return remove(collectionName, element, null);
+    }
+
+    @Override
+    public int remove(String collectionName, String element, String where) {
+        checkIfCollectionExists(collectionName);
+
+        return getCollection(collectionName).remove(element, where);
+    }
+
+    @Override
     public Flux<String> select(@NonNull String collectionName, @NonNull String columns, String where) {
         checkIfCollectionExists(collectionName);
 

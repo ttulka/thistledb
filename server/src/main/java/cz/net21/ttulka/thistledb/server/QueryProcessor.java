@@ -82,6 +82,10 @@ class QueryProcessor {
                 return processCreate(parser);
             case DROP:
                 return processDrop(parser);
+            case ADD:
+                return processAdd(parser);
+            case REMOVE:
+                return processRemove(parser);
             case CREATE_INDEX:
                 return processCreateIndex(parser);
             case DROP_INDEX:
@@ -138,6 +142,24 @@ class QueryProcessor {
         String collection = parser.parseCollection();
 
         dataSource.dropCollection(collection);
+        return Flux.just(OKAY);
+    }
+
+    Flux<String> processAdd(QueryParser parser) {
+        String collection = parser.parseCollection();
+        String element = parser.parseElement();
+        String where = parser.parseWhere();
+
+        dataSource.add(collection, element, where);
+        return Flux.just(OKAY);
+    }
+
+    Flux<String> processRemove(QueryParser parser) {
+        String collection = parser.parseCollection();
+        String element = parser.parseElement();
+        String where = parser.parseWhere();
+
+        dataSource.remove(collection, element, where);
         return Flux.just(OKAY);
     }
 

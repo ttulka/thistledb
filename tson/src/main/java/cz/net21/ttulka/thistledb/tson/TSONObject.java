@@ -36,8 +36,7 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Construct a TSONObject from a source JSON text string. This is the most
-     * commonly used TSONObject constructor.
+     * Construct a TSONObject from a source JSON text string. This is the most commonly used TSONObject constructor.
      *
      * @param source A string beginning with <code>{</code>&nbsp;<small>(left brace)</small> and ending with <code>}</code> &nbsp;<small>(right brace)</small>.
      * @throws JSONException If there is a syntax error in the source string or a duplicated key.
@@ -137,8 +136,7 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Get a set of keys of the JSONObject. Modifying this key Set will also modify the
-     * JSONObject. Use with caution.
+     * Get a set of keys of the JSONObject. Modifying this key Set will also modify the JSONObject. Use with caution.
      *
      * @return A keySet.
      * @see Map#keySet()
@@ -149,10 +147,8 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Get a set of entries of the JSONObject. These are raw values and may not
-     * match what is returned by the JSONObject get* and opt* functions. Modifying
-     * the returned EntrySet or the Entry objects contained therein will modify the
-     * backing JSONObject. This does not return a clone or a read-only view.
+     * Get a set of entries of the JSONObject. These are raw values and may not match what is returned by the JSONObject get* and opt* functions. Modifying the
+     * returned EntrySet or the Entry objects contained therein will modify the backing JSONObject. This does not return a clone or a read-only view.
      * <p>
      * Use with caution.
      *
@@ -174,8 +170,7 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Produce a JSONArray containing the names of the elements of this
-     * JSONObject.
+     * Produce a JSONArray containing the names of the elements of this JSONObject.
      *
      * @return A JSONArray containing the key strings, or null if the JSONObject is empty.
      */
@@ -211,8 +206,7 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Put a key/value pair in the JSONObject. If the value is null, then the
-     * key will be removed from the JSONObject if it is present.
+     * Put a key/value pair in the JSONObject. If the value is null, then the key will be removed from the JSONObject if it is present.
      *
      * @param key   A key string.
      * @param value An object which is the value. It should be of one of these types: Boolean, Double, Integer, JSONArray, JSONObject, Long, String, or the
@@ -246,8 +240,7 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Write the contents of the JSONObject as JSON text to a writer. For
-     * compactness, no whitespace is added.
+     * Write the contents of the JSONObject as JSON text to a writer. For compactness, no whitespace is added.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      *
@@ -370,9 +363,7 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Returns a java.util.Map containing all of the entries in this object.
-     * If an entry in the object is a JSONArray or JSONObject it will also
-     * be converted.
+     * Returns a java.util.Map containing all of the entries in this object. If an entry in the object is a JSONArray or JSONObject it will also be converted.
      * <p>
      * Warning: This method assumes that the data structure is acyclical.
      *
@@ -398,7 +389,7 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Finds a sub JSON object by the path.
+     * Finds a sub TSON object by the path.
      *
      * @param path the path with comma-separated levels, eg.: "addressBook.person.name"
      * @return the sub object or null
@@ -426,20 +417,59 @@ public class TSONObject extends JSONObject {
     }
 
     /**
-     * Set a sub JSON object by the path.
+     * Set a value for a sub TSON object by the path.
      *
      * @param path  the path with comma-separated levels, eg.: "addressBook.person.name"
      * @param value the sub-object to set
-     * @return true if the sub-object was changed, otherwise false
+     * @return the TSON object
      */
     public TSONObject updateByPath(String path, Object value) {
         TSONObject json = new TSONObject(this.toString());
+
+        if (path == null) {
+            return json;
+        }
         TSONObject ref = json;
+        String[] splittedPath = path.split("\\.");
+
+        int index = 0;
+        for (String keyPart : splittedPath) {
+            if (json == null || !json.keySet().contains(keyPart)) {
+                return ref;
+            }
+            Object o = json.get(keyPart);
+
+            if (o instanceof TSONObject) {
+                json = (TSONObject) o;
+            } else {
+                if (index < splittedPath.length - 1) {
+                    return ref;
+                }
+                break;
+            }
+            index++;
+        }
+
+        json.put(splittedPath[index], value);
+
+        return ref;
+    }
+
+    /**
+     * Add a new or set a value for a sub JSON object by the path.
+     *
+     * @param path  the path with comma-separated levels, eg.: "addressBook.person.name"
+     * @param value the sub-object to set
+     * @return the TSON object
+     */
+    public TSONObject addByPath(String path, Object value) {
+        TSONObject json = new TSONObject(this.toString());
 
         if (path == null) {
             return json;
         }
 
+        TSONObject ref = json;
         String[] splittedPath = path.split("\\.");
 
         int index = 0;
@@ -454,21 +484,60 @@ public class TSONObject extends JSONObject {
             } else {
                 break;
             }
-            index ++;
+            index++;
         }
 
-        String[] restPath = Arrays.copyOfRange(splittedPath, index + 1, splittedPath.length);
-        json.put(splittedPath[index], createSubElement(restPath, value));
+        String[] restPath = Arrays.copyOfRange(splittedPath, index, splittedPath.length - 1);
+        for (String p : restPath) {
+            TSONObject o = new TSONObject();
+            json.put(p, o);
+            json = o;
+        }
+
+        if (value == null) {
+            value = NULL;
+        }
+
+        json.put(splittedPath[splittedPath.length - 1], value);
 
         return ref;
     }
 
-    private Object createSubElement(String[] path, Object value) {
-        for (int i = path.length - 1; i >= 0; i--) {
-            TSONObject json = new TSONObject();
-            json.put(path[i], value);
-            value = json;
+    /**
+     * Remove an element from a sub TSON object by the path.
+     *
+     * @param path  the path with comma-separated levels, eg.: "addressBook.person.name"
+     * @return the TSON object
+     */
+    public TSONObject removeByPath(String path) {
+        TSONObject json = new TSONObject(this.toString());
+
+        if (path == null) {
+            return json;
         }
-        return value;
+        TSONObject ref = json;
+        String[] splittedPath = path.split("\\.");
+
+        int index = 0;
+        for (String keyPart : splittedPath) {
+            if (json == null || !json.keySet().contains(keyPart)) {
+                return ref;
+            }
+            if (index == splittedPath.length - 1) {
+                break;
+            }
+            Object o = json.get(keyPart);
+
+            if (o instanceof TSONObject) {
+                json = (TSONObject) o;
+            } else {
+                return ref;
+            }
+            index++;
+        }
+
+        json.remove(splittedPath[index]);
+
+        return ref;
     }
 }

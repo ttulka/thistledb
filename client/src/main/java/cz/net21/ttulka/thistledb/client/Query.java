@@ -40,8 +40,6 @@ public class Query {
 
         private StringBuilder sb = new StringBuilder();
 
-        private boolean whereAllowedA;
-        private boolean whereA;
         private boolean ready;
 
         private QueryBuilder() {
@@ -221,11 +219,11 @@ public class Query {
              * @param value  the value of the column
              * @return the conditional builder
              */
-            public ConditionalQueryBuilder where(String column, String value) {
+            public ConditionalQueryBuilder where(String column, Object value) {
                 if (column == null || column.isEmpty()) {
                     throw new IllegalArgumentException("Column name cannot be empty.");
                 }
-                if (value == null || value.isEmpty()) {
+                if (value == null || value.toString().isEmpty()) {
                     throw new IllegalArgumentException("Value cannot be empty.");
                 }
                 if (!whereAllowed) {
@@ -325,11 +323,11 @@ public class Query {
          */
         public class UpdateQueryBuilder extends ConditionalQueryBuilder {
 
-            public UpdateQueryBuilder set(String column, String value) {
+            public UpdateQueryBuilder set(String column, Object value) {
                 if (column == null || column.isEmpty()) {
                     throw new IllegalArgumentException("Column name cannot be empty.");
                 }
-                if (value == null || value.isEmpty()) {
+                if (value == null || value.toString().isEmpty()) {
                     throw new IllegalArgumentException("Value cannot be empty.");
                 }
                 whereAllowed = true;

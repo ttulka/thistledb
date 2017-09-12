@@ -60,6 +60,9 @@ public class ClientITest {
         client.executeCommand("INSERT INTO test VALUES {\"v\":1},{\"v\":2}", null);
         sleep(500);
 
+        client.executeCommandBlocking("UPDATE test SET v = 3 WHERE v = 2");
+        sleep(500);
+
         JsonPublisher publisher = client.executeQuery("SELECT v FROM test");
         assertThat("Publisher shouldn't be null.", publisher, not(nullValue()));
 
@@ -67,7 +70,7 @@ public class ClientITest {
         publisher.subscribe(results::add);
         publisher.await();
 
-        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":1}", "{\"v\":2}"));
+        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":1}", "{\"v\":3}"));
     }
 
     @Test
@@ -80,6 +83,10 @@ public class ClientITest {
         client.executeCommand(insertQuery, null);
         sleep(500);
 
+        Query updateQuery = Query.builder().update("test").set("v", 3).where("v", 2).build();
+        client.executeCommand(updateQuery, null);
+        sleep(500);
+
         Query selectQuery = Query.builder().selectFrom("test").build();
         JsonPublisher publisher = client.executeQuery(selectQuery);
         assertThat("Publisher shouldn't be null.", publisher, not(nullValue()));
@@ -88,7 +95,7 @@ public class ClientITest {
         publisher.subscribe(results::add);
         publisher.await();
 
-        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":1}", "{\"v\":2}"));
+        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":1}", "{\"v\":3}"));
     }
 
     @Test
@@ -97,9 +104,11 @@ public class ClientITest {
 
         client.executeCommandBlocking("INSERT INTO test VALUES {\"v\":1},{\"v\":2}");
 
+        client.executeCommandBlocking("UPDATE test SET v = 3 WHERE v = 2");
+
         List<String> results = client.executeQueryBlocking("SELECT v FROM test");
 
-        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":1}", "{\"v\":2}"));
+        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":1}", "{\"v\":3}"));
     }
 
     @Test
@@ -110,10 +119,13 @@ public class ClientITest {
         Query insertQuery = Query.builder().insertInto("test").values("{\"v\":1}").values("{\"v\":2}").build();
         client.executeCommandBlocking(insertQuery);
 
+        Query updateQuery = Query.builder().update("test").set("v", 3).where("v", 2).build();
+        client.executeCommandBlocking(updateQuery);
+
         Query selectQuery = Query.builder().selectFrom("test").build();
         List<String> results = client.executeQueryBlocking(selectQuery);
 
-        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":1}", "{\"v\":2}"));
+        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":1}", "{\"v\":3}"));
     }
 
     private void sleep(int milsecs) {

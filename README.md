@@ -38,6 +38,8 @@ Collections are separated data spaces with schema-less structures.
 
 A collection contains a set of documents.
 
+Collection name can contain only literals, digits and underscore `_`. 
+
 #### Documents
 Documents are JSON objects in a collection.
 
@@ -61,6 +63,8 @@ name
 123
 patient-name_123
 ```
+##### Values
+Values could be strings, numbers, boolean literals and `null`.
 
 ### Commands and Queries
 All the commands and queries are SQL-like.
@@ -72,6 +76,14 @@ CREATE collection_name
 #### Drop a Collection
 ```
 DROP collection_name 
+```
+#### Add an Element to Documents in a Collection
+```
+ALTER collection_name ADD element [WHERE element op value [{AND|OR} element op value [...]]]  
+```
+#### Remove an Element from Documents in a Collection
+```
+ALTER collection_name REMOVE element [WHERE element op value [{AND|OR} element op value [...]]]  
 ```
 #### Insert a Document into a Collection
 ```
@@ -87,7 +99,7 @@ DELETE FROM collection_name [WHERE element op value [{AND|OR} element op value [
 ```
 #### Update a Document in a Collection
 ```
-UPDATE collection_name SET element op value[,element op value [...]] [WHERE element op value [{AND|OR} element op value [...]]]  
+UPDATE collection_name SET element=value[,element=value [...]] [WHERE element op value [{AND|OR} element op value [...]]]  
 ```
 Element is updated only when exists.
 

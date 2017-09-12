@@ -13,23 +13,25 @@ import static java.util.regex.Pattern.compile;
  */
 public class QueryValidator {
 
-    private static final String COLLECTION = "[\\w\\d]+";
+    private static final String COLLECTION = "[\\w\\d_]+";
 
-    private static final String JSON = "\\{.*}";    // TODO
+    private static final String JSON = "\\{.*}";
+    private static final String JSON_ELEMENT = "[\\w\\d._\\-$]+";
+    private static final String JSON_VALUE = "((null)|(\".+\")|('.+')|(true)|(false)|(\\d+)|([\\d]*[.]?[\\d]+))";
 
-    private static final String JSON_PATH = "[\\w\\d._\\-$]+";
-
-    private static final String WHERE = "(" + JSON_PATH + "\\s*(=|!=|<|<=|>|>=|LIKE)\\s*((['\"](.+)['\"])|(\\d+)))+";
+    private static final String WHERE = "(" + JSON_ELEMENT + "\\s*(=|!=|<|<=|>|>=|LIKE)\\s*" + JSON_VALUE + ")+";
     private static final String WHERE_COMPOSITED = "(" + WHERE + ")(\\s+(AND|OR)\\s+(" + WHERE + "))*";
 
-    static final Pattern SELECT = compile("SELECT\\s+(\\*|" + JSON_PATH + ")\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern SELECT = compile("SELECT\\s+(\\*|" + JSON_ELEMENT + ")\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern INSERT = compile("INSERT\\s+INTO\\s+(" + COLLECTION + ")\\s+VALUES\\s+(" + JSON + ")", CASE_INSENSITIVE);
-    static final Pattern UPDATE = compile("UPDATE\\s+(" + COLLECTION + ")\\s+SET((\\s+((?!.WHERE).)+)\\s*=\\s*(((?!.WHERE).)+))(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern UPDATE = compile("UPDATE\\s+(" + COLLECTION + ")\\s+SET\\s+(" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + "(\\s*,\\s*" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")*)(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern DELETE = compile("DELETE\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern CREATE = compile("CREATE\\s+(?!.*INDEX)(" + COLLECTION + ")", CASE_INSENSITIVE);
     static final Pattern DROP = compile("DROP\\s+((?!.*INDEX)" + COLLECTION + ")", CASE_INSENSITIVE);
-    static final Pattern CREATE_INDEX = compile("CREATE\\s+INDEX\\s+(" + JSON_PATH + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
-    static final Pattern DROP_INDEX = compile("DROP\\s+INDEX\\s+(" + JSON_PATH + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
+    static final Pattern ADD = compile("ALTER\\s+(" + COLLECTION + ")\\s+ADD((\\s+((?!.WHERE)(" + JSON_ELEMENT + "))+)\\s*)(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern REMOVE = compile("ALTER\\s+(" + COLLECTION + ")\\s+REMOVE((\\s+((?!.WHERE)(" + JSON_ELEMENT + "))+)\\s*)(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern CREATE_INDEX = compile("CREATE\\s+INDEX\\s+(" + JSON_ELEMENT + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
+    static final Pattern DROP_INDEX = compile("DROP\\s+INDEX\\s+(" + JSON_ELEMENT + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
 
     /**
      * Validates a query.
@@ -49,6 +51,8 @@ public class QueryValidator {
             && !DELETE.matcher(query).matches()
             && !CREATE.matcher(query).matches()
             && !DROP.matcher(query).matches()
+            && !ADD.matcher(query).matches()
+            && !REMOVE.matcher(query).matches()
             && !CREATE_INDEX.matcher(query).matches()
             && !DROP_INDEX.matcher(query).matches()) {
             return false;

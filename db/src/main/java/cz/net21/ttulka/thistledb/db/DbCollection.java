@@ -20,5 +20,9 @@ interface DbCollection {
 
     boolean dropIndex(String column);
 
+    int add(String element, String where);
+
+    int remove(String element, String where);
+
     void cleanUp();
 }

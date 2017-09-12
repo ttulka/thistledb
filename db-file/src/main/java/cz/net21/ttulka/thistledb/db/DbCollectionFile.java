@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.BiFunction;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -131,6 +132,32 @@ public class DbCollectionFile implements DbCollection {
             }
         }
         return false;
+    }
+
+    @Override
+    public int add(String element, String where) {
+        lock.writeLock().lock();
+        try (Alter alter = new Alter(element, where)) {
+            return alter.add();
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot alter (add) a collection: " + e.getMessage(), e);
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public int remove(String element, String where) {
+        lock.writeLock().lock();
+        try (Alter alter = new Alter(element, where)) {
+            return alter.remove();
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot alter (add) a collection: " + e.getMessage(), e);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -492,6 +519,63 @@ public class DbCollectionFile implements DbCollection {
             }
             close();
             return deleted;
+        }
+    }
+
+    class Alter extends Insert {
+
+        private final String element;
+        private final Where where;
+
+        public Alter(String element, String where) throws IOException {
+            super();
+            this.where = Where.create(where);
+            this.element = element;
+        }
+
+        public int add() throws IOException {
+            return alter(this::addData);
+        }
+
+        public int remove() throws IOException {
+            return alter(this::removeData);
+        }
+
+        private int alter(BiFunction<String, String, String> alterFnc) throws IOException {
+            setUpMaxPosition();
+
+            int updated = 0;
+            String json;
+            while ((json = nextRecord(where)) != null) {
+                String updatedJson = alterFnc.apply(json, element);
+                if (updatedJson != null) {
+                    deleteRecord(json);
+                    insert(updatedJson);
+
+                    updated++;
+                }
+            }
+            freeMaxPosition();
+
+            return updated;
+        }
+
+        private String addData(String json, String element) {
+            TSONObject tson = new TSONObject(json);
+
+            if (tson.findByPath(element) != null) {
+                return null;
+            }
+            return tson.addByPath(element, null).toString();
+        }
+
+        private String removeData(String json, String element) {
+            TSONObject tson = new TSONObject(json);
+
+            if (tson.findByPath(element) == null) {
+                return null;
+            }
+            return tson.removeByPath(element).toString();
         }
     }
 

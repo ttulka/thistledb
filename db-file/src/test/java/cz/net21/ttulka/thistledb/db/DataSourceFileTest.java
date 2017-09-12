@@ -243,7 +243,7 @@ public class DataSourceFileTest {
                                         new String[]{"person.name"},
                                         new String[]{"Peter"});
 
-        assertThat("Three records should be update.", updated, is(3));
+        assertThat("Three records should be updated.", updated, is(3));
 
         List<String> results = new CopyOnWriteArrayList<>();
 
@@ -274,7 +274,7 @@ public class DataSourceFileTest {
                                         new String[]{"Peter"},
                                         "person.surname=\"Smith\"");
 
-        assertThat("Three records should be update.", updated, is(3));
+        assertThat("Three records should be updated.", updated, is(3));
 
         List<String> results = new CopyOnWriteArrayList<>();
 
@@ -305,7 +305,7 @@ public class DataSourceFileTest {
                                         new String[]{"Peter"},
                                         "person.name=\"John\"");
 
-        assertThat("Three records should be update.", updated, is(3));
+        assertThat("Three records should be updated.", updated, is(3));
 
         List<String> results = new CopyOnWriteArrayList<>();
 
@@ -336,7 +336,7 @@ public class DataSourceFileTest {
                                         new String[]{"Peter"},
                                         "person.surname=\"XXX\"");
 
-        assertThat("No record should be update.", updated, is(0));
+        assertThat("No record should be updated.", updated, is(0));
 
         List<String> results = new CopyOnWriteArrayList<>();
 
@@ -349,6 +349,189 @@ public class DataSourceFileTest {
         waitForSeconds(1);
 
         assertThat("Should contain new values.", results, contains("John", "John", "John"));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void addTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int altered = dataSource.add(TEST_COLLECTION_NAME, "person.id");
+
+        assertThat("Three records should be altered.", altered, is(3));
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.id"},
+                                        new String[]{"P12345678"});
+
+        assertThat("Three records should be updated.", updated, is(3));
+
+        List<String> results = new CopyOnWriteArrayList<>();
+
+        dataSource.select(TEST_COLLECTION_NAME, "*")
+                .map(TSONObject::new)
+                .map(person -> person.findByPath("person.id").toString())
+                .subscribe(results::add);
+
+        waitForSeconds(1);
+
+        assertThat("Should contain new values.", results, contains("P12345678", "P12345678", "P12345678"));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void addSameElementTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int altered = dataSource.add(TEST_COLLECTION_NAME, "person.name");
+
+        assertThat("No records should be altered.", altered, is(0));
+
+        List<String> results = new CopyOnWriteArrayList<>();
+
+        dataSource.select(TEST_COLLECTION_NAME, "*")
+                .map(TSONObject::new)
+                .map(person -> person.findByPath("person.name").toString())
+                .subscribe(results::add);
+
+        waitForSeconds(1);
+
+        assertThat("Should contain new values.", results, contains("John", "John"));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void addWhereTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int altered = dataSource.add(TEST_COLLECTION_NAME, "person.id", "person.name='John'");
+
+        assertThat("Two records should be altered.", altered, is(2));
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.id"},
+                                        new String[]{"P12345678"});
+
+        assertThat("Two records should be updated.", updated, is(2));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void addWhereUnsatisfiableTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int altered = dataSource.add(TEST_COLLECTION_NAME, "person.id", "person.name='XXX'");
+
+        assertThat("No records should be altered.", altered, is(0));
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.id"},
+                                        new String[]{"P12345678"});
+
+        assertThat("No records should be updated.", updated, is(0));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void removeTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int altered = dataSource.remove(TEST_COLLECTION_NAME, "person.name");
+
+        assertThat("Two records should be altered.", altered, is(2));
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.name"},
+                                        new String[]{"XXX"});
+
+        assertThat("No records should be updated.", updated, is(0));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void removeNotExistingElementTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int altered = dataSource.remove(TEST_COLLECTION_NAME, "person.xxx");
+
+        assertThat("No records should be altered.", altered, is(0));
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.name"},
+                                        new String[]{"XXX"});
+
+        assertThat("Two records should be updated.", updated, is(2));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void removeWhereTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int altered = dataSource.remove(TEST_COLLECTION_NAME, "person.name", "person.name='John'");
+
+        assertThat("Two records should be altered.", altered, is(2));
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.name"},
+                                        new String[]{"XXX"});
+
+        assertThat("No records should be updated.", updated, is(0));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void removeWhereUnsatisfiableTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int altered = dataSource.remove(TEST_COLLECTION_NAME, "person.name", "person.name='XXX'");
+
+        assertThat("No records should be altered.", altered, is(0));
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.name"},
+                                        new String[]{"XXX"});
+
+        assertThat("Two records should be updated.", updated, is(2));
 
         dataSource.dropCollection(TEST_COLLECTION_NAME);
     }

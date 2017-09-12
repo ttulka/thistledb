@@ -110,6 +110,16 @@ public class DualCollection implements DbCollection {
     }
 
     @Override
+    public int add(String element, String where) {
+        throw new DatabaseException("Cannot add an element to the collection '" + NAME + "'.");
+    }
+
+    @Override
+    public int remove(String element, String where) {
+        throw new DatabaseException("Cannot remove an element from the collection '" + NAME + "'.");
+    }
+
+    @Override
     public void cleanUp() {
         // nothing here
     }

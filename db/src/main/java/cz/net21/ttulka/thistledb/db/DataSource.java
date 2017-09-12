@@ -29,6 +29,44 @@ public interface DataSource {
     boolean dropCollection(String collectionName);
 
     /**
+     * Adds an element.
+     *
+     * @param collectionName the collection name
+     * @param element
+     * @return count of altered documents
+     */
+    int add(String collectionName, String element);
+
+    /**
+     * Adds an element by a condition.
+     *
+     * @param collectionName the collection name
+     * @param element        the element
+     * @param where          the condition
+     * @return count of altered documents
+     */
+    int add(String collectionName, String element, String where);
+
+    /**
+     * Removes an element.
+     *
+     * @param collectionName the collection name
+     * @param element        the element
+     * @return count of altered documents
+     */
+    int remove(String collectionName, String element);
+
+    /**
+     * Removes an element by a condition.
+     *
+     * @param collectionName the collection name
+     * @param element        the element
+     * @param where          the condition
+     * @return count of altered documents
+     */
+    int remove(String collectionName, String element, String where);
+
+    /**
      * Selects from a collection by a condition.
      *
      * @param collectionName the collection name
