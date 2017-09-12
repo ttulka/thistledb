@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import cz.net21.ttulka.thistledb.server.db.DataSource;
+import cz.net21.ttulka.thistledb.db.DataSource;
 import reactor.core.publisher.Flux;
 
 import static org.hamcrest.CoreMatchers.is;

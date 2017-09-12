@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import cz.net21.ttulka.thistledb.server.db.DataSource;
+import cz.net21.ttulka.thistledb.db.DataSource;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**

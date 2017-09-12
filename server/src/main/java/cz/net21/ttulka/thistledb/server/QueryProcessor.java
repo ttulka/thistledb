@@ -3,7 +3,7 @@ package cz.net21.ttulka.thistledb.server;
 import java.util.List;
 import java.util.function.Consumer;
 
-import cz.net21.ttulka.thistledb.server.db.DataSource;
+import cz.net21.ttulka.thistledb.db.DataSource;
 import cz.net21.ttulka.thistledb.tson.TSONObject;
 import lombok.NonNull;
 import lombok.extern.apachecommons.CommonsLog;

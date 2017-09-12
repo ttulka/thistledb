@@ -2,8 +2,8 @@ package cz.net21.ttulka.thistledb.server;
 
 import java.nio.file.Path;
 
-import cz.net21.ttulka.thistledb.server.db.DataSource;
-import cz.net21.ttulka.thistledb.server.db.DataSourceFile;
+import cz.net21.ttulka.thistledb.db.DataSource;
+import cz.net21.ttulka.thistledb.db.DataSourceFile;
 import lombok.NonNull;
 
 /**
