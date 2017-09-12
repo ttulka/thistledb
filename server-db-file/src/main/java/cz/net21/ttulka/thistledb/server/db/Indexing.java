@@ -271,7 +271,7 @@ class Indexing {
     }
 
     void cleanUpIndex(Path file) {
-        log.info("Clean up indexes for " + file); // TODO debug
+        log.debug("Cleaning up indexes for " + file);
         try {
             Path temp = Paths.get(file + ".tmp");
             ChannelUtils.createNewFileOrTruncateExisting(temp);

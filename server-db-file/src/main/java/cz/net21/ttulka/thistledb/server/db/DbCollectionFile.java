@@ -531,9 +531,11 @@ public class DbCollectionFile implements DbCollection {
             DbCollectionFile tmpCollection = new DbCollectionFile(tempCollectionPath);
 
             // drop real indexing data and copy the indexing structure to the temp collection
-            indexing.dropOnlyFiles();
-            Files.move(indexing.path, tmpCollection.indexing.path);
-            indexing.dropAll();
+            if (Files.exists(indexing.path)) {
+                indexing.dropOnlyFiles();
+                Files.move(indexing.path, tmpCollection.indexing.path);
+                indexing.dropAll();
+            }
 
             // fetch all data from the collection and insert into the temp collection
             // new indexes will be written automatically with the insert
@@ -545,8 +547,10 @@ public class DbCollectionFile implements DbCollection {
             }
             // exchange the data and indexing
             close();
-            Files.move(tmpCollection.indexing.path, indexing.path, StandardCopyOption.REPLACE_EXISTING);
             Files.move(tmpCollection.path, path, StandardCopyOption.REPLACE_EXISTING);
+            if (Files.exists(tmpCollection.indexing.path)) {
+                Files.move(tmpCollection.indexing.path, indexing.path, StandardCopyOption.REPLACE_EXISTING);
+            }
         }
     }
 }
