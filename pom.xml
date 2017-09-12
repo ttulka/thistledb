@@ -7,9 +7,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>server-test</module>
-        <module>server-db</module>
-        <module>server-db-file</module>
+        <module>test-data</module>
+        <module>db</module>
+        <module>db-file</module>
         <module>server</module>
         <module>server-app</module>
         <module>client</module>

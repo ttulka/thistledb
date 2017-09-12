@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import cz.net21.ttulka.thistledb.TestData;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
