@@ -26,7 +26,7 @@ class QueryParser {
 
     private static final String JSON = "\\{.*}";    // TODO
 
-    private static final String JSON_PATH = "[\\w\\d._\\-$]+";    // TODO
+    private static final String JSON_PATH = "[\\w\\d._\\-$]+";
 
     private static final String WHERE = "(" + JSON_PATH + "\\s*(=|!=|<|<=|>|>=|LIKE)\\s*((['\"](.+)['\"])|(\\d+)))+";
     private static final String WHERE_COMPOSITED = "(" + WHERE + ")(\\s+(AND|OR)\\s+(" + WHERE + "))*";
