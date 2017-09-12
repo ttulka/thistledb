@@ -40,7 +40,7 @@ public class ServerTest {
 
         assertThat("Server should listen after been started.", server.listening(), is(true));
 
-        server.stop(500);
+        server.stop(5000);
 
         assertThat("Server shouldn't listen after been stopped.", server.listening(), is(false));
     }

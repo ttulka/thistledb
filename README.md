@@ -249,7 +249,7 @@ server.setMaxClientConnections(maxClientConnections);
 #### Start and stop the server
 ```
 server.start();
-server.stop(timeout);
+server.stop();
 ```
 
 ## Console

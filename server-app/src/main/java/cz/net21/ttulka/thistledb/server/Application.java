@@ -75,7 +75,7 @@ public final class Application {
 
         startCommandConsole(server.getPort());
 
-        server.stop(Integer.MAX_VALUE);
+        server.stop();
     }
 
     private static void startCommandConsole(int port) {

@@ -117,27 +117,43 @@ public class Server implements AutoCloseable {
     }
 
     /**
-     * Stops the server listener and waits until it's down. Blocking variant.
+     * Stops the server listener and blocks until it's down.
      *
      * @param timeout the waiting timeout in milliseconds
      */
     public void stop(int timeout) {
-        log.info("Closing a serverChannel and stopping the server...");
-        listening = false;
-        selector.wakeup();
+        stopServer();
         try {
-            stopLatch.await(timeout, TimeUnit.MILLISECONDS);
+            stopLatch.await(timeout, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             log.warn("Waiting for the server stop interrupted.", e);
         }
     }
 
     /**
-     * Calls {@link #stop(int timeout)}.
+     * Stops the server listener and blocks until it's down.
+     */
+    public void stop() {
+        stopServer();
+        try {
+            stopLatch.await();
+        } catch (InterruptedException e) {
+            log.warn("Waiting for the server stop interrupted.", e);
+        }
+    }
+
+    private void stopServer() {
+        log.info("Closing a serverChannel and stopping the server...");
+        listening = false;
+        selector.wakeup();
+    }
+
+    /**
+     * Calls {@link #stop()}.
      */
     @Override
     public final void close() {
-        stop(5000);
+        stop();
     }
 
     /**
