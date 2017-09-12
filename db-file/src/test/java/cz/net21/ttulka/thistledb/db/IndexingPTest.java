@@ -22,6 +22,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class IndexingPTest {
 
     private static final int AMOUNT_OF_RECORDS = 1000;
+    private static final int AMOUNT_OF_ROUNDS = 100;
+
+    private static final int THRESHOLD = 3; // how many times must be performance better to pass the test
 
     private static final String TEST_COLLECTION_NAME = "test";
 
@@ -66,15 +69,24 @@ public class IndexingPTest {
     public void performanceTest() {
         String needle = generateValue();
 
-        long time1 = measure(needle);
+        long time1 = measure(needle, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME #1: " + time1 + " ms");
 
         dataSource.createIndex(TEST_COLLECTION_NAME, "root.value");
 
-        long time2 = measure(needle);
+        long time2 = measure(needle, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME #2: " + time2 + " ms");
 
-        assertThat("Indexed search must be at least ten times quicker.", time1 > time2 * 10, is(true));
+        assertThat("Indexed search must be at least " + THRESHOLD + " times quicker.",
+                   time1 > time2 * THRESHOLD, is(true));
+    }
+
+    private long measure(String needle, int count) {
+        long time = 0;
+        for (int i = 0; i < count; i++) {
+            time += measure(needle);
+        }
+        return time;
     }
 
     private long measure(String needle) {
@@ -86,6 +98,5 @@ public class IndexingPTest {
                 .blockLast();
 
         return System.currentTimeMillis() - start;
-
     }
 }
