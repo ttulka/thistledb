@@ -117,22 +117,14 @@ public class Server implements AutoCloseable {
     }
 
     /**
-     * Stops the server listener.
-     */
-    public void stop() {
-        log.info("Closing a serverChannel and stopping the server...");
-        listening = false;
-
-        selector.wakeup();  // for the case the selector is currently blocking
-    }
-
-    /**
      * Stops the server listener and waits until it's down. Blocking variant.
      *
      * @param timeout the waiting timeout in milliseconds
      */
     public void stop(int timeout) {
-        stop();
+        log.info("Closing a serverChannel and stopping the server...");
+        listening = false;
+        selector.wakeup();
         try {
             stopLatch.await(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -197,7 +189,6 @@ public class Server implements AutoCloseable {
         } catch (Exception e) {
             if (listening) {
                 listening = false;
-                e.printStackTrace();
                 throw new ServerException("Exception while serving client connections.", e);
             } else {
                 log.warn("Server was stopped while serving client connections.", e);
@@ -245,8 +236,6 @@ public class Server implements AutoCloseable {
         dataSource.cleanUpData();
     }
 
-    private int clientNumber = 0;
-
     private ClientConnectionThread acceptNewClientConnection(ServerSocketChannel serverChannel) throws IOException {
         log.debug("Accepting a new connection.");
 
@@ -257,7 +246,7 @@ public class Server implements AutoCloseable {
             refuseConnectionOverMaxPool(clientChannel);
             throw new IllegalStateException("Maximum client connection pool exceeded.");
         }
-        ClientConnectionThread thread = new ClientConnectionThread(clientNumber++, clientChannel, dataSource);
+        ClientConnectionThread thread = new ClientConnectionThread(clientChannel, dataSource);
         connectionPool.addClientConnection(thread);
         return thread;
     }

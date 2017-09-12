@@ -42,7 +42,11 @@ public class DataSourceFile implements DataSource {
 
     void loadCollections(Path dataDir) {
         try {
-            Files.list(dataDir).forEach(path -> collections.put(path.getFileName().toString(), new DbCollectionFile(path)));
+            Files.list(dataDir)
+                    .filter(Files::isRegularFile)
+                    .forEach(path -> collections.put(
+                            path.getFileName().toString(),
+                            new DbCollectionFile(path)));
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot read a data directory '" + dataDir.toAbsolutePath() + "': " + e.getMessage(), e);
@@ -149,14 +153,14 @@ public class DataSourceFile implements DataSource {
     }
 
     @Override
-    public boolean delete(@NonNull String collectionName, String where) {
+    public int delete(@NonNull String collectionName, String where) {
         checkIfCollectionExists(collectionName);
 
         return getCollection(collectionName).delete(where);
     }
 
     @Override
-    public boolean delete(@NonNull String collectionName) {
+    public int delete(@NonNull String collectionName) {
         return delete(collectionName, null);
     }
 
@@ -181,7 +185,5 @@ public class DataSourceFile implements DataSource {
     @Override
     public void cleanUpData() {
         collections.values().stream().forEach(DbCollection::cleanUp);
-
-        // TODO reorganize indexes etc.
     }
 }

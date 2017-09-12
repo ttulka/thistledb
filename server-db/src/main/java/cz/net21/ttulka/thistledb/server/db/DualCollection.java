@@ -91,7 +91,7 @@ public class DualCollection implements DbCollection {
     }
 
     @Override
-    public boolean delete(String where) {
+    public int delete(String where) {
         throw new IllegalStateException("Cannot modify DUAL collection.");
     }
 

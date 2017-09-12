@@ -1,9 +1,7 @@
 package cz.net21.ttulka.thistledb.server.db;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,8 +61,8 @@ public class DbCollectionFile implements DbCollection {
     @Override
     public void insert(@NonNull Collection<String> jsonData) {
         lock.writeLock().lock();
-        try {
-            new Insert(jsonData);
+        try (Insert insert = new Insert()) {
+            insert.insert(jsonData);
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot insert into a collection: " + e.getMessage(), e);
@@ -78,10 +76,10 @@ public class DbCollectionFile implements DbCollection {
     }
 
     @Override
-    public boolean delete(String where) {
+    public int delete(String where) {
         lock.writeLock().lock();
-        try {
-            return new Delete(where).delete();
+        try (Delete delete = new Delete(where)) {
+            return delete.delete();
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot delete from a collection: " + e.getMessage(), e);
@@ -93,8 +91,8 @@ public class DbCollectionFile implements DbCollection {
     @Override
     public int update(String[] columns, String[] values, String where) {
         lock.writeLock().lock();
-        try {
-            return new Update(columns, values, where).update();
+        try (Update update = new Update(columns, values, where)) {
+            return update.update();
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot update a collection: " + e.getMessage(), e);
@@ -105,43 +103,42 @@ public class DbCollectionFile implements DbCollection {
 
     @Override
     public boolean createIndex(String column) {
-        lock.writeLock().lock();
-        try {
-            if (!indexing.exists(column)) {
-                new CreateIndex(column);
+        if (!indexing.exists(column)) {
+            lock.writeLock().lock();
+            try (CreateIndex createIndex = new CreateIndex(column)) {
                 return true;
-            }
-            return false;
 
-        } catch (IOException e) {
-            throw new DatabaseException("Cannot create an insert for a collection: " + e.getMessage(), e);
-        } finally {
-            lock.writeLock().unlock();
+            } catch (IOException e) {
+                throw new DatabaseException("Cannot create an insert for a collection: " + e.getMessage(), e);
+            } finally {
+                lock.writeLock().unlock();
+            }
         }
+        return false;
     }
 
     @Override
     public boolean dropIndex(String column) {
-        lock.writeLock().lock();
-        try {
-            if (indexing.exists(column)) {
+        if (indexing.exists(column)) {
+            lock.writeLock().lock();
+            try {
                 new DropIndex(column);
                 return true;
-            }
-            return false;
 
-        } catch (IOException e) {
-            throw new DatabaseException("Cannot drop an insert for a collection: " + e.getMessage(), e);
-        } finally {
-            lock.writeLock().unlock();
+            } catch (IOException e) {
+                throw new DatabaseException("Cannot drop an insert for a collection: " + e.getMessage(), e);
+            } finally {
+                lock.writeLock().unlock();
+            }
         }
+        return false;
     }
 
     @Override
     public void cleanUp() {
         lock.writeLock().lock();
-        try {
-            new CleanUp().cleanUp();
+        try (CleanUp cleanUp = new CleanUp()) {
+            cleanUp.cleanUp();
             indexing.cleanUp();
 
         } catch (IOException e) {
@@ -179,8 +176,6 @@ public class DbCollectionFile implements DbCollection {
     }
 
     abstract class DbAccess implements AutoCloseable {
-
-        static final int BUFFER_SIZE = 1024;
 
         protected final SeekableByteChannel channel;
 
@@ -255,11 +250,12 @@ public class DbCollectionFile implements DbCollection {
                 return null;
             }
             try {
-                positionOfActualRecord = channel.position();
-
                 String next = ChannelUtils.next(channel, RECORD_SEPARATOR, RECORD_DELETED, maxPosition);
                 if (next == null) {
                     finished = true;
+                    positionOfActualRecord = channel.size();
+                } else {
+                    positionOfActualRecord = channel.position() - next.length() - 1;
                 }
                 return next;
 
@@ -367,26 +363,42 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
-    class Insert {
+    class Insert extends DbAccess {
 
-        public Insert(Collection<String> jsonData) throws IOException {
+        protected Insert() throws IOException {
             super();
-            try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "rw");
-                 FileChannel channel = file.getChannel()) {
+        }
 
-                // append
-                long position = channel.size();
-                channel.position(position);
+        public void insert(Collection<String> jsonData) throws IOException {
+            long currentPosition = channel.position();
 
-                for (String json : jsonData) {
-                    position = channel.position();
+            // append
+            channel.position(channel.size());
 
-                    String data = serialize(json) + RECORD_SEPARATOR;
-                    channel.write(ByteBuffer.wrap(data.getBytes()));
-
-                    indexNewRecord(json, position);
-                }
+            for (String json : jsonData) {
+                writeData(json);
             }
+            channel.position(currentPosition);
+        }
+
+        public void insert(String jsonData) throws IOException {
+            long currentPosition = channel.position();
+
+            // append
+            channel.position(channel.size());
+
+            writeData(jsonData);
+
+            channel.position(currentPosition);
+        }
+
+        private void writeData(String json) throws IOException {
+            long position = channel.position();
+
+            String data = serialize(json) + RECORD_SEPARATOR;
+            channel.write(ByteBuffer.wrap(data.getBytes()));
+
+            indexNewRecord(json, position);
         }
 
         private void indexNewRecord(String json, long position) {
@@ -402,35 +414,7 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
-    class Delete extends DbAccess {
-
-        private final Where where;
-
-        public Delete(String where) throws IOException {
-            super();
-            this.where = Where.create(where);
-        }
-
-        public boolean delete() throws IOException {
-            boolean deleted = false;
-            String json;
-            do {
-                json = nextRecord(where);
-
-                if (json != null) {
-                    deleteRecord(json);
-
-                    deleted = true;
-                }
-            } while (json != null);
-
-            close();
-
-            return deleted;
-        }
-    }
-
-    class Update extends DbAccess {
+    class Update extends Insert {
 
         private final Where where;
         private final String[] columns;
@@ -449,10 +433,10 @@ public class DbCollectionFile implements DbCollection {
             int updated = 0;
             String json;
             while ((json = nextRecord(where)) != null) {
-                json = updateData(json, columns, values);
-                if (json != null) {
+                String updatedJson = updateData(json, columns, values);
+                if (updatedJson != null && !updatedJson.equals(json)) {
                     deleteRecord(json);
-                    insert(json);
+                    insert(updatedJson);
 
                     updated++;
                 }
@@ -501,6 +485,27 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
+    class Delete extends DbAccess {
+
+        private final Where where;
+
+        public Delete(String where) throws IOException {
+            super();
+            this.where = Where.create(where);
+        }
+
+        public int delete() throws IOException {
+            int deleted = 0;
+            String json;
+            while ((json = nextRecord(where)) != null) {
+                deleteRecord(json);
+                deleted++;
+            }
+            close();
+            return deleted;
+        }
+    }
+
     class CreateIndex extends DbAccess {
 
         public CreateIndex(String column) throws IOException {
@@ -534,17 +539,9 @@ public class DbCollectionFile implements DbCollection {
         public CleanUp() throws IOException {
             super();
             Path tempCollectionPath = Paths.get(path + ".tmp");
-            createNewFileOrTruncateExisting(tempCollectionPath);
+            ChannelUtils.createNewFileOrTruncateExisting(tempCollectionPath);
 
             this.tempCollection = new DbCollectionFile(tempCollectionPath);
-        }
-
-        private void createNewFileOrTruncateExisting(Path path) throws IOException {
-            Files.newByteChannel(path,
-                                 StandardOpenOption.WRITE,
-                                 StandardOpenOption.CREATE,
-                                 StandardOpenOption.TRUNCATE_EXISTING
-            ).close();
         }
 
         public void cleanUp() {

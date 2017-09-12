@@ -6,24 +6,29 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
+
+import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Indexing of the database.
  *
  * @author ttulka
  */
+@CommonsLog
 class Indexing {
 
-    private static final String VALUE_SEPARATOR = "+";
-    private static final String POSITION_SEPARATOR = ",";
+    static final String VALUE_SEPARATOR = "+";
+    static final String POSITION_SEPARATOR = ",";
 
     static final char RECORD_SEPARATOR = '\1';
     static final char RECORD_DELETED = '\2';
@@ -32,23 +37,10 @@ class Indexing {
 
     public Indexing(Path path) {
         this.path = Paths.get(path + "_idx");
-
-        createIndexingDirectory(this.path);
-    }
-
-    private void createIndexingDirectory(Path path) {
-        if (!Files.exists(path)) {
-            try {
-                Files.createDirectory(path);
-
-            } catch (IOException e) {
-                throw new DatabaseException("Cannot create indexing directory '" + path + "'.");
-            }
-        }
     }
 
     private String getIndexHash(String index) {
-        return index.replaceAll("%s", "").replace('.', '_');
+        return index.replaceAll("%s", "");
     }
 
     private String getValueHash(String value) {
@@ -83,15 +75,15 @@ class Indexing {
             return Collections.emptySet();
         }
 
-        Set<Long> positions = new HashSet<>();
+        Set<Long> positions = new TreeSet<>();
         try (SeekableByteChannel channel = Files.newByteChannel(pathToIndexValue, StandardOpenOption.READ)) {
-            String line;
-            while ((line = ChannelUtils.next(channel, RECORD_SEPARATOR, RECORD_SEPARATOR)) != null) {
-                int separator = line.indexOf(VALUE_SEPARATOR);
+            String record;
+            while ((record = ChannelUtils.next(channel, RECORD_SEPARATOR, RECORD_DELETED)) != null) {
+                int separator = record.indexOf(VALUE_SEPARATOR);
 
-                String val = line.substring(0, separator);
+                String val = record.substring(0, separator);
                 if (val.equals(value)) {
-                    String positionList = line.substring(separator + 1);
+                    String positionList = record.substring(separator + 1);
 
                     for (String pos : positionList.split(POSITION_SEPARATOR)) {
                         positions.add(Long.valueOf(pos));
@@ -113,34 +105,30 @@ class Indexing {
             Files.createDirectories(pathToIndexValue.getParent());
 
             try (SeekableByteChannel channel = Files.newByteChannel(pathToIndexValue, StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-                Set<String> savedPositions = new HashSet<>();
+                Set<String> savedPositions = new TreeSet<>();
                 savedPositions.add(String.valueOf(position));
 
-                String line;
-                while ((line = ChannelUtils.next(channel, RECORD_SEPARATOR, RECORD_SEPARATOR)) != null) {
-                    int separator = line.indexOf(VALUE_SEPARATOR);
+                String record;
+                while ((record = ChannelUtils.next(channel, RECORD_SEPARATOR, RECORD_DELETED)) != null) {
+                    int separator = record.indexOf(VALUE_SEPARATOR);
 
-                    String val = line.substring(0, separator);
+                    String val = record.substring(0, separator);
                     if (val.equals(value)) {
                         // save old positions
-                        String positionList = line.substring(separator + 1);
+                        String positionList = record.substring(separator + 1);
                         savedPositions.addAll(Arrays.asList(positionList.split(POSITION_SEPARATOR)));
 
                         // delete an old record
-                        long pos = channel.position();
-                        channel.position(pos - line.length());
-                        channel.write(ByteBuffer.wrap(new byte[]{RECORD_DELETED}));
-                        channel.position(pos);
-
+                        deleteRecord(channel, record);
                         break;
                     }
                 }
-
+                
                 // add the new value
                 channel.position(channel.size());   // append
                 String positions = String.join(POSITION_SEPARATOR, savedPositions).replace(" ", "");
-                String record = value + VALUE_SEPARATOR + positions + RECORD_SEPARATOR;
-                channel.write(ByteBuffer.wrap(record.getBytes()));
+                String insert = value + VALUE_SEPARATOR + positions + RECORD_SEPARATOR;
+                channel.write(ByteBuffer.wrap(insert.getBytes()));
             }
         } catch (IOException e) {
             throw new DatabaseException("Cannot create an index file: " + pathToIndexValue, e);
@@ -149,32 +137,28 @@ class Indexing {
 
     public void delete(String index, Object value, long position) {
         Path pathToIndexValue = getPathToIndexValue(index, value.toString());
-
-        if (!Files.exists(path.resolve(pathToIndexValue))) {
+        if (!Files.exists(pathToIndexValue)) {
             return;
         }
+        String positionString = String.valueOf(position);
         try (SeekableByteChannel channel = Files.newByteChannel(pathToIndexValue, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-            Set<String> savedPositions = new HashSet<>();
+            Set<String> savedPositions = new TreeSet<>();
 
-            String line;
-            while ((line = ChannelUtils.next(channel, RECORD_SEPARATOR, RECORD_SEPARATOR)) != null) {
-                int separator = line.indexOf(VALUE_SEPARATOR);
+            String record;
+            while ((record = ChannelUtils.next(channel, RECORD_SEPARATOR, RECORD_DELETED)) != null) {
+                int separator = record.indexOf(VALUE_SEPARATOR);
 
-                String val = line.substring(0, separator);
+                String val = record.substring(0, separator);
                 if (val.equals(value)) {
                     // save old positions
-                    String positionList = line.substring(separator + 1);
+                    String positionList = record.substring(separator + 1);
                     List<String> positions = Arrays.asList(positionList.split(POSITION_SEPARATOR));
-                    String positionString = String.valueOf(position);
                     if (positions.contains(positionString)) {
                         savedPositions.addAll(positions);
                         savedPositions.remove(positionString);
 
                         // delete an old record
-                        long pos = channel.position();
-                        channel.position(pos - line.length());
-                        channel.write(ByteBuffer.wrap(new byte[]{RECORD_DELETED}));
-                        channel.position(pos);
+                        deleteRecord(channel, record);
                     }
                     break;
                 }
@@ -184,12 +168,19 @@ class Indexing {
                 // add save values without the deleted one
                 channel.position(channel.size());   // append
                 String positions = String.join(POSITION_SEPARATOR, savedPositions).replace(" ", "");
-                String record = value + VALUE_SEPARATOR + positions + RECORD_SEPARATOR;
-                channel.write(ByteBuffer.wrap(record.getBytes()));
+                String insert = value + VALUE_SEPARATOR + positions + RECORD_SEPARATOR;
+                channel.write(ByteBuffer.wrap(insert.getBytes()));
             }
         } catch (IOException e) {
             throw new DatabaseException("Cannot create an index file: " + pathToIndexValue, e);
         }
+    }
+
+    private void deleteRecord(SeekableByteChannel channel, String record) throws IOException {
+        long pos = channel.position();
+        channel.position(pos - record.length() - 1);
+        channel.write(ByteBuffer.wrap(new byte[]{RECORD_DELETED}));
+        channel.position(pos);
     }
 
     public boolean create(String index) {
@@ -233,13 +224,46 @@ class Indexing {
         if (!exists(index)) {
             return;
         }
-        // TODO
+        cleanUpDirectory(getPathToIndex(index));
     }
 
     public void cleanUp() {
         if (!Files.exists(path)) {
             return;
         }
-        // TODO
+        cleanUpDirectory(path);
+    }
+
+    void cleanUpDirectory(Path dir) {
+        try (Stream<Path> filesStream = Files.walk(dir)) {
+            filesStream
+                    .filter(Files::isRegularFile)
+                    .filter(file -> file.endsWith("index"))
+                    .forEach(this::cleanUpIndex);
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot clean up an index directory: " + dir, e);
+        }
+    }
+
+    void cleanUpIndex(Path file) {
+        log.info("Clean up indexes for " + file); // TODO debug
+        try {
+            Path temp = Paths.get(file + ".tmp");
+            ChannelUtils.createNewFileOrTruncateExisting(temp);
+
+            try (SeekableByteChannel in = Files.newByteChannel(file, StandardOpenOption.READ);
+                 SeekableByteChannel out = Files.newByteChannel(temp, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+                String record;
+                while ((record = ChannelUtils.next(in, RECORD_SEPARATOR, RECORD_DELETED)) != null) {
+                    String output = record + RECORD_SEPARATOR;
+                    out.write(ByteBuffer.wrap(output.getBytes()));
+                }
+            }
+            Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot clean up an index file: " + file, e);
+        }
     }
 }

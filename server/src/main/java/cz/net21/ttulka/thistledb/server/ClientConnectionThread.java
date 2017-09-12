@@ -31,10 +31,7 @@ class ClientConnectionThread implements Runnable {
 
     private boolean live = true;
 
-    private final int number; // TODO remove, only for testing purposes
-
-    ClientConnectionThread(int number, SocketChannel clientChannel, DataSource dataSource) throws IOException {
-        this.number = number;
+    ClientConnectionThread(SocketChannel clientChannel, DataSource dataSource) throws IOException {
         this.clientChannel = clientChannel;
         this.selector = Selector.open();
         this.queryProcessor = new QueryProcessor(dataSource);
@@ -44,7 +41,6 @@ class ClientConnectionThread implements Runnable {
 
     @Override
     public void run() {
-        log.info("Running a new client connection thread " + number);   // TODO debug
         try {
             while (live) {
                 selector.select();
@@ -75,6 +71,7 @@ class ClientConnectionThread implements Runnable {
 
     public void stop() {
         live = false;
+        selector.wakeup();
     }
 
     public boolean isLive() {
@@ -82,7 +79,6 @@ class ClientConnectionThread implements Runnable {
     }
 
     private void read(SelectionKey key) throws IOException {
-        log.info("Read from a client " + number);   // TODO debug
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         int numRead;
         try {
@@ -124,7 +120,6 @@ class ClientConnectionThread implements Runnable {
     private void processInput() {
         String data;
         while ((data = readLineFromBuffer()) != null) {
-            log.info("Processing a client input \"" + data + "\" connection thread " + number);   // TODO debug
             queryProcessor.process(data, this::processOutput);
         }
     }
@@ -134,7 +129,6 @@ class ClientConnectionThread implements Runnable {
             Iterator<String> iterator = output.iterator();
             while (iterator.hasNext()) {
                 String data = iterator.next();
-                log.info("Write \"" + data + "\" to a client " + number);   // TODO debug
                 if (!SocketUtils.printlnIntoChannel(data, clientChannel)) {
                     break;
                 }
@@ -151,7 +145,6 @@ class ClientConnectionThread implements Runnable {
         if (!live) {
             return;
         }
-        log.info("Processing a client output \"" + data + "\" connection thread " + number);   // TODO debug
         synchronized (output) {
             output.add(data);
         }
@@ -160,11 +153,11 @@ class ClientConnectionThread implements Runnable {
         key.interestOps(SelectionKey.OP_WRITE);
 
         // wake up our selecting thread so it can make the required changes
-        selector.wakeup();  // TODO unnecessary???
+        selector.wakeup();
     }
 
     private void close() {
-        log.info("Closing a client socket " + number); // TODO debug
+        log.debug("Closing a client socket.");
         live = false;
         try {
             clientChannel.close();

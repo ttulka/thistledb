@@ -95,19 +95,19 @@ public interface DataSource {
      *
      * @param collectionName the collection name
      * @param where          the condition
-     * @return true if a record was deleted, otherwise false
+     * @return count of deleted documents
      * @throws DatabaseException if the collection doesn't exist
      */
-    boolean delete(String collectionName, String where);
+    int delete(String collectionName, String where);
 
     /**
      * Deletes from a collection. Convenient method.
      *
      * @param collectionName the collection name
-     * @return true if a record was deleted, otherwise false
+     * @return count of deleted documents
      * @throws DatabaseException if the collection doesn't exist
      */
-    boolean delete(String collectionName);
+    int delete(String collectionName);
 
     /**
      * Creates an index in a collection.
@@ -132,8 +132,7 @@ public interface DataSource {
     boolean dropIndex(String collectionName, String column);
 
     /**
-     * Cleans up the data source.
-     * This method is called when the data source closing.
+     * Cleans up the data source. This method is called when the data source closing.
      */
     void cleanUpData();
 }

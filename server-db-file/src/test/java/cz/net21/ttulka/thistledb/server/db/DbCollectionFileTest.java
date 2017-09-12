@@ -42,7 +42,9 @@ public class DbCollectionFileTest {
 
         long originalSize = Files.size(collectionPath);
 
-        dbCollection.delete("person.name = \"John\"");
+        dbCollection.createIndex("person.name");
+        dbCollection.update(new String[]{"person.name"}, new String[]{"Peter"}, "person.name = \"John\"");
+        dbCollection.delete("person.name = \"Peter\"");
 
         dbCollection.cleanUp();
 

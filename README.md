@@ -53,6 +53,14 @@ Example: `patient.name` is an element addressing a patient name in the document:
     }
 }
 ```
+Name of an element can contain literals, digits, underscore `_` and dash `-`. 
+
+Example of valid element names:
+```
+name
+123
+patient-name_123
+```
 
 ### Commands and Queries
 All the commands and queries are SQL-like.
@@ -241,7 +249,7 @@ server.setMaxClientConnections(maxClientConnections);
 #### Start and stop the server
 ```
 server.start();
-server.stop();
+server.stop(timeout);
 ```
 
 ## Console

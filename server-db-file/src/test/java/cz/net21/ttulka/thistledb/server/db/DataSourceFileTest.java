@@ -165,9 +165,9 @@ public class DataSourceFileTest {
         dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
         dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
-        boolean deleted = dataSource.delete(TEST_COLLECTION_NAME);
+        int deleted = dataSource.delete(TEST_COLLECTION_NAME);
 
-        assertThat("Should be deleted.", deleted, is(true));
+        assertThat("Should be deleted.", deleted, is(2));
 
         Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
 
@@ -189,9 +189,9 @@ public class DataSourceFileTest {
         dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
         dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
-        boolean deleted = dataSource.delete(TEST_COLLECTION_NAME, "person.name = \"John\"");
+        int deleted = dataSource.delete(TEST_COLLECTION_NAME, "person.name = \"John\"");
 
-        assertThat("Should be deleted.", deleted, is(true));
+        assertThat("Should be deleted.", deleted, is(2));
 
         Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
 
@@ -213,9 +213,9 @@ public class DataSourceFileTest {
         dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
         dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
 
-        boolean deleted = dataSource.delete(TEST_COLLECTION_NAME, "person.name = \"XXX\"");
+        int deleted = dataSource.delete(TEST_COLLECTION_NAME, "person.name = \"XXX\"");
 
-        assertThat("Shouldn't be deleted.", deleted, is(false));
+        assertThat("Shouldn't be deleted.", deleted, is(0));
 
         Flux<String> stream = dataSource.select(TEST_COLLECTION_NAME, "*");
 
@@ -273,6 +273,37 @@ public class DataSourceFileTest {
                                         new String[]{"person.name"},
                                         new String[]{"Peter"},
                                         "person.surname=\"Smith\"");
+
+        assertThat("Three records should be update.", updated, is(3));
+
+        List<String> results = new CopyOnWriteArrayList<>();
+
+        dataSource.select(TEST_COLLECTION_NAME, "*")
+                .map(TSONObject::new)
+                .filter(tson -> tson.findByPath("person") != null)
+                .map(person -> person.findByPath("person.name").toString())
+                .subscribe(results::add);
+
+        waitForSeconds(1);
+
+        assertThat("Should contain new values.", results, contains("Peter", "Peter", "Peter"));
+
+        dataSource.dropCollection(TEST_COLLECTION_NAME);
+    }
+
+    @Test
+    public void updateWhereSameElementTest() {
+        dataSource.createCollection(TEST_COLLECTION_NAME);
+
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_BASIC);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+        dataSource.insert(TEST_COLLECTION_NAME, TestData.JSON_PERSON);
+
+        int updated = dataSource.update(TEST_COLLECTION_NAME,
+                                        new String[]{"person.name"},
+                                        new String[]{"Peter"},
+                                        "person.name=\"John\"");
 
         assertThat("Three records should be update.", updated, is(3));
 

@@ -3,15 +3,21 @@ package cz.net21.ttulka.thistledb.server.db;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 /**
  * Utils for working with Channels.
  *
  * @author ttulka
  */
-public class ChannelUtils {
+public final class ChannelUtils {
 
     private static final int BUFFER_SIZE = 1024;
+
+    private ChannelUtils() {
+    }
 
     /**
      * Convenient method.
@@ -86,5 +92,18 @@ public class ChannelUtils {
             return null;
         }
         return next(channel, separatorFlag, deletedFlag);
+    }
+
+    /**
+     * Create a new file or truncate it if already exists.
+     * @param path the file
+     * @throws IOException
+     */
+    public static void createNewFileOrTruncateExisting(Path path) throws IOException {
+        Files.newByteChannel(path,
+                             StandardOpenOption.WRITE,
+                             StandardOpenOption.CREATE,
+                             StandardOpenOption.TRUNCATE_EXISTING
+        ).close();
     }
 }

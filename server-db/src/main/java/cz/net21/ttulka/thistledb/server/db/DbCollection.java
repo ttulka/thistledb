@@ -12,7 +12,7 @@ interface DbCollection {
 
     void insert(Collection<String> jsonData);
 
-    boolean delete(String where);
+    int delete(String where);
 
     int update(String[] columns, String[] values, String where);
 

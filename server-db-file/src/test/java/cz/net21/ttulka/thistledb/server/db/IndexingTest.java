@@ -1,7 +1,12 @@
 package cz.net21.ttulka.thistledb.server.db;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
@@ -13,6 +18,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author ttulka
@@ -113,5 +120,55 @@ public class IndexingTest {
 
         boolean exists2A = indexing.exists("index2");
         assertThat(exists2A, is(false));
+    }
+
+    @Test
+    public void cleanUpDirectoryWalkTest() throws IOException {
+        Path dir = temp.newFolder().toPath();
+
+        Path test1 = Files.createDirectories(dir.resolve("test1").resolve("01"));
+        Path test2 = Files.createDirectories(dir.resolve("test2").resolve("02"));
+        Path test3 = Files.createDirectories(dir.resolve("test3").resolve("03"));
+
+        Path index1 = Files.createFile(test1.resolve("index"));
+        Path index2 = Files.createFile(test2.resolve("index"));
+        Path index3 = Files.createFile(test3.resolve("index"));
+
+        Indexing spyIndexing = spy(indexing);
+
+        spyIndexing.cleanUpDirectory(dir);
+
+        verify(spyIndexing).cleanUpIndex(index1);
+        verify(spyIndexing).cleanUpIndex(index2);
+        verify(spyIndexing).cleanUpIndex(index3);
+    }
+
+    @Test
+    public void cleanUpIndexTest() throws IOException {
+        Path index = temp.newFile().toPath();
+
+        String lastRecord = "value" + Indexing.VALUE_SEPARATOR + "4" + Indexing.RECORD_SEPARATOR;
+
+        // simulate modified index file
+        try (BufferedWriter bw = Files.newBufferedWriter(index)) {
+            bw.write(Indexing.RECORD_DELETED + "alue" + Indexing.VALUE_SEPARATOR + "1" + Indexing.RECORD_SEPARATOR);
+            bw.write(Indexing.RECORD_DELETED + "alue" + Indexing.VALUE_SEPARATOR + "2" + Indexing.RECORD_SEPARATOR);
+            bw.write(Indexing.RECORD_DELETED + "alue" + Indexing.VALUE_SEPARATOR + "3" + Indexing.RECORD_SEPARATOR);
+            bw.write(lastRecord);
+        }
+
+        // clean it up
+        indexing.cleanUpIndex(index);
+
+        // read the content after the modification
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader br = Files.newBufferedReader(index)) {
+            int ch;
+            while ((ch = br.read()) != -1) {
+                content.append((char)ch);
+            }
+        }
+
+        assertThat("Index file should be cleaned up.", content.toString(), is(lastRecord));
     }
 }
