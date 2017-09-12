@@ -33,7 +33,7 @@ class Indexing {
     static final char RECORD_SEPARATOR = '\1';
     static final char RECORD_DELETED = '\2';
 
-    private final Path path;
+    final Path path;
 
     public Indexing(Path path) {
         this.path = Paths.get(path + "_idx");
@@ -123,7 +123,7 @@ class Indexing {
                         break;
                     }
                 }
-                
+
                 // add the new value
                 channel.position(channel.size());   // append
                 String positions = String.join(POSITION_SEPARATOR, savedPositions).replace(" ", "");
@@ -217,6 +217,30 @@ class Indexing {
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot delete an index directory: " + path, e);
+        }
+    }
+
+    void dropOnlyFiles() {
+        if (!Files.exists(path)) {
+            return;
+        }
+        try (Stream<Path> filesStream = Files.walk(path)) {
+            filesStream
+                    .filter(Files::isRegularFile)
+                    .filter(file -> file.endsWith("index"))
+                    .forEach(this::deleteFile);
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot clean up an index directory: " + path, e);
+        }
+    }
+
+    private void deleteFile(Path file) {
+        try {
+            Files.delete(file);
+
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot delete an index file: " + file, e);
         }
     }
 

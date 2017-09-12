@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -71,8 +70,8 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
-    private void insert(String json) {
-        insert(Collections.singleton(json));
+    protected Insert newInsert() throws IOException {
+        return new Insert();
     }
 
     @Override
@@ -138,7 +137,6 @@ public class DbCollectionFile implements DbCollection {
     public void cleanUp() {
         lock.writeLock().lock();
         try (CleanUp cleanUp = new CleanUp()) {
-            cleanUp.cleanUp();
             indexing.cleanUp();
 
         } catch (IOException e) {
@@ -155,15 +153,6 @@ public class DbCollectionFile implements DbCollection {
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot drop a collection: " + e.getMessage(), e);
-        }
-    }
-
-    protected void move(Path newPath) {
-        try {
-            Files.move(path, newPath, StandardCopyOption.REPLACE_EXISTING);
-
-        } catch (IOException e) {
-            throw new DatabaseException("Cannot move a collection: " + e.getMessage(), e);
         }
     }
 
@@ -532,25 +521,29 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
-    class CleanUp extends DbAccess {
+    class CleanUp extends Insert {
 
-        private DbCollectionFile tempCollection;
+        private DbCollectionFile oldCollection;
 
         public CleanUp() throws IOException {
             super();
             Path tempCollectionPath = Paths.get(path + ".tmp");
             ChannelUtils.createNewFileOrTruncateExisting(tempCollectionPath);
+            DbCollectionFile tmpCollection = new DbCollectionFile(tempCollectionPath);
 
-            this.tempCollection = new DbCollectionFile(tempCollectionPath);
-        }
+            indexing.dropOnlyFiles();
+            Files.move(indexing.path, tmpCollection.indexing.path);
+            indexing.dropAll();
 
-        public void cleanUp() {
-            String record;
-            while ((record = nextRecord()) != null) {
-                tempCollection.insert(record);
+            try (Insert tmpInsert = tmpCollection.newInsert()) {
+                String record;
+                while ((record = nextRecord()) != null) {
+                    tmpInsert.insert(record);
+                }
             }
             close();
-            tempCollection.move(path);
+            Files.move(tmpCollection.indexing.path, indexing.path, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(tmpCollection.path, path, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 }
