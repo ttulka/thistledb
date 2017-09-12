@@ -523,24 +523,27 @@ public class DbCollectionFile implements DbCollection {
 
     class CleanUp extends Insert {
 
-        private DbCollectionFile oldCollection;
-
         public CleanUp() throws IOException {
             super();
+            // create a temp empty collection
             Path tempCollectionPath = Paths.get(path + ".tmp");
             ChannelUtils.createNewFileOrTruncateExisting(tempCollectionPath);
             DbCollectionFile tmpCollection = new DbCollectionFile(tempCollectionPath);
 
+            // drop real indexing data and copy the indexing structure to the temp collection
             indexing.dropOnlyFiles();
             Files.move(indexing.path, tmpCollection.indexing.path);
             indexing.dropAll();
 
+            // fetch all data from the collection and insert into the temp collection
+            // new indexes will be written automatically with the insert
             try (Insert tmpInsert = tmpCollection.newInsert()) {
                 String record;
                 while ((record = nextRecord()) != null) {
                     tmpInsert.insert(record);
                 }
             }
+            // exchange the data and indexing
             close();
             Files.move(tmpCollection.indexing.path, indexing.path, StandardCopyOption.REPLACE_EXISTING);
             Files.move(tmpCollection.path, path, StandardCopyOption.REPLACE_EXISTING);
