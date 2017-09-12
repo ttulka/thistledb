@@ -1,4 +1,4 @@
-package cz.net21.ttulka.thistledb.server.db;
+package cz.net21.ttulka.thistledb.db;
 
 /**
  * Exception thrown by the database access.
