@@ -90,7 +90,7 @@ class IndexingWhere {
         if (!isIndexed) {
             throw new IllegalStateException("Cannot call nextPosition() when not indexed.");
         }
-        if (positions.hasNext()) {
+        if (positions != null && positions.hasNext()) {
             return positions.next();
         }
         return -1;

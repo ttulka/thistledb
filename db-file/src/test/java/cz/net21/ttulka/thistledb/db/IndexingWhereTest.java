@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 public class IndexingWhereTest {
 
     @Mock
-    private Indexing indexing;
+    public Indexing indexing;
 
     @Before
     public void setUp() {

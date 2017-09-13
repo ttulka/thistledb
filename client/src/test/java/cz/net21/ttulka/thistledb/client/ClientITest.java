@@ -60,17 +60,20 @@ public class ClientITest {
         client.executeCommand("INSERT INTO test VALUES {\"v\":1},{\"v\":2}", null);
         sleep(500);
 
+        client.executeCommand("CREATE INDEX v ON test", null);
+        sleep(500);
+
         client.executeCommandBlocking("UPDATE test SET v = 3 WHERE v = 2");
         sleep(500);
 
-        JsonPublisher publisher = client.executeQuery("SELECT v FROM test");
+        JsonPublisher publisher = client.executeQuery("SELECT v FROM test WHERE v = 3");
         assertThat("Publisher shouldn't be null.", publisher, not(nullValue()));
 
         List<String> results = new ArrayList<>();
         publisher.subscribe(results::add);
         publisher.await();
 
-        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":1}", "{\"v\":3}"));
+        assertThat("There should be two results.", results, containsInAnyOrder("{\"v\":3}"));
     }
 
     @Test

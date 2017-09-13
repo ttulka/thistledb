@@ -74,18 +74,44 @@ public class IndexingPTest {
         String needle = generateValue();
 
         long time1 = measure(needle, AMOUNT_OF_ROUNDS);
-        System.out.println("PERFORMANCE TIME #1: " + time1 + " ms");
+        System.out.println("PERFORMANCE TIME (NO INDEXING): " + time1 + " ms");
 
-        long start = System.currentTimeMillis();
-        dataSource.createIndex(TEST_COLLECTION_NAME, "root.value");
-
-        System.out.println("INDEXING TIME: " + (System.currentTimeMillis() - start) + " ms");
+        long indexingTime = index();
+        System.out.println("INDEXING TIME: " + indexingTime + " ms");
 
         long time2 = measure(needle, AMOUNT_OF_ROUNDS);
-        System.out.println("PERFORMANCE TIME #2: " + time2 + " ms");
+        System.out.println("PERFORMANCE TIME  (INDEXING): " + time2 + " ms");
+
+        long cleanUp = cleanUpIndexing();
+        System.out.println("INDEXING CLEAN UP TIME: " + cleanUp + " ms");
+
+        long time3 = measure(needle, AMOUNT_OF_ROUNDS);
+        System.out.println("PERFORMANCE TIME  (INDEXING CLEANED UP): " + time3 + " ms");
 
         assertThat("Indexed search must be at least " + THRESHOLD + " times quicker.",
                    time1 > time2 * THRESHOLD, is(true));
+        assertThat("Indexed search must be at least " + THRESHOLD + " times quicker.",
+                   time1 > time3 * THRESHOLD, is(true));
+        assertThat("Indexed search after clean up must be same or better than before.",
+                   time3 <= time2, is(true));
+
+    }
+
+    private long index() {
+        long start = System.currentTimeMillis();
+
+        dataSource.createIndex(TEST_COLLECTION_NAME, "root.value");
+
+        return System.currentTimeMillis() - start;
+    }
+
+    private long cleanUpIndexing() {
+        long start = System.currentTimeMillis();
+
+        DbCollectionFile collection = (DbCollectionFile)dataSource.getCollection(TEST_COLLECTION_NAME);
+        collection.indexing.cleanUp();
+
+        return System.currentTimeMillis() - start;
     }
 
     private long measure(String needle, int count) {

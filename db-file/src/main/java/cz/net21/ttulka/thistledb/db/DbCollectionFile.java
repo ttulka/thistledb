@@ -36,11 +36,11 @@ public class DbCollectionFile implements DbCollection {
 
     protected final Path path;
 
-    private final Indexing indexing;
+    final Indexing indexing;
 
     public DbCollectionFile(@NonNull Path path) {
         this.path = path;
-        this.indexing = new Indexing(path);
+        this.indexing = new IndexingFile(path);
     }
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -615,9 +615,9 @@ public class DbCollectionFile implements DbCollection {
             DbCollectionFile tmpCollection = new DbCollectionFile(tempCollectionPath);
 
             // drop real indexing data and copy the indexing structure to the temp collection
-            if (Files.exists(indexing.path)) {
-                indexing.dropOnlyFiles();
-                Files.move(indexing.path, tmpCollection.indexing.path);
+            if (Files.exists(indexing.getPath())) {
+                indexing.dropOnlyData();
+                Files.move(indexing.getPath(), tmpCollection.indexing.getPath());
                 indexing.dropAll();
             }
 
@@ -632,8 +632,8 @@ public class DbCollectionFile implements DbCollection {
             // exchange the data and indexing
             close();
             Files.move(tmpCollection.path, path, StandardCopyOption.REPLACE_EXISTING);
-            if (Files.exists(tmpCollection.indexing.path)) {
-                Files.move(tmpCollection.indexing.path, indexing.path, StandardCopyOption.REPLACE_EXISTING);
+            if (Files.exists(tmpCollection.indexing.getPath())) {
+                Files.move(tmpCollection.indexing.getPath(), indexing.getPath(), StandardCopyOption.REPLACE_EXISTING);
             }
         }
     }
