@@ -21,14 +21,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @Ignore
 public class IndexingPTest {
 
-    private static final int AMOUNT_OF_RECORDS = 10000;
+    private static final int AMOUNT_OF_RECORDS = 10_000;
     private static final int AMOUNT_OF_ROUNDS = 100;
 
-    private static final int THRESHOLD = 10; // how many times must be performance better to pass the test
+    private static final int THRESHOLD = String.valueOf(AMOUNT_OF_RECORDS).length() + 1; // how many times must be performance better to pass the test
 
     private static final String TEST_COLLECTION_NAME = "test";
 
-    private static final String BALLAST = "Frederick P. Brooks, Jr., is Kenan Professor of Computer Science at the University of North Carolina at Chapel Hill. He is best known as the 'father of the IBM System/360', having served as project manager for its development and later as manager of the Operating System/360 software project during its design phase. For this work he, Bob Evans, and Erich Bloch were awarded the National Medal of Technology in 1985. Earlier, he was an architect of the IBM Stretch and Harvest computers. At Chapel Hill, Dr. Brooks founded the Department of Computer Science and chaired it from 1964 through 1984. He has served on the National Science Board and the Defense Science Board. His current teaching and research is in computer architecture, molecular graphics, and virtual environments.";
+    private static final String JUNK = "Frederick P. Brooks, Jr., is Kenan Professor of Computer Science at the University of North Carolina at Chapel Hill. He is best known as the 'father of the IBM System/360', having served as project manager for its development and later as manager of the Operating System/360 software project during its design phase. For this work he, Bob Evans, and Erich Bloch were awarded the National Medal of Technology in 1985. Earlier, he was an architect of the IBM Stretch and Harvest computers. At Chapel Hill, Dr. Brooks founded the Department of Computer Science and chaired it from 1964 through 1984. He has served on the National Science Board and the Defense Science Board. His current teaching and research is in computer architecture, molecular graphics, and virtual environments. To my surprise and delight, The Mythical Man-Month continues to be popular after 20 years. Over 250,000 copies are in print. People often ask which of the opinions and recommendations.";
 
     private DataSourceFile dataSource;
 
@@ -66,7 +66,7 @@ public class IndexingPTest {
         if (index == AMOUNT_OF_RECORDS / 2) {   // save the middle value as the needle
             needle = value;
         }
-        return "{\"root\":{\"id\":" + index + ",\"value\":\"" + value + "\",\"ballast\":\"" + BALLAST + "\"}}";
+        return "{\"root\":{\"id\":" + index + ",\"value\":\"" + value + "\",\"ballast\":\"" + JUNK + "\"}}";
     }
 
     private Random random = new Random();
@@ -96,8 +96,8 @@ public class IndexingPTest {
                    time1 > time2 * THRESHOLD, is(true));
         assertThat("Indexed search must be at least " + THRESHOLD + " times quicker.",
                    time1 > time3 * THRESHOLD, is(true));
-        assertThat("Indexed search after clean up must be same or better than before.",
-                   time3 <= time2, is(true));
+        assertThat("Indexed search after clean up must be almost same than before.",
+                   time3 <= time2 + 10, is(true));
 
     }
 
@@ -112,7 +112,7 @@ public class IndexingPTest {
     private long cleanUpIndexing() {
         long start = System.currentTimeMillis();
 
-        DbCollectionFile collection = (DbCollectionFile)dataSource.getCollection(TEST_COLLECTION_NAME);
+        DbCollectionFile collection = (DbCollectionFile) dataSource.getCollection(TEST_COLLECTION_NAME);
         collection.indexing.cleanUp();
 
         return System.currentTimeMillis() - start;
@@ -130,8 +130,8 @@ public class IndexingPTest {
         long start = System.currentTimeMillis();
 
         String found = dataSource.select(TEST_COLLECTION_NAME,
-                          "root.value",
-                          "root.value = \"" + needle + "\"")
+                                         "root.value",
+                                         "root.value = \"" + needle + "\"")
                 .blockLast();
 
         assertThat("Needle should be found.", found, is("{\"value\":\"" + needle + "\"}"));
