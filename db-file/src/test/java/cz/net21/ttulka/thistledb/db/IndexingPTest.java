@@ -28,9 +28,11 @@ public class IndexingPTest {
 
     private static final String TEST_COLLECTION_NAME = "test";
 
-    private static final String BALLAST = "Frederick P. Brooks, Jr., is Kenan Professor of Computer Science at the University of North Carolina at Chapel Hill. He is best known as the 'father of the IBM System/360,' having served as project manager for its development and later as manager of the Operating System/360 software project during its design phase. For this work he, Bob Evans, and Erich Bloch were awarded the National Medal of Technology in 1985. Earlier, he was an architect of the IBM Stretch and Harvest computers. At Chapel Hill, Dr. Brooks founded the Department of Computer Science and chaired it from 1964 through 1984. He has served on the National Science Board and the Defense Science Board. His current teaching and research is in computer architecture, molecular graphics, and virtual environments.";
+    private static final String BALLAST = "Frederick P. Brooks, Jr., is Kenan Professor of Computer Science at the University of North Carolina at Chapel Hill. He is best known as the 'father of the IBM System/360', having served as project manager for its development and later as manager of the Operating System/360 software project during its design phase. For this work he, Bob Evans, and Erich Bloch were awarded the National Medal of Technology in 1985. Earlier, he was an architect of the IBM Stretch and Harvest computers. At Chapel Hill, Dr. Brooks founded the Department of Computer Science and chaired it from 1964 through 1984. He has served on the National Science Board and the Defense Science Board. His current teaching and research is in computer architecture, molecular graphics, and virtual environments.";
 
     private DataSourceFile dataSource;
+
+    private String needle;
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -60,6 +62,10 @@ public class IndexingPTest {
 
     private String generateJson(int index) {
         String value = generateValue();
+
+        if (index == AMOUNT_OF_RECORDS / 2) {   // save the middle value as the needle
+            needle = value;
+        }
         return "{\"root\":{\"id\":" + index + ",\"value\":\"" + value + "\",\"ballast\":\"" + BALLAST + "\"}}";
     }
 
@@ -71,8 +77,6 @@ public class IndexingPTest {
 
     @Test
     public void performanceTest() {
-        String needle = generateValue();
-
         long time1 = measure(needle, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME (NO INDEXING): " + time1 + " ms");
 
@@ -125,10 +129,12 @@ public class IndexingPTest {
     private long measure(String needle) {
         long start = System.currentTimeMillis();
 
-        dataSource.select(TEST_COLLECTION_NAME,
+        String found = dataSource.select(TEST_COLLECTION_NAME,
                           "root.value",
                           "root.value = \"" + needle + "\"")
                 .blockLast();
+
+        assertThat("Needle should be found.", found, is("{\"value\":\"" + needle + "\"}"));
 
         return System.currentTimeMillis() - start;
     }

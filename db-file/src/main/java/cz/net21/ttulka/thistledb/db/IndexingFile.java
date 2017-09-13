@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
@@ -49,6 +50,9 @@ class IndexingFile implements Indexing {
 
     final Path path;
 
+    private final Map<String, Boolean> existingIndexes = new HashMap<>();
+    private final Map<String, Path> cacheValuePaths = new WeakHashMap();
+
     public IndexingFile(Path path) {
         this.path = Paths.get(path + "_idx");
     }
@@ -70,12 +74,14 @@ class IndexingFile implements Indexing {
     }
 
     private Path getPathToIndexValue(String index, String value) {
-        String hash = getValueHash(value);
-        return getPathToIndex(index)
-                .resolve(hash.substring(0, 2))
-                .resolve(hash.substring(2, 4))
-                .resolve(hash.substring(4, 5))
-                .resolve("index");
+        return cacheValuePaths.computeIfAbsent(index + "/" + value, key -> {
+            String hash = getValueHash(value);
+            return getPathToIndex(index)
+                    .resolve(hash.substring(0, 2))
+                    .resolve(hash.substring(2, 4))
+                    .resolve(hash.substring(4, 5))
+                    .resolve("index");
+        });
     }
 
     @Override
@@ -85,17 +91,14 @@ class IndexingFile implements Indexing {
 
     @Override
     public boolean exists(String index) {
-        return Files.exists(getPathToIndex(index));
+        return existingIndexes.computeIfAbsent(index, key -> Files.exists(getPathToIndex(key)));
     }
 
     @Override
     public Set<Long> positions(String index, String value) {
-        Path pathToIndex = getPathToIndex(index);
-
-        if (!Files.exists(pathToIndex)) {
+        if (!exists(index)) {
             return null;
         }
-
         Path pathToIndexValue = getPathToIndexValue(index, value);
 
         if (!Files.exists(pathToIndexValue)) {
@@ -216,6 +219,7 @@ class IndexingFile implements Indexing {
         }
         try {
             Files.createDirectories(getPathToIndex(index));
+            existingIndexes.put(index, true);
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot create an index directory: " + getPathToIndex(index), e);
@@ -230,6 +234,7 @@ class IndexingFile implements Indexing {
         }
         try {
             FileUtils.deleteDirectory(getPathToIndex(index).toFile());
+            existingIndexes.put(index, false);
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot delete an index directory: " + getPathToIndex(index), e);
@@ -243,6 +248,7 @@ class IndexingFile implements Indexing {
         }
         try {
             FileUtils.deleteDirectory(path.toFile());
+            existingIndexes.replaceAll((k,v) -> false);
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot delete an index directory: " + path, e);
