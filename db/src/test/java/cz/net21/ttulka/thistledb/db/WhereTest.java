@@ -115,10 +115,13 @@ public class WhereTest {
                 "name >= \"A>=b\" AND " +
                 "name < \"Y<z\" AND " +
                 "name <= \"Y<=z\" AND " +
-                "name Like \"something*LIKE*you\"");
+                "name Like \"something*LIKE*you\" AND " +
+                "name LIKE 'LIKE' AND " +
+                "name like 'LIKE\"quote' AND " +
+                "name like \"LIKE'apostrophe\"");
 
         assertThat(conditions, notNullValue());
-        assertThat(conditions.size(), is(7));
+        assertThat(conditions.size(), is(10));
 
         assertThat(conditions.get(0).getOrClause().get(0).getKey(), is("name"));
         assertThat(conditions.get(0).getOrClause().get(0).getValue(), is("Pe=ter"));
@@ -147,6 +150,18 @@ public class WhereTest {
         assertThat(conditions.get(6).getOrClause().get(0).getKey(), is("name"));
         assertThat(conditions.get(6).getOrClause().get(0).getValue(), is("something*LIKE*you"));
         assertThat(conditions.get(6).getOrClause().get(0).getOperator(), is(Where.Operators.LIKE));
+
+        assertThat(conditions.get(7).getOrClause().get(0).getKey(), is("name"));
+        assertThat(conditions.get(7).getOrClause().get(0).getValue(), is("LIKE"));
+        assertThat(conditions.get(7).getOrClause().get(0).getOperator(), is(Where.Operators.LIKE));
+
+        assertThat(conditions.get(8).getOrClause().get(0).getKey(), is("name"));
+        assertThat(conditions.get(8).getOrClause().get(0).getValue(), is("LIKE\"quote"));
+        assertThat(conditions.get(8).getOrClause().get(0).getOperator(), is(Where.Operators.LIKE));
+
+        assertThat(conditions.get(9).getOrClause().get(0).getKey(), is("name"));
+        assertThat(conditions.get(9).getOrClause().get(0).getValue(), is("LIKE'apostrophe"));
+        assertThat(conditions.get(9).getOrClause().get(0).getOperator(), is(Where.Operators.LIKE));
     }
 
     @Test

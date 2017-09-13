@@ -28,7 +28,7 @@ class QueryParser {
     private static final String JSON_ELEMENT = "[\\w\\d._\\-$]+";
     private static final String JSON_VALUE = "((null)|(\".+\")|('.+')|(true)|(false)|(\\d+)|([\\d]*[.]?[\\d]+))";
 
-    private static final String WHERE = "(" + JSON_ELEMENT + "\\s*(=|!=|<|<=|>|>=|LIKE)\\s*" + JSON_VALUE + ")+";
+    private static final String WHERE = "((" + JSON_ELEMENT + "\\s*(=|!=|<|<=|>|>=)\\s*" + JSON_VALUE + ")|(" + JSON_ELEMENT + "\\s+(LIKE)\\s+'([^']*)')|(" + JSON_ELEMENT + "\\s+(LIKE)\\s+\"(([^\"]|(\\\\\"))*)\"))+";
     private static final String WHERE_COMPOSITED = "(" + WHERE + ")(\\s+(AND|OR)\\s+(" + WHERE + "))*";
 
     static final Pattern SELECT = compile("SELECT\\s+(\\*|" + JSON_ELEMENT + ")\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);

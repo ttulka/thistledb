@@ -28,7 +28,7 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validate("SELECT a_2 FROM test WHERE 1=1 AND 1=1"), is(true));
         assertThat(QueryValidator.validate("SELECT a_2 FROM test WHERE 1=1 AND 1=1 OR 1=1"), is(true));
         assertThat(QueryValidator.validate("SELECT a_2 FROM test WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1"), is(true));
-        assertThat(QueryValidator.validate("SELECT a_2 FROM test WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1"), is(true));
+        assertThat(QueryValidator.validate("SELECT a_2 FROM test WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE '1' AND 1 < 1"), is(true));
         assertThat(QueryValidator.validate("select * from test where person.name = \"Johnny\""), is(true));
     }
 
@@ -78,7 +78,7 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validate("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1"), is(true));
         assertThat(QueryValidator.validate("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND 1=1 OR 1=1"), is(true));
         assertThat(QueryValidator.validate("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1"), is(true));
-        assertThat(QueryValidator.validate("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1"), is(true));
+        assertThat(QueryValidator.validate("UPDATE test SET x.a_1 = 'y.a_1' WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE '1' AND 1 < 1"), is(true));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validate("ALTER test ADD x.a_1 WHERE 1=1 AND 1=1"), is(true));
         assertThat(QueryValidator.validate("ALTER test ADD x.a_1 WHERE 1=1 AND 1=1 OR 1=1"), is(true));
         assertThat(QueryValidator.validate("ALTER test ADD x.a_1 WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1"), is(true));
-        assertThat(QueryValidator.validate("ALTER test ADD x.a_1 WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1"), is(true));
+        assertThat(QueryValidator.validate("ALTER test ADD x.a_1 WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE '1' AND 1 < 1"), is(true));
     }
 
     @Test
@@ -112,7 +112,7 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validate("ALTER test REMOVE x.a_1 WHERE 1=1 AND 1=1"), is(true));
         assertThat(QueryValidator.validate("ALTER test REMOVE x.a_1 WHERE 1=1 AND 1=1 OR 1=1"), is(true));
         assertThat(QueryValidator.validate("ALTER test REMOVE x.a_1 WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1"), is(true));
-        assertThat(QueryValidator.validate("ALTER test REMOVE x.a_1 WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1"), is(true));
+        assertThat(QueryValidator.validate("ALTER test REMOVE x.a_1 WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE '1' AND 1 < 1"), is(true));
     }
 
     @Test
@@ -128,7 +128,7 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validate("DELETE FROM test WHERE 1=1 AND 1=1"), is(true));
         assertThat(QueryValidator.validate("DELETE FROM test WHERE 1=1 AND 1=1 OR 1=1"), is(true));
         assertThat(QueryValidator.validate("DELETE FROM test WHERE 1=1 AND a_2 = '' OR a1 = 'xxx' OR 1=1 AND 1=1"), is(true));
-        assertThat(QueryValidator.validate("DELETE FROM test WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE 1 AND 1 < 1"), is(true));
+        assertThat(QueryValidator.validate("DELETE FROM test WHERE 1=1 AND a_2 >= '' OR a1 != 'xxx' OR 1 LIKE '1' AND 1 < 1"), is(true));
     }
 
     @Test
@@ -260,6 +260,8 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x=1 AND x"), is(false));
         assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x OR x=1"), is(false));
         assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x=1 OR x"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x like 1"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x like x"), is(false));
 
         assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1"), is(true));
         assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x=1"), is(true));
@@ -273,5 +275,17 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x=1 OR x=1 OR x=1"), is(true));
         assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x=1 AND x=1 AND x=1"), is(true));
         assertThat(QueryValidator.validate("SELECT x FROM x WHERE x1.a2=true OR x=123 AND x=1.23 OR x=\"abc\" AND x='abc' OR x=\"\" AND x='' OR x=null AND x  =1 OR x= 1 AND x = 1"), is(true));
+
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x LIKE '1'1'"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x LIKE '1\"1'"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x LIKE '1'"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x like '111'"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x like ''"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x like \"x\""), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x like \"xxx\""), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x like \"x\\\\\"x\""), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x like \"\""), is(true));
+
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x!=1 and x LIKE '1' or x like \"xx\" AND x like '' AND x like \"\" AND x>1 AND x<1 AND x<=1 AND x>=1"), is(true));
     }
 }
