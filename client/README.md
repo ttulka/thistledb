@@ -176,6 +176,12 @@ System.exit(0);
 
 There are always overloaded variants for native String-based and Query-Builder-based queries.
 
+## Test the connection
+Testing if the connection was successfully established by sending a simple query to the server and waiting for a response.
+```
+boolean connected = client.test();
+```
+
 ## License
 
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
