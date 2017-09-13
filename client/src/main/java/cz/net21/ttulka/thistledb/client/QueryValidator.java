@@ -1,7 +1,12 @@
 package cz.net21.ttulka.thistledb.client;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
@@ -24,7 +29,8 @@ public class QueryValidator {
 
     static final Pattern SELECT = compile("SELECT\\s+(\\*|" + JSON_ELEMENT + ")\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern INSERT = compile("INSERT\\s+INTO\\s+(" + COLLECTION + ")\\s+VALUES\\s+(" + JSON + ")", CASE_INSENSITIVE);
-    static final Pattern UPDATE = compile("UPDATE\\s+(" + COLLECTION + ")\\s+SET\\s+(" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + "(\\s*,\\s*" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")*)(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
+    static final Pattern UPDATE = compile("UPDATE\\s+(" + COLLECTION + ")\\s+SET\\s+((" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")(\\s*,\\s*" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")*)", CASE_INSENSITIVE);
+    static final Pattern UPDATE_WHERE = compile("UPDATE\\s+(" + COLLECTION + ")\\s+SET\\s+((" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")(\\s*,\\s*" + JSON_ELEMENT + "\\s*=\\s*" + JSON_VALUE + ")*)\\s+WHERE\\s+(" + WHERE_COMPOSITED + ")", CASE_INSENSITIVE);
     static final Pattern DELETE = compile("DELETE\\s+FROM\\s+(" + COLLECTION + ")(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern CREATE = compile("CREATE\\s+(?!.*INDEX)(" + COLLECTION + ")", CASE_INSENSITIVE);
     static final Pattern DROP = compile("DROP\\s+((?!.*INDEX)" + COLLECTION + ")", CASE_INSENSITIVE);
@@ -32,6 +38,8 @@ public class QueryValidator {
     static final Pattern REMOVE = compile("ALTER\\s+(" + COLLECTION + ")\\s+REMOVE((\\s+((?!.WHERE)(" + JSON_ELEMENT + "))+)\\s*)(\\s+WHERE\\s+(" + WHERE_COMPOSITED + "))?", CASE_INSENSITIVE);
     static final Pattern CREATE_INDEX = compile("CREATE\\s+INDEX\\s+(" + JSON_ELEMENT + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
     static final Pattern DROP_INDEX = compile("DROP\\s+INDEX\\s+(" + JSON_ELEMENT + ")\\s+ON\\s+(" + COLLECTION + ")", CASE_INSENSITIVE);
+
+    private static final List<String> OPERATORS = Arrays.asList("=", "!=", ">", "<", ">=", "<=", "LIKE");
 
     /**
      * Validates a query.
@@ -48,6 +56,7 @@ public class QueryValidator {
         if (!SELECT.matcher(query).matches()
             && !INSERT.matcher(query).matches()
             && !UPDATE.matcher(query).matches()
+            && !UPDATE_WHERE.matcher(query).matches()
             && !DELETE.matcher(query).matches()
             && !CREATE.matcher(query).matches()
             && !DROP.matcher(query).matches()
@@ -59,6 +68,9 @@ public class QueryValidator {
         }
 
         if (!validateInsert(query)) {
+            return false;
+        }
+        if (!validateWhere(query)) {
             return false;
         }
         return true;
@@ -79,6 +91,106 @@ public class QueryValidator {
             return validateListOfJsons(json);
         }
         return true;
+    }
+
+    private static boolean validateWhere(String query) {
+        if (SELECT.matcher(query).matches()) {
+            return validateWhereClause(getMatchingGroup(SELECT, query, 4));
+        }
+        if (DELETE.matcher(query).matches()) {
+            return validateWhereClause(getMatchingGroup(DELETE, query, 3));
+        }
+        if (ADD.matcher(query).matches()) {
+            return validateWhereClause(getMatchingGroup(ADD, query, 7));
+        }
+        if (REMOVE.matcher(query).matches()) {
+            return validateWhereClause(getMatchingGroup(REMOVE, query, 7));
+        }
+        if (UPDATE_WHERE.matcher(query).matches()) {
+            return validateWhereClause(getMatchingGroup(UPDATE_WHERE, query, 21));
+        }
+        return true;
+    }
+
+    private static String getMatchingGroup(Pattern pattern, String input, int group) {
+        try {
+            Matcher matcher = pattern.matcher(input);
+            matcher.matches();
+            return matcher.group(group);
+
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    private static boolean validateWhereClause(String where) {
+        if (where == null) {
+            return true;
+        }
+        where = upperCaseIgnoreAndOrInQuotes(where, "AND");
+        where = upperCaseIgnoreAndOrInQuotes(where, "OR");
+
+        return parseAndParts(where);
+    }
+
+    private static String upperCaseIgnoreAndOrInQuotes(String where, String operator) {
+        return where.replaceAll("([^\"](.*))\\s+(?i)" + operator + "\\s+((.*)[^\"])", "$1 " + operator + " $3");
+    }
+
+    private static boolean parseAndParts(String where) {
+        return Arrays.stream(where.split(" AND "))
+                .map(QueryValidator::parseOrParts)
+                .allMatch(valid -> valid);
+    }
+
+    static boolean parseOrParts(String orPart) {
+        return Arrays.stream(orPart.split(" OR "))
+                .map(QueryValidator::parseDataPart)
+                .allMatch(valid -> valid);
+    }
+
+    static boolean parseDataPart(String data) {
+        String dataProcessed = truncateOperators(data).toUpperCase();
+
+        Optional<String> operator = OPERATORS.stream()
+                .sorted((op1, op2) -> Integer.valueOf(op2.length()).compareTo(Integer.valueOf(op1.length())))
+                .filter(op -> dataProcessed.contains(op.toUpperCase()))
+                .findFirst();
+
+        if (!operator.isPresent()) {
+            return false;
+        }
+
+        String[] split = dataProcessed.split(operator.get());
+        return split.length == 2;
+    }
+
+    private static String truncateOperators(String s) {
+        for (String op : OPERATORS) {
+            StringBuilder sb = new StringBuilder(s.length());
+            Character quote = null;
+            int i = 0;
+            while (i < s.length()) {
+                char ch = s.charAt(i);
+
+                if (ch == '"' || ch == '\'') {
+                    if (quote == null) {
+                        quote = ch;
+
+                    } else if (quote == ch) {
+                        quote = null;
+                    }
+                } else if (quote != null && s.substring(i).startsWith(op)) {    // we are inside quotes
+                    sb.append("replacementstring".substring(0, op.length()));
+                    i += op.length();
+                    continue;
+                }
+                sb.append(ch);
+                i++;
+            }
+            s = sb.toString();
+        }
+        return s;
     }
 
     static boolean validateJson(String json) {

@@ -225,4 +225,53 @@ public class QueryValidatorTest {
         assertThat(QueryValidator.validateJson("{\"a1\" : { \"arr\":[1,\"abc\",true,-12.25,false,\"\",null,\"\\\"\",\"'\",'abc'], \"b\":{ 'a3':'123'} }, \"b1\":\"\"}"), is(true));
         assertThat(QueryValidator.validateJson("{\"a1\" : { \"a_2\":\"1\", \"arr\":[1,\"abc\",true,-12.25,false,\"\",null,\"\\\"\",\"'\",'abc'], \"b\":2 }, \"b1\":\"\"}"), is(true));
     }
+
+    @Test
+    public void validateWhereTest() {
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1"), is(true));
+
+        assertThat(QueryValidator.validate("DELETE FROM x WHERE x"), is(false));
+        assertThat(QueryValidator.validate("DELETE FROM x WHERE x=1"), is(true));
+
+        assertThat(QueryValidator.validate("ALTER x ADD x WHERE x"), is(false));
+        assertThat(QueryValidator.validate("ALTER x ADD x WHERE x=1"), is(true));
+
+        assertThat(QueryValidator.validate("ALTER x REMOVE x WHERE x"), is(false));
+        assertThat(QueryValidator.validate("ALTER x REMOVE x WHERE x=1"), is(true));
+
+        assertThat(QueryValidator.validate("UPDATE x SET x=1 WHERE x"), is(false));
+        assertThat(QueryValidator.validate("UPDATE x SET x=1 WHERE x=1"), is(true));
+    }
+
+    @Test
+    public void validateWhereClauseTest() {
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE OR x=1"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR OR x=1"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE AND x=1"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND AND x=1"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND OR x=1"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR AND x=1"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x AND x=1"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x=1 AND x"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x OR x=1"), is(false));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x=1 OR x"), is(false));
+
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x=1 OR x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x=1 AND x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x=1 OR x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x=1 AND x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x=1 AND x=1 OR x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x=1 OR x=1 AND x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 OR x=1 OR x=1 OR x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x=1 AND x=1 AND x=1 AND x=1"), is(true));
+        assertThat(QueryValidator.validate("SELECT x FROM x WHERE x1.a2=true OR x=123 AND x=1.23 OR x=\"abc\" AND x='abc' OR x=\"\" AND x='' OR x=null AND x  =1 OR x= 1 AND x = 1"), is(true));
+    }
 }
