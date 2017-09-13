@@ -111,6 +111,7 @@ public class Server implements AutoCloseable {
         start();
         try {
             startLatch.await(timeout, TimeUnit.MILLISECONDS);
+
         } catch (InterruptedException e) {
             log.warn("Waiting for the server start interrupted.", e);
         }
@@ -125,6 +126,7 @@ public class Server implements AutoCloseable {
         stopServer();
         try {
             stopLatch.await(timeout, TimeUnit.SECONDS);
+
         } catch (InterruptedException e) {
             log.warn("Waiting for the server stop interrupted.", e);
         }
@@ -137,6 +139,7 @@ public class Server implements AutoCloseable {
         stopServer();
         try {
             stopLatch.await();
+
         } catch (InterruptedException e) {
             log.warn("Waiting for the server stop interrupted.", e);
         }
@@ -144,6 +147,7 @@ public class Server implements AutoCloseable {
 
     private void stopServer() {
         log.info("Closing a serverChannel and stopping the server...");
+
         listening = false;
         selector.wakeup();
     }
