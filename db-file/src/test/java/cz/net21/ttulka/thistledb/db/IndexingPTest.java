@@ -21,10 +21,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @Ignore
 public class IndexingPTest {
 
-    private static final int AMOUNT_OF_RECORDS = 1000;
+    private static final int AMOUNT_OF_RECORDS = 10000;
     private static final int AMOUNT_OF_ROUNDS = 100;
 
-    private static final int THRESHOLD = 3; // how many times must be performance better to pass the test
+    private static final int THRESHOLD = 10; // how many times must be performance better to pass the test
 
     private static final String TEST_COLLECTION_NAME = "test";
 
@@ -38,7 +38,11 @@ public class IndexingPTest {
     @Before
     public void setUp() throws IOException {
         createDataSource();
+
+        long start = System.currentTimeMillis();
         generateData();
+
+        System.out.println("GENERATION TIME: " + (System.currentTimeMillis() - start) + " ms");
     }
 
     private void createDataSource() throws IOException {
@@ -72,7 +76,10 @@ public class IndexingPTest {
         long time1 = measure(needle, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME #1: " + time1 + " ms");
 
+        long start = System.currentTimeMillis();
         dataSource.createIndex(TEST_COLLECTION_NAME, "root.value");
+
+        System.out.println("INDEXING TIME: " + (System.currentTimeMillis() - start) + " ms");
 
         long time2 = measure(needle, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME #2: " + time2 + " ms");
@@ -86,7 +93,7 @@ public class IndexingPTest {
         for (int i = 0; i < count; i++) {
             time += measure(needle);
         }
-        return time;
+        return time / count;
     }
 
     private long measure(String needle) {
