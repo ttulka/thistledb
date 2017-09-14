@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiFunction;
-import java.util.function.Supplier;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -39,7 +38,8 @@ public class DbCollectionFile implements DbCollection {
 
     final Indexing indexing;
 
-    private final LastWriterHolder lastWriterHolder = new LastWriterHolder();
+    // For performance reasons we hold the last opened writer in the memory. This is handy when a lot of same operations are proceed together.
+    private Insert insertHolder;
 
     public DbCollectionFile(@NonNull Path path) {
         this.path = path;
@@ -65,11 +65,11 @@ public class DbCollectionFile implements DbCollection {
     public void insert(@NonNull Collection<String> jsonData) {
         lock.writeLock().lock();
         try {
-            Insert insert = lastWriterHolder.computeIfAbsent(Insert::new, Insert.class);
+            Insert insert = insertHolder != null ? insertHolder : (insertHolder = new Insert());
             insert.insert(jsonData);
 
         } catch (Exception e) {
-            throw new DatabaseException("Cannot insert into a collection: " + e.getMessage(), e);
+            throw new DatabaseException("Cannot insertRecord into a collection: " + e.getMessage(), e);
         } finally {
             lock.writeLock().unlock();
         }
@@ -82,8 +82,7 @@ public class DbCollectionFile implements DbCollection {
     @Override
     public int delete(String where) {
         lock.writeLock().lock();
-        try {
-            Delete delete = lastWriterHolder.computeIfAbsent(() -> new Delete(where), Delete.class);
+        try (Delete delete = new Delete(where)) {
             return delete.delete();
 
         } catch (Exception e) {
@@ -96,8 +95,7 @@ public class DbCollectionFile implements DbCollection {
     @Override
     public int update(String[] columns, String[] values, String where) {
         lock.writeLock().lock();
-        try {
-            Update update = lastWriterHolder.computeIfAbsent(() -> new Update(columns, values, where), Update.class);
+        try (Update update = new Update(columns, values, where)) {
             return update.update();
 
         } catch (Exception e) {
@@ -115,7 +113,7 @@ public class DbCollectionFile implements DbCollection {
                 return true;
 
             } catch (Exception e) {
-                throw new DatabaseException("Cannot create an insert for a collection: " + e.getMessage(), e);
+                throw new DatabaseException("Cannot create an insertRecord for a collection: " + e.getMessage(), e);
             } finally {
                 lock.writeLock().unlock();
             }
@@ -132,7 +130,7 @@ public class DbCollectionFile implements DbCollection {
                 return true;
 
             } catch (Exception e) {
-                throw new DatabaseException("Cannot drop an insert for a collection: " + e.getMessage(), e);
+                throw new DatabaseException("Cannot drop an insertRecord for a collection: " + e.getMessage(), e);
             } finally {
                 lock.writeLock().unlock();
             }
@@ -143,8 +141,8 @@ public class DbCollectionFile implements DbCollection {
     @Override
     public int add(String element, String where) {
         lock.writeLock().lock();
-        try (Alter alter = new Alter(element, where)) {
-            return alter.add();
+        try (Alter alter = new Alter(where)) {
+            return alter.add(element);
 
         } catch (Exception e) {
             throw new DatabaseException("Cannot alter (add) a collection: " + e.getMessage(), e);
@@ -156,8 +154,8 @@ public class DbCollectionFile implements DbCollection {
     @Override
     public int remove(String element, String where) {
         lock.writeLock().lock();
-        try (Alter alter = new Alter(element, where)) {
-            return alter.remove();
+        try (Alter alter = new Alter(where)) {
+            return alter.remove(element);
 
         } catch (Exception e) {
             throw new DatabaseException("Cannot alter (add) a collection: " + e.getMessage(), e);
@@ -169,7 +167,7 @@ public class DbCollectionFile implements DbCollection {
     @Override
     public void cleanUp() {
         lock.writeLock().lock();
-        lastWriterHolder.close();
+        closeInsertHolder();
         try (CleanUp cleanUp = new CleanUp()) {
             indexing.cleanUp();
 
@@ -181,6 +179,7 @@ public class DbCollectionFile implements DbCollection {
     }
 
     protected void drop() {
+        closeInsertHolder();
         try {
             Files.delete(path);
             indexing.dropAll();
@@ -198,41 +197,22 @@ public class DbCollectionFile implements DbCollection {
         return tson;
     }
 
-    /**
-     * For the performance reason holds the last opened writer in the memory. This is handy when a lot of same operations are proceed together.
-     */
-    private final class LastWriterHolder implements AutoCloseable {
-
-        private DbAccess lastWriter;
-
-        public synchronized <T extends DbAccess> T computeIfAbsent(Supplier<T> supplier, Class<T> writerClass) {
-            if (lastWriter == null || !lastWriter.getClass().equals(writerClass)) {
-                close();
-                lastWriter = supplier.get();
-            }
-            return (T) lastWriter;
-        }
-
-        @Override
-        public void close() {
-            if (lastWriter != null) {
-                lastWriter.close();
-                lastWriter = null;
-            }
+    private void closeInsertHolder() {
+        if (insertHolder != null) {
+            insertHolder.close();
+            insertHolder = null;
         }
     }
 
+    /**
+     * Abstract class for all database operations. Offers methods for reading, writing and deleting.
+     */
     abstract class DbAccess implements AutoCloseable {
 
         protected final SeekableByteChannel channel;
 
-        protected DbAccess() throws DbAccessException {
-            try {
-                channel = Files.newByteChannel(path, StandardOpenOption.READ, StandardOpenOption.WRITE);
-
-            } catch (IOException e) {
-                throw new DbAccessException(e);
-            }
+        protected DbAccess() throws IOException {
+            channel = Files.newByteChannel(path, StandardOpenOption.READ, StandardOpenOption.WRITE);
         }
 
         private long positionOfActualRecord = 0;
@@ -259,7 +239,7 @@ public class DbCollectionFile implements DbCollection {
             maxPosition = null;
         }
 
-        protected String nextRecord(Where where) {
+        protected String readNextRecord(Where where) {
             // first, try indexes
             if (!Where.EMPTY.equals(where)) {
                 indexingWheres.putIfAbsent(where, new IndexingWhere(where, indexing));
@@ -271,7 +251,7 @@ public class DbCollectionFile implements DbCollection {
                             long position = indexingWhere.nextPosition();
                             if (position != -1) {
                                 channel.position(position);
-                                json = nextRecord();
+                                json = readNextRecord();
 
                                 if (where.matches(json)) {
                                     return json;
@@ -289,7 +269,7 @@ public class DbCollectionFile implements DbCollection {
 
             // full search
             String json;
-            while ((json = nextRecord()) != null) {
+            while ((json = readNextRecord()) != null) {
                 if (where.matches(json)) {
                     return json;
                 }
@@ -297,7 +277,7 @@ public class DbCollectionFile implements DbCollection {
             return null;
         }
 
-        protected String nextRecord() {
+        protected String readNextRecord() {
             if (finished) {
                 return null;
             }
@@ -313,6 +293,37 @@ public class DbCollectionFile implements DbCollection {
 
             } catch (IOException e) {
                 throw new DatabaseException("Cannot read a collection: " + e.getMessage(), e);
+            }
+        }
+
+        protected void insertRecord(String jsonData) throws IOException {
+            long currentPosition = channel.position();
+
+            // append
+            channel.position(channel.size());
+            writeData(jsonData);
+
+            channel.position(currentPosition);
+        }
+
+        private void writeData(String json) throws IOException {
+            long position = channel.position();
+
+            String data = serialize(json) + RECORD_SEPARATOR;
+            channel.write(ByteBuffer.wrap(data.getBytes()));
+
+            insertIntoIndexes(json, position);
+        }
+
+        private void insertIntoIndexes(String json, long position) {
+            TSONObject tson = new TSONObject(json);
+            Iterator<String> columns = new ColumnsIterator(tson);
+
+            while (columns.hasNext()) {
+                String column = columns.next();
+                Object value = tson.findByPath(column);
+
+                indexing.insert(column, value, position);
             }
         }
 
@@ -347,15 +358,9 @@ public class DbCollectionFile implements DbCollection {
                 }
             }
         }
-
-        protected class DbAccessException extends RuntimeException {
-            public DbAccessException(Exception e) {
-                super(e);
-            }
-        }
     }
 
-    class Select extends DbAccess implements Iterator<String> {
+    final class Select extends DbAccess implements Iterator<String> {
 
         private final Where where;
         private final String elementKey;
@@ -386,7 +391,7 @@ public class DbCollectionFile implements DbCollection {
         }
 
         private String getNext() {
-            String json = nextRecord(where);
+            String json = readNextRecord(where);
 
             if (json != null) {
                 return selectElement(deserialize(json));
@@ -423,62 +428,24 @@ public class DbCollectionFile implements DbCollection {
 
     class Insert extends DbAccess {
 
-        protected Insert() {
+        protected Insert() throws IOException {
             super();
         }
 
         public void insert(Collection<String> jsonData) throws IOException {
-            long currentPosition = channel.position();
-
-            // append
-            channel.position(channel.size());
-
             for (String json : jsonData) {
-                writeData(json);
-            }
-            channel.position(currentPosition);
-        }
-
-        public void insert(String jsonData) throws IOException {
-            long currentPosition = channel.position();
-
-            // append
-            channel.position(channel.size());
-
-            writeData(jsonData);
-
-            channel.position(currentPosition);
-        }
-
-        private void writeData(String json) throws IOException {
-            long position = channel.position();
-
-            String data = serialize(json) + RECORD_SEPARATOR;
-            channel.write(ByteBuffer.wrap(data.getBytes()));
-
-            indexNewRecord(json, position);
-        }
-
-        private void indexNewRecord(String json, long position) {
-            TSONObject tson = new TSONObject(json);
-            Iterator<String> columns = new ColumnsIterator(tson);
-
-            while (columns.hasNext()) {
-                String column = columns.next();
-                Object value = tson.findByPath(column);
-
-                indexing.insert(column, value, position);
+                insertRecord(json);
             }
         }
     }
 
-    class Update extends Insert {
+    final class Update extends DbAccess {
 
         private final Where where;
         private final String[] columns;
         private final String[] values;
 
-        public Update(String[] columns, String[] values, String where) {
+        public Update(String[] columns, String[] values, String where) throws IOException {
             super();
             this.where = Where.create(where);
             this.columns = columns;
@@ -490,11 +457,11 @@ public class DbCollectionFile implements DbCollection {
 
             int updated = 0;
             String json;
-            while ((json = nextRecord(where)) != null) {
+            while ((json = readNextRecord(where)) != null) {
                 String updatedJson = updateData(json, columns, values);
                 if (updatedJson != null && !updatedJson.equals(json)) {
                     deleteRecord(json);
-                    insert(updatedJson);
+                    insertRecord(updatedJson);
 
                     updated++;
                 }
@@ -543,11 +510,11 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
-    class Delete extends DbAccess {
+    final class Delete extends DbAccess {
 
         private final Where where;
 
-        public Delete(String where) {
+        public Delete(String where) throws IOException {
             super();
             this.where = Where.create(where);
         }
@@ -555,7 +522,7 @@ public class DbCollectionFile implements DbCollection {
         public int delete() throws IOException {
             int deleted = 0;
             String json;
-            while ((json = nextRecord(where)) != null) {
+            while ((json = readNextRecord(where)) != null) {
                 deleteRecord(json);
                 deleted++;
             }
@@ -564,35 +531,33 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
-    class Alter extends Insert {
+    final class Alter extends DbAccess {
 
-        private final String element;
         private final Where where;
 
-        public Alter(String element, String where) {
+        public Alter(String where) throws IOException {
             super();
             this.where = Where.create(where);
-            this.element = element;
         }
 
-        public int add() throws IOException {
-            return alter(this::addData);
+        public int add(String element) throws IOException {
+            return alter(element, this::addData);
         }
 
-        public int remove() throws IOException {
-            return alter(this::removeData);
+        public int remove(String element) throws IOException {
+            return alter(element, this::removeData);
         }
 
-        private int alter(BiFunction<String, String, String> alterFnc) throws IOException {
+        private int alter(String element, BiFunction<String, String, String> alterFnc) throws IOException {
             setUpMaxPosition();
 
             int updated = 0;
             String json;
-            while ((json = nextRecord(where)) != null) {
+            while ((json = readNextRecord(where)) != null) {
                 String updatedJson = alterFnc.apply(json, element);
                 if (updatedJson != null) {
                     deleteRecord(json);
-                    insert(updatedJson);
+                    insertRecord(updatedJson);
 
                     updated++;
                 }
@@ -621,13 +586,13 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
-    class CreateIndex extends DbAccess {
+    final class CreateIndex extends DbAccess {
 
-        public CreateIndex(String column) {
+        public CreateIndex(String column) throws IOException {
             super();
             if (indexing.create(column)) {
                 String json;
-                while ((json = nextRecord()) != null) {
+                while ((json = readNextRecord()) != null) {
                     TSONObject tson = new TSONObject(json);
                     Object value = tson.findByPath(column);
                     if (value != null && !(value instanceof TSONObject)) {
@@ -639,7 +604,7 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
-    class DropIndex {
+    final class DropIndex {
 
         public DropIndex(String column) {
             super();
@@ -647,7 +612,7 @@ public class DbCollectionFile implements DbCollection {
         }
     }
 
-    class CleanUp extends Insert {
+    final class CleanUp extends DbAccess {
 
         public CleanUp() throws IOException {
             super();
@@ -663,12 +628,12 @@ public class DbCollectionFile implements DbCollection {
                 indexing.dropAll();
             }
 
-            // fetch all data from the collection and insert into the temp collection
-            // new indexes will be written automatically with the insert
+            // fetch all data from the collection and insertRecord into the temp collection
+            // new indexes will be written automatically with the insertRecord
             try (Insert tmpInsert = tmpCollection.newInsert()) {
                 String record;
-                while ((record = nextRecord()) != null) {
-                    tmpInsert.insert(record);
+                while ((record = readNextRecord()) != null) {
+                    tmpInsert.insertRecord(record);
                 }
             }
             // exchange the data and indexing
