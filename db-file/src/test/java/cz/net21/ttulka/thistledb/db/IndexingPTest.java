@@ -32,7 +32,7 @@ public class IndexingPTest {
 
     private DataSourceFile dataSource;
 
-    private String needle;
+    private String[] needles = new String[AMOUNT_OF_ROUNDS];
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
@@ -63,8 +63,8 @@ public class IndexingPTest {
     private String generateJson(int index) {
         String value = generateValue();
 
-        if (index == AMOUNT_OF_RECORDS / 2) {   // save the middle value as the needle
-            needle = value;
+        if (AMOUNT_OF_RECORDS - index <= AMOUNT_OF_ROUNDS) {
+            needles[AMOUNT_OF_RECORDS - index - 1] = value;
         }
         return "{\"root\":{\"id\":" + index + ",\"value\":\"" + value + "\",\"ballast\":\"" + JUNK + "\"}}";
     }
@@ -77,19 +77,19 @@ public class IndexingPTest {
 
     @Test
     public void performanceTest() {
-        long time1 = measure(needle, AMOUNT_OF_ROUNDS);
+        long time1 = measure(needles, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME (NO INDEXING): " + time1 + " ms");
 
         long indexingTime = index();
         System.out.println("INDEXING TIME: " + indexingTime + " ms");
 
-        long time2 = measure(needle, AMOUNT_OF_ROUNDS);
+        long time2 = measure(needles, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME  (INDEXING): " + time2 + " ms");
 
         long cleanUp = cleanUpIndexing();
         System.out.println("INDEXING CLEAN UP TIME: " + cleanUp + " ms");
 
-        long time3 = measure(needle, AMOUNT_OF_ROUNDS);
+        long time3 = measure(needles, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME  (INDEXING CLEANED UP): " + time3 + " ms");
 
         assertThat("Indexed search must be at least " + THRESHOLD + " times quicker.",
@@ -118,10 +118,10 @@ public class IndexingPTest {
         return System.currentTimeMillis() - start;
     }
 
-    private long measure(String needle, int count) {
+    private long measure(String[] needles, int count) {
         long time = 0;
         for (int i = 0; i < count; i++) {
-            time += measure(needle);
+            time += measure(needles[i]);
         }
         return time / count;
     }
