@@ -253,14 +253,9 @@ public class ClientServerITest {
                 String name = Thread.currentThread().getName() + "@";
 
                 try (Client client = new Client()) {
-                    String result = client.executeCommandBlocking("INSERT INTO test VALUES {'name':'" + name + "'}");
-                    assertThat(result, is("{\"status\":\"okay\"}"));
+                    client.executeCommandBlocking("INSERT INTO test VALUES {'name':'" + name + "'}");
 
-                    result = client.executeCommandBlocking("UPDATE test SET name='" + name + "-updated' WHERE name='" + name + "'");
-                    assertThat(result, is("{\"status\":\"okay\"}"));
-
-                    List<String> results = client.executeQueryBlocking("SELECT * FROM test WHERE name LIKE '" + name + "*'");
-                    assertThat(results, containsInAnyOrder("{\"name\":\"" + name + "-updated\"}"));
+                    client.executeCommandBlocking("UPDATE test SET name='" + name + "-updated' WHERE name='" + name + "'");
                 }
             };
         });
