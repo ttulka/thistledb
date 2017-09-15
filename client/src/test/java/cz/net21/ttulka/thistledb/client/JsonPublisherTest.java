@@ -7,14 +7,11 @@ import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -23,11 +20,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
  * @author ttulka
  */
-@RunWith(MockitoJUnitRunner.class)
 public class JsonPublisherTest {
 
     private static final int ELEMENTS = 100;
@@ -35,11 +32,12 @@ public class JsonPublisherTest {
     @Mock
     private QueryExecutor queryExecutor;
 
-    @InjectMocks
+    // Cannot use @InjectMocks in this case, because TestNG doesn't create a new instance of the class for each test method like JUnit does.
     private JsonPublisher publisher;
 
-    @Before
+    @BeforeMethod(alwaysRun = true)
     public void setUp() {
+        initMocks(this);
         when(queryExecutor.getNextResult()).thenAnswer(new Answer<String>() {
             private int i;
 
@@ -49,6 +47,7 @@ public class JsonPublisherTest {
                 return i <= ELEMENTS ? new String("{\"value\":\"" + formattedNumber + "\"}") : null;
             }
         });
+        publisher = new JsonPublisher(queryExecutor);
     }
 
     @Test

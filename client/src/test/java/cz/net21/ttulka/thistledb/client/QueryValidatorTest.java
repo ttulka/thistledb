@@ -1,6 +1,6 @@
 package cz.net21.ttulka.thistledb.client;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;

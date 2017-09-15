@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -92,7 +92,7 @@ public class QueryExecutorTest {
         assertThat(result, containsString("\"status\":\"" + RESULT.toLowerCase() + "\""));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expectedExceptions = IllegalStateException.class)
     public void getNextResultExceptionTest() {
         List<String> in = Arrays.asList(RESULT);
         List<String> out = new ArrayList<>();

@@ -1,4 +1,4 @@
-package cz.net21.ttulka.thistledb.client;
+package cz.net21.ttulka.thistledb.tests;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,6 +14,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import cz.net21.ttulka.thistledb.client.Client;
+import cz.net21.ttulka.thistledb.client.JsonPublisher;
+import cz.net21.ttulka.thistledb.client.Query;
 import cz.net21.ttulka.thistledb.server.Server;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -28,7 +31,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
  *
  * @author ttulka
  */
-public class ClientITest {
+public class ClientServerITest {
 
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();

@@ -1,6 +1,6 @@
 package cz.net21.ttulka.thistledb.client;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.is;
@@ -38,7 +38,7 @@ public class QueryTest {
         assertThat(q.getNativeQuery(), is("INSERT INTO test VALUES {},{}"));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expectedExceptions = IllegalStateException.class)
     public void insertIntoIllegalStateTest() {
         Query.builder().insertInto("test").build();
         fail("Shouldn't create an incomplete query.");
@@ -53,7 +53,7 @@ public class QueryTest {
         assertThat(q.getNativeQuery(), is("UPDATE test SET a='1', b='2'"));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expectedExceptions = IllegalStateException.class)
     public void updateIllegalStateTest() {
         Query.builder().update("test").build();
         fail("Shouldn't create an incomplete query.");
@@ -98,12 +98,12 @@ public class QueryTest {
         assertThat(q.getNativeQuery(), is("DROP INDEX abc ON test"));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expectedExceptions = IllegalStateException.class)
     public void illegalStateANDWithoutWHERETest() {
         Query.builder().deleteFrom("test").and("a", "1").build();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expectedExceptions = IllegalStateException.class)
     public void illegalStateORWithoutWHERETest() {
         Query.builder().deleteFrom("test").or("a", "1").build();
     }

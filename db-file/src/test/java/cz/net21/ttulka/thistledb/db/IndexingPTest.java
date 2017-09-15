@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.util.Random;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -18,7 +17,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *
  * @author ttulka
  */
-@Ignore
 public class IndexingPTest {
 
     private static final int AMOUNT_OF_RECORDS = 10_000;
