@@ -54,6 +54,7 @@ public class JsonPublisher implements Publisher<String> {
 
     /**
      * Changes the publisher to parallel processing.
+     * @return the parallel publisher
      */
     public final JsonPublisher parallel() {
         parallel = true;
@@ -62,6 +63,7 @@ public class JsonPublisher implements Publisher<String> {
 
     /**
      * Changes the publisher to serial processing.
+     * @return the serial publisher
      */
     public final JsonPublisher serial() {
         parallel = false;
@@ -90,6 +92,7 @@ public class JsonPublisher implements Publisher<String> {
      * Subscribes a consumer.
      *
      * @param onNext the consumer
+     * @return the publisher
      */
     public JsonPublisher subscribe(Consumer<String> onNext) {
         final ExecutorService executor = Executors.newCachedThreadPool();

@@ -60,6 +60,7 @@ public class Query {
          * Builds a select query for columns.
          *
          * @param from the collection to select from
+         * @param columns the columns to select
          * @return the select query builder
          */
         public SelectQueryBuilder selectFrom(String from, String[] columns) {
