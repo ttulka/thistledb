@@ -4,8 +4,6 @@ A simple JSON database based on the file-access with server-client approach.
 
 With the non-blocking server and the reactive (asynchronous non-blocking) client.
 
-**!!! IN PROGRESS !!!**
-
 ## Prerequisites
 
 - Java 8
@@ -155,6 +153,8 @@ There are special element to be returned.
 ThistleDB provides a Java driver to build a client from a Java application.
 
 Client implements [Reactive Streams, Version 1.0.0](http://www.reactive-streams.org).
+
+Client is not thread-safe, to ensure concurrency must be run within a synchronized context.
 
 Copy the Maven dependency into your project:
 ```xml
