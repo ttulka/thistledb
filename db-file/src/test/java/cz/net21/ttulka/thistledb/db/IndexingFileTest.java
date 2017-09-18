@@ -33,7 +33,7 @@ public class IndexingFileTest {
     @Before
     public void createDataSource() throws IOException {
         Path tempPath = temp.newFolder().toPath().resolve("test");
-        indexingFile = new IndexingFile(tempPath);
+        indexingFile = new IndexingFile(tempPath, 0);
     }
 
     @Test

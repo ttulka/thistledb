@@ -222,8 +222,13 @@ $ server
 ```
 #### Maximum Client Connections
 ```
--m, --max <maximum>
+-m, --maxConnections <maximum>
 ```
+#### Caching 
+```
+-c, --cacheExpirationTime <minutes>
+```
+Caching is active only together with indexes. Default value is 20 minutes, zero value means no caching.
 
 ### Starting from a Java Code
 Copy the Maven dependency into your project:
@@ -236,24 +241,31 @@ Copy the Maven dependency into your project:
 ```
 
 #### Create a server instance
+For creating a new server object use `ServerBuilder`:
 ```
-import cz.net21.ttulka.thistledb.server.Server;
-// ...
-Server server = new Server();
+Server.ServerBuilder builder = Server.builder();
+Server server = builder.build();
 ```
-
-Server port could be change by a sever's constructor:
+Set the port:
 ```
 int port = 1234;
-Server server = new Server(port);
+Server server = Server.builder().port(port).build();
 ```
-
-Data folder could be changed by a sever's constructor:
+Set the data folder:
 ```
-Path dataFolder = java.nio.file.Paths.get("/thistledb/data");
-Server server = new Server(port);
+Path dataFolder = java.nio.file.Paths.get("/data");
+Server server = Server.builder().dataFolder(dataFolder).build();
 ```
-Maximum client connections could be changed by a setter:
+Set the cache expiration time (in minutes):
+```
+int cacheExpirationTime = 0;    // zero means cache is disabled
+Server server = Server.builder().cacheExpirationTime(cacheExpirationTime).build();
+```
+Setters can be mixed as wanted:
+```
+Server server = Server.builder().port(1234).cacheExpirationTime(5).build();
+```
+Maximum client connections can be changed by a setter:
 ```
 int maxClientConnections = 10;
 server.setMaxClientConnections(maxClientConnections);

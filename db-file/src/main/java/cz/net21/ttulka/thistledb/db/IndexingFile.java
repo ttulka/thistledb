@@ -1,24 +1,20 @@
 package cz.net21.ttulka.thistledb.db;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.io.FileUtils;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.WeakHashMap;
+import java.nio.file.*;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-
-import org.apache.commons.io.FileUtils;
-
-import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Indexing of the database files.
@@ -28,7 +24,7 @@ import lombok.extern.apachecommons.CommonsLog;
  * <p>
  * Index files contain records in form: `<value>#VALUE_SEPARATOR<position1>[#POSITION_SEPARATOR<positionX>]#RECORD_SEPARATOR`.<br>
  * Example:<br>
- *     `John+213,545,89961|Peter+100,76954,.9984,1024455|.ames+12,55551|.homas+.892`<br>
+ * `John+213,545,89961|Peter+100,76954,.9984,1024455|.ames+12,55551|.homas+.892`<br>
  * <p>
  * For performance reasons are positions NOT updated and deleted directly.<br>
  * When a position from a position set is deleted, the position value starts with `#POSITION_DELETED`.<br>
@@ -53,8 +49,26 @@ class IndexingFile implements Indexing {
     private final Map<String, Boolean> existingIndexes = new HashMap<>();
     private final Map<String, Path> cacheValuePaths = new WeakHashMap();
 
-    public IndexingFile(Path path) {
+
+    final LoadingCache<PositionsKey, Set<Long>> positionsCache;
+
+    public IndexingFile(Path path, int cacheExpirationTime) {
         this.path = Paths.get(path + "_idx");
+
+        positionsCache = CacheBuilder.newBuilder()
+                .expireAfterAccess(cacheExpirationTime, TimeUnit.MINUTES)
+                .build(new CacheLoader<PositionsKey, Set<Long>>() {
+                    @Override
+                    public Set<Long> load(PositionsKey key) {
+                        return loadPositions(key.getIndex(), key.getValue());
+                    }
+                });
+    }
+
+    @Data
+    @AllArgsConstructor
+    class PositionsKey {
+        String index, value;
     }
 
     private String getIndexHash(String index) {
@@ -99,12 +113,15 @@ class IndexingFile implements Indexing {
         if (!exists(index)) {
             return null;
         }
+        return positionsCache.getUnchecked(new PositionsKey(index, value));
+    }
+
+    private Set<Long> loadPositions(String index, String value) {
         Path pathToIndexValue = getPathToIndexValue(index, value);
 
         if (!Files.exists(pathToIndexValue)) {
             return Collections.emptySet();
         }
-
         Set<Long> positions = new TreeSet<>();
         try (SeekableByteChannel channel = Files.newByteChannel(pathToIndexValue, StandardOpenOption.READ)) {
             int separator;
@@ -148,6 +165,8 @@ class IndexingFile implements Indexing {
             }
         } catch (IOException e) {
             throw new DatabaseException("Cannot create an index file: " + pathToIndexValue, e);
+        } finally {
+            positionsCache.refresh(new PositionsKey(index, value.toString()));
         }
     }
 
@@ -195,6 +214,8 @@ class IndexingFile implements Indexing {
             }
         } catch (IOException e) {
             throw new DatabaseException("Cannot delete an index position: " + pathToIndexValue, e);
+        } finally {
+            positionsCache.refresh(new PositionsKey(index, value.toString()));
         }
     }
 
@@ -248,7 +269,7 @@ class IndexingFile implements Indexing {
         }
         try {
             FileUtils.deleteDirectory(path.toFile());
-            existingIndexes.replaceAll((k,v) -> false);
+            existingIndexes.replaceAll((k, v) -> false);
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot delete an index directory: " + path, e);

@@ -16,7 +16,7 @@ final class DataSourceFactory {
     private DataSourceFactory() {
     }
 
-    public static DataSource getDataSource(@NonNull Path dataDir) {
-        return new DataSourceFile(dataDir);
+    public static DataSource getDataSource(@NonNull Path dataDir, int cacheExpirationTime) {
+        return new DataSourceFile(dataDir, cacheExpirationTime);
     }
 }

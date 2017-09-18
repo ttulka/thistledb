@@ -24,7 +24,8 @@ public final class Application {
         Options cmdOptions = new Options();
         cmdOptions.addOption("p", "port", true, "Port to listen on.");
         cmdOptions.addOption("d", "dataDir", true, "Data directory to store DB files into.");
-        cmdOptions.addOption("m", "max", true, "Maximum client connections.");
+        cmdOptions.addOption("c", "cacheExpirationTime", true, "Cache expiration time (in minutes).");
+        cmdOptions.addOption("m", "maxConnections", true, "Maximum client connections.");
         cmdOptions.addOption("h", "help", false, "Help.");
 
         try {
@@ -50,21 +51,22 @@ public final class Application {
     }
 
     private static void startServer(CommandLine cmdLine) {
-        Server server;
+        Server.ServerBuilder builder = Server.builder();
 
-        if (cmdLine.hasOption("p") && cmdLine.hasOption("d")) {
+        if (cmdLine.hasOption("p")) {
             int port = Integer.parseInt(cmdLine.getOptionValue("p"));
-            Path dataDir = Paths.get(cmdLine.getOptionValue("d"));
-            server = new Server(port, dataDir);
-        } else if (cmdLine.hasOption("p")) {
-            int port = Integer.parseInt(cmdLine.getOptionValue("p"));
-            server = new Server(port);
-        } else if (cmdLine.hasOption("d")) {
-            Path dataDir = Paths.get(cmdLine.getOptionValue("d"));
-            server = new Server(dataDir);
-        } else {
-            server = new Server();
+            builder.port(port);
         }
+        if (cmdLine.hasOption("d")) {
+            Path dataDir = Paths.get(cmdLine.getOptionValue("d"));
+            builder.dataDir(dataDir);
+        }
+        if (cmdLine.hasOption("c")) {
+            int cacheExpirationTime = Integer.parseInt(cmdLine.getOptionValue("c"));
+            builder.cacheExpirationTime(cacheExpirationTime);
+        }
+
+        Server server = builder.build();
 
         if (cmdLine.hasOption("m")) {
             int maxClientConnections = Integer.parseInt(cmdLine.getOptionValue("m"));

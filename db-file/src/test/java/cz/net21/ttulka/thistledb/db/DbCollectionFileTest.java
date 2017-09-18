@@ -31,7 +31,7 @@ public class DbCollectionFileTest {
     public void createDbCollection() throws IOException {
         Path tempFile = temp.newFile().toPath();
 
-        dbCollection = new DbCollectionFile(tempFile);
+        dbCollection = new DbCollectionFile(tempFile, 0);
     }
 
     @Test

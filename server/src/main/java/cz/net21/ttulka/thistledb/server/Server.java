@@ -30,6 +30,7 @@ public class Server implements AutoCloseable {
     public static final Path DEFAULT_DATA_DIR = Paths.get("data");
 
     public static final int DEFAULT_MAX_CONNECTION_POOL = 20;
+    public static final int DEFAULT_CACHE_EXPIRATION_TIME = 20;
 
     protected final int port;
 
@@ -46,21 +47,49 @@ public class Server implements AutoCloseable {
     private CountDownLatch startLatch;
     private CountDownLatch stopLatch;
 
-    public Server() {
-        this(DEFAULT_PORT);
+    public static class ServerBuilder {
+
+        private int port = DEFAULT_PORT;
+        private Path dataDir = DEFAULT_DATA_DIR;
+        private int cacheExpirationTime = DEFAULT_CACHE_EXPIRATION_TIME;
+
+        private boolean built = false;
+
+        public Server build() {
+            checkBuilt();
+            built = true;
+            return new Server(port, dataDir, cacheExpirationTime);
+        }
+
+        public ServerBuilder port(int port) {
+            this.port = port;
+            return this;
+        }
+
+        public ServerBuilder dataDir(Path dataDir) {
+            this.dataDir = dataDir;
+            return this;
+        }
+
+        public ServerBuilder cacheExpirationTime(int cacheExpirationTime) {
+            this.cacheExpirationTime = cacheExpirationTime;
+            return this;
+        }
+
+        private void checkBuilt() {
+            if (built) {
+                throw new IllegalStateException("Server already built.");
+            }
+        }
     }
 
-    public Server(int port) {
-        this(port, DEFAULT_DATA_DIR);
+    public static ServerBuilder builder() {
+        return new ServerBuilder();
     }
 
-    public Server(Path dataDir) {
-        this(DEFAULT_PORT, dataDir);
-    }
-
-    public Server(int port, Path dataDir) {
+    protected Server(int port, Path dataDir, int cacheExpirationTime) {
         this.port = port;
-        this.dataSource = DataSourceFactory.getDataSource(dataDir);
+        this.dataSource = DataSourceFactory.getDataSource(dataDir, cacheExpirationTime);
     }
 
     public int getPort() {

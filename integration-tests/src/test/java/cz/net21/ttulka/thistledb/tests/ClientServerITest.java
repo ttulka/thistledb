@@ -41,7 +41,7 @@ public class ClientServerITest {
 
     @Before
     public void setUp() throws IOException {
-        server = new Server(temp.newFolder().toPath());
+        server = Server.builder().dataDir(temp.newFolder().toPath()).build();
         server.start(5000);
 
         client = new Client();

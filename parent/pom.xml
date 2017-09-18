@@ -95,9 +95,9 @@
                         <artifactId>maven-failsafe-plugin</artifactId>
                         <configuration>
                             <skip>false</skip>
-                            <includes>
+                            <!--includes>
                                 <include>**/*ITest.java</include>
-                            </includes>
+                            </includes-->
                         </configuration>
                     </plugin>
                 </plugins>

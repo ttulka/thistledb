@@ -23,11 +23,13 @@ import reactor.core.scheduler.Schedulers;
 public class DataSourceFile implements DataSource {
 
     protected final Path dataDir;
+    protected final int cacheExpirationTime;
 
     protected final Map<String, DbCollection> collections = new HashMap<>();
 
-    public DataSourceFile(@NonNull Path dataDir) {
+    public DataSourceFile(@NonNull Path dataDir, int cacheExpirationTime) {
         this.dataDir = dataDir;
+        this.cacheExpirationTime = cacheExpirationTime;
 
         if (Files.exists(dataDir)) {
             loadCollections(dataDir);
@@ -46,7 +48,7 @@ public class DataSourceFile implements DataSource {
                     .filter(Files::isRegularFile)
                     .forEach(path -> collections.put(
                             path.getFileName().toString(),
-                            new DbCollectionFile(path)));
+                            new DbCollectionFile(path, cacheExpirationTime)));
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot read a data directory '" + dataDir.toAbsolutePath() + "': " + e.getMessage(), e);
@@ -82,7 +84,7 @@ public class DataSourceFile implements DataSource {
             try {
                 Files.createFile(path);
 
-                addCollection(collectionName, new DbCollectionFile(path));
+                addCollection(collectionName, new DbCollectionFile(path, cacheExpirationTime));
                 return true;
 
             } catch (IOException e) {

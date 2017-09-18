@@ -32,7 +32,7 @@ public class ServerTest {
 
     @Test
     public void startServerTest() throws Exception {
-        Server server = new Server(temp.newFolder().toPath());
+        Server server = new Server(Server.DEFAULT_PORT, temp.newFolder().toPath(), 0);
 
         assertThat("Server shouldn't listen before been started.", server.listening(), is(false));
 
@@ -47,7 +47,7 @@ public class ServerTest {
 
     @Test
     public void basicTest() throws Exception {
-        try (Server server = new Server(temp.newFolder().toPath())) {
+        try (Server server = new Server(Server.DEFAULT_PORT, temp.newFolder().toPath(), 0)) {
             server.start(5000);
 
             try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
@@ -65,7 +65,7 @@ public class ServerTest {
 
     @Test
     public void moreQueriesTest() throws Exception {
-        try (Server server = new Server(temp.newFolder().toPath())) {
+        try (Server server = new Server(Server.DEFAULT_PORT, temp.newFolder().toPath(), 0)) {
             server.start(5000);
 
             try (Socket socket = new Socket("localhost", Server.DEFAULT_PORT);
@@ -95,7 +95,7 @@ public class ServerTest {
 
     @Test(expected = SocketTimeoutException.class)
     public void maxConnectionsPoolTest() throws Exception {
-        try (Server server = new Server(temp.newFolder().toPath())) {
+        try (Server server = new Server(Server.DEFAULT_PORT, temp.newFolder().toPath(), 0)) {
             server.start(500);
 
             server.setMaxClientConnections(2); // only two connections in time are accepted
@@ -143,7 +143,7 @@ public class ServerTest {
 
     @Test
     public void maxConnectionsPoolAfterPreviousWereClosedTest() throws Exception {
-        try (Server server = new Server(temp.newFolder().toPath())) {
+        try (Server server = new Server(Server.DEFAULT_PORT, temp.newFolder().toPath(), 0)) {
             server.start(500);
 
             server.setMaxClientConnections(1);  // only one connection in time is accepted
@@ -181,7 +181,7 @@ public class ServerTest {
         AtomicInteger sucessConnections = new AtomicInteger();
         List<String> errors = new CopyOnWriteArrayList<>();
 
-        Server server = new Server(temp.newFolder().toPath());
+        Server server = new Server(Server.DEFAULT_PORT, temp.newFolder().toPath(), 0);
         server.start(500);
         server.setMaxClientConnections(numberOfClients);
 

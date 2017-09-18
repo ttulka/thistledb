@@ -34,7 +34,7 @@ public class DataSourceFileTest {
     @Before
     public void createDataSource() throws IOException {
         Path tempFile = temp.newFolder().toPath();
-        dataSource = new DataSourceFile(tempFile);
+        dataSource = new DataSourceFile(tempFile, 0);
     }
 
     @Test

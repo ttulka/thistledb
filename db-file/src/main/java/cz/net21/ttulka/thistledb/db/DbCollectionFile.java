@@ -41,9 +41,9 @@ public class DbCollectionFile implements DbCollection {
     // For performance reasons we hold the last opened writer in the memory. This is handy when a lot of same operations are proceed together.
     private Insert insertHolder;
 
-    public DbCollectionFile(@NonNull Path path) {
+    public DbCollectionFile(@NonNull Path path, int cacheExpirationTime) {
         this.path = path;
-        this.indexing = new IndexingFile(path);
+        this.indexing = new IndexingFile(path, cacheExpirationTime);
     }
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -619,7 +619,7 @@ public class DbCollectionFile implements DbCollection {
             // create a temp empty collection
             Path tempCollectionPath = Paths.get(path + ".tmp");
             ChannelUtils.createNewFileOrTruncateExisting(tempCollectionPath);
-            DbCollectionFile tmpCollection = new DbCollectionFile(tempCollectionPath);
+            DbCollectionFile tmpCollection = new DbCollectionFile(tempCollectionPath, 0);
 
             // drop real indexing data and copy the indexing structure to the temp collection
             if (Files.exists(indexing.getPath())) {
