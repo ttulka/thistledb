@@ -1,0 +1,165 @@
+@font-face {
+  font-family: 'Proxima Nova';
+  font-weight: 400;
+  font-style: normal;
+  src: url("fonts/proxima-nova-regular.eot");
+  src: url("fonts/proxima-nova-regular.eot?#iefix") format("embedded-opentype"), url("fonts/proxima-nova-regular.woff2") format("woff2"), url("fonts/proxima-nova-regular.woff") format("woff"), url("fonts/proxima-nova-regular.ttf") format("truetype");
+}
+
+body {
+    color: #151515;
+    background-color: #fff;
+    padding: 0;
+    margin: 0;
+    font-family: Proxima Nova, sans-serif;
+}
+
+pre {
+    padding: 1em 10px 0 10px;
+    background-color: #eaf2ec;
+    border: 1px solid #1da24c;
+    color: #000;
+    overflow-y:scroll;
+}
+@media only screen and (min-width: 800px) {
+    pre {
+        padding: 1em 2em 0 2em;
+    }
+}
+
+a {
+    color: #1da24c;
+}
+
+header {
+    background-color: #f4f4f4;
+    border-top: 7px solid #1da24c;
+    border-bottom: 1px solid #e0e0e0;
+    padding-top: 7px;
+    background-image: url('../images/thistle.png');
+    background-repeat: no-repeat;
+    background-position: 5px center;
+    /* phone */
+    height: 50px;
+    background-size: 42px auto;
+}
+@media only screen and (min-width: 800px) {
+    header {
+        height: 75px;
+        background-size: 200px auto;
+        padding: 0 5em 0 5em;
+        background-image: url('../images/logo.png');
+        background-position: 5em 0.4em;
+    }
+}
+header a {
+   color: #5b5b5b;
+   text-decoration: none;
+}
+header a:hover {
+   color: #1da24c;
+}
+
+nav {
+    text-align: right;
+}
+nav table td.active {
+    display: none;
+}
+nav table {
+    padding: 0;
+    margin: 0;
+    height: 50px;
+    float: right;
+    width: 80%;
+    font-size: 85%;
+}
+@media only screen and (min-width: 800px) {
+    nav table td.active {
+        display: table-cell;
+    }
+    nav table {
+        background-color: #f4f4f4;
+        height: 75px;
+        width: 55%;
+        font-size: 100%;
+    }
+}
+nav table td {
+    text-align: center;
+    white-space: nowrap;
+}
+nav table td a {
+    display: block;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+@media only screen and (min-width: 800px) {
+    nav table td a {
+        padding: 1.5em 0 1.5em 0;
+    }
+}
+nav table td.active {
+    background-color: #1da24c;
+    color: #fff;
+}
+nav table td.active a {
+    color: #fff;
+}
+
+article {
+    border-top: 1px solid #f1f1f1;
+    padding: 0 5px 1em 5px;
+}
+@media only screen and (min-width: 800px) {
+    article {
+        padding: 2em 5em 2em 5em;
+    }
+}
+
+footer {
+    background-color: #2f2f2f;
+    border-bottom: 7px solid #1da24c;
+    text-align: center;
+    color: #ccc;
+    font-size: 70%;
+
+    background-image: url('../images/thistle.png');
+    background-repeat: no-repeat;
+    background-position: 10px center;
+    background-size: 45px auto;
+}
+footer p {
+    padding: 2.5em 10px 1.5em 10px;
+    text-align: right;
+}
+footer a {
+    color: #ccc;
+}
+@media only screen and (min-width: 800px) {
+    footer {
+        font-size: 90%;
+        background-image: url('../images/logo-inverted.png');
+        background-position: 5em 1em;
+        background-size: 150px auto;
+    }
+    footer p {
+        text-align: center;
+    }
+}
+
+h2 {
+    color: #1da24c;
+}
+@media only screen and (min-width: 800px) {
+    h1 {
+        font-size: 250%;
+    }
+    h2 {
+        font-size: 200%;
+        color: #1da24c;
+    }
+    h3 {
+        font-size: 170%;
+    }
+}
