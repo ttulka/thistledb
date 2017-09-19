@@ -19,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class IndexingPTest {
 
-    private static final int AMOUNT_OF_RECORDS = 1_000_000;
+    private static final int AMOUNT_OF_RECORDS = 10_000;
     private static final int AMOUNT_OF_ROUNDS = 100;
 
     private static final int THRESHOLD = String.valueOf(AMOUNT_OF_RECORDS).length() + 1; // how many times must be performance better to pass the test
@@ -35,9 +35,14 @@ public class IndexingPTest {
     @Rule
     public TemporaryFolder temp = new TemporaryFolder();
 
+    private Path dataFolder;
+
     @Before
     public void setUp() throws IOException {
-        createDataSource();
+        dataFolder = temp.newFolder().toPath();
+        System.out.println("DATA FOLDER: " + dataFolder);
+
+        createDataSource(0);
 
         long start = System.currentTimeMillis();
         generateData();
@@ -45,9 +50,8 @@ public class IndexingPTest {
         System.out.println("GENERATION TIME: " + (System.currentTimeMillis() - start) + " ms");
     }
 
-    private void createDataSource() throws IOException {
-        Path tempFile = temp.newFolder().toPath();
-        dataSource = new DataSourceFile(tempFile, 60);
+    private void createDataSource(int cacheExpirationTime) throws IOException {
+        dataSource = new DataSourceFile(dataFolder, cacheExpirationTime);
     }
 
     private void generateData() {
@@ -74,7 +78,7 @@ public class IndexingPTest {
     }
 
     @Test
-    public void performanceTest() {
+    public void performanceTest() throws IOException {
         long time1 = measure(needles, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME (NO INDEXING): " + time1 + " ms");
 
@@ -89,6 +93,12 @@ public class IndexingPTest {
 
         long time3 = measure(needles, AMOUNT_OF_ROUNDS);
         System.out.println("PERFORMANCE TIME  (INDEXING CLEANED UP): " + time3 + " ms");
+
+        // caching enabled
+        createDataSource(60);
+
+        long time4 = measure(needles, AMOUNT_OF_ROUNDS);
+        System.out.println("PERFORMANCE TIME  (INDEXING CACHED): " + time4 + " ms");
 
         assertThat("Indexed search must be at least " + THRESHOLD + " times quicker.",
                    time1 > time2 * THRESHOLD, is(true));

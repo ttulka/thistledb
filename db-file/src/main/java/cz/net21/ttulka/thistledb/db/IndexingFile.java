@@ -14,6 +14,8 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -49,20 +51,26 @@ class IndexingFile implements Indexing {
     private final Map<String, Boolean> existingIndexes = new HashMap<>();
     private final Map<String, Path> cacheValuePaths = new WeakHashMap();
 
+    private final LoadingCache<PositionsKey, Set<Long>> positionsCache;
+    private final BiFunction<String, String, Set<Long>> positionMethod =
+            (index, value) -> loadPositions(index, value);
 
-    final LoadingCache<PositionsKey, Set<Long>> positionsCache;
 
     public IndexingFile(Path path, int cacheExpirationTime) {
         this.path = Paths.get(path + "_idx");
 
-        positionsCache = CacheBuilder.newBuilder()
-                .expireAfterAccess(cacheExpirationTime, TimeUnit.MINUTES)
-                .build(new CacheLoader<PositionsKey, Set<Long>>() {
-                    @Override
-                    public Set<Long> load(PositionsKey key) {
-                        return loadPositions(key.getIndex(), key.getValue());
-                    }
-                });
+        if (cacheExpirationTime > 0) {
+            positionsCache = CacheBuilder.newBuilder()
+                    .expireAfterAccess(cacheExpirationTime, TimeUnit.MINUTES)
+                    .build(new CacheLoader<PositionsKey, Set<Long>>() {
+                        @Override
+                        public Set<Long> load(PositionsKey key) {
+                            return positionMethod.apply(key.getIndex(), key.getValue());
+                        }
+                    });
+        } else {
+            positionsCache = null;
+        }
     }
 
     @Data
@@ -113,7 +121,10 @@ class IndexingFile implements Indexing {
         if (!exists(index)) {
             return null;
         }
-        return positionsCache.getUnchecked(new PositionsKey(index, value));
+        if (positionsCache != null) {
+            return positionsCache.getUnchecked(new PositionsKey(index, value));
+        }
+        return positionMethod.apply(index, value);
     }
 
     private Set<Long> loadPositions(String index, String value) {
@@ -166,7 +177,9 @@ class IndexingFile implements Indexing {
         } catch (IOException e) {
             throw new DatabaseException("Cannot create an index file: " + pathToIndexValue, e);
         } finally {
-            positionsCache.refresh(new PositionsKey(index, value.toString()));
+            if (positionsCache != null) {
+                positionsCache.refresh(new PositionsKey(index, value.toString()));
+            }
         }
     }
 
@@ -215,7 +228,9 @@ class IndexingFile implements Indexing {
         } catch (IOException e) {
             throw new DatabaseException("Cannot delete an index position: " + pathToIndexValue, e);
         } finally {
-            positionsCache.refresh(new PositionsKey(index, value.toString()));
+            if (positionsCache != null) {
+                positionsCache.refresh(new PositionsKey(index, value.toString()));
+            }
         }
     }
 
