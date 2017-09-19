@@ -39,16 +39,22 @@ header {
     background-image: url('../images/thistle.png');
     background-repeat: no-repeat;
     background-position: 5px center;
-    /* phone */
     height: 50px;
     background-size: 42px auto;
+}
+@media only screen and (min-width: 500px) {
+    header {
+        background-size: 150px auto;
+        padding-right: 1em;
+        background-image: url('../images/logo.png');
+        background-position: 1em 5px;
+    }
 }
 @media only screen and (min-width: 800px) {
     header {
         height: 75px;
         background-size: 200px auto;
         padding: 0 5em 0 5em;
-        background-image: url('../images/logo.png');
         background-position: 5em 0.4em;
     }
 }
@@ -74,6 +80,20 @@ nav table {
     width: 80%;
     font-size: 85%;
 }
+@media only screen and (min-width: 500px) {
+    nav table {
+        width: 60%;
+        font-size: 100%;
+    }
+    nav table td {
+        padding-top: 0.5em;
+    }
+}
+@media only screen and (min-width: 700px) {
+    nav table {
+            /*width: 80%;*/
+        }
+}
 @media only screen and (min-width: 800px) {
     nav table td.active {
         display: table-cell;
@@ -81,8 +101,12 @@ nav table {
     nav table {
         background-color: #f4f4f4;
         height: 75px;
+        width: 65%;
+    }
+}
+@media only screen and (min-width: 1000px) {
+    nav table {
         width: 55%;
-        font-size: 100%;
     }
 }
 nav table td {
@@ -136,15 +160,23 @@ footer p {
 footer a {
     color: #ccc;
 }
-@media only screen and (min-width: 800px) {
+@media only screen and (min-width: 400px) {
     footer {
         font-size: 90%;
         background-image: url('../images/logo-inverted.png');
-        background-position: 5em 1em;
+        background-position: 1em 1em;
         background-size: 150px auto;
     }
     footer p {
-        text-align: center;
+        padding-right: 1em;
+    }
+}
+@media only screen and (min-width: 800px) {
+    footer {
+        background-position: 5em 1em;
+    }
+    footer p {
+        padding-right: 5em;
     }
 }
 
