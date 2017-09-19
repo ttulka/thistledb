@@ -20,7 +20,13 @@ pre {
     border: 1px solid #1da24c;
     color: #000;
     overflow-y:scroll;
+    font-family: monospace;
 }
+.code {
+    font-family: monospace;
+    font-size: 120%;
+}
+
 @media only screen and (min-width: 800px) {
     pre {
         padding: 1em 2em 0 2em;

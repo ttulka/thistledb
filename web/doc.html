@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>ThistleDB - Documentation</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="images/favicon.png">
+</head>
+<body>
+
+<header>
+    <nav>
+        <table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td><a href="/">Get Started</a></td>
+                <td class="active"><a>Documentation</a></td>
+                <td><a href="/client">Client</a></td>
+                <td><a href="/download">Download</a></td>
+            </tr>
+        </table>
+    </nav>
+</header>
+
+<article>
+    <h1>Documentation</h1>
+    <p>Simple JSON database based on the file-access with server-client approach. </p>
+    <p>With the non-blocking server and the reactive (asynchronous non-blocking) client.</p>
+
+    <h2>Prerequisites</h2>
+    <ul>
+        <li>Java 8</li>
+    </ul>
+
+    <h2>Data Structures</h2>
+    <p>ThistleDB is based on the file-access. All the data are persistent on a disk.</p>
+
+    <h3>Collections</h3>
+    <p>Collections are separated data spaces with schema-less structures.</p>
+    <p>A collection contains a set of documents.</p>
+    <p>Collection name can contain only literals, digits and underscore _. </p>
+
+    <h3>Documents</h3>
+    <p>Documents are JSON objects in a collection.</p>
+
+    <h4>Elements</h4>
+    <p>Elements are paths in a document.</p>
+    <p>Example: patient.name is an element addressing a patient name in the document:</p>
+    <pre>
+{
+    "patient" : {
+        "id" : "123456789",
+        "name" : "John Smith"
+    }
+}
+    </pre>
+    <p>Name of an element can contain literals, digits, underscore _ and dash -. </p>
+    <p>Example of valid element names:</p>
+    <pre>
+name
+123
+patient-name_123
+    </pre>
+
+    <h4>Values</h4>
+    <p>Values could be strings, numbers, boolean literals and null.</p>
+
+    <h2>Commands and Queries</h2>
+    <p>All the commands and queries are SQL-like.</p>
+
+    <h3>Create a Collection</h3>
+    <pre>
+CREATE collection_name
+    </pre>
+
+    <h3>Drop a Collection</h3>
+    <pre>
+DROP collection_name
+    </pre>
+
+    <h3>Add an Element to Documents in a Collection</h3>
+    <pre>
+ALTER collection_name ADD element [WHERE element op value [{AND|OR} element op value [...]]]
+    </pre>
+
+    <h3>Remove an Element from Documents in a Collection</h3>
+
+    <pre>
+ALTER collection_name REMOVE element [WHERE element op value [{AND|OR} element op value [...]]]
+    </pre>
+
+    <h3>Insert a Document into a Collection</h3>
+    <pre>
+INSERT INTO collection_name VALUES json_document[,json_document[...]]
+    </pre>
+
+    <h3>Select a Document from a Collection</h3>
+    <pre>
+SELECT {*|element[,element[...]]} FROM collection_name [WHERE element=value [{AND|OR} element=value [...]]]
+    </pre>
+
+    <h3>Delete a Document from a Collection</h3>
+    <pre>
+DELETE FROM collection_name [WHERE element op value [{AND|OR} element op value [...]]]
+    </pre>
+
+    <h3>Update a Document in a Collection</h3>
+    <pre>
+UPDATE collection_name SET element=value[,element=value [...]] [WHERE element op value [{AND|OR} element op value [...]]]
+    </pre>
+    <p>Element is updated only when exists.</p>
+
+    <h2>Operators</h2>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr><th>Operator</th><th>Meaning</th><th>Note</th></tr>
+        <tr><td class="code">=</td><td>Equal</td><td></td></tr>
+        <tr><td class="code">!=</td><td>Not equal</td><td></td></tr>
+        <tr><td class="code">&gt;</td><td>Greater</td><td></td></tr>
+        <tr><td class="code">&gt;=</td><td>Greater or equal</td><td></td></tr>
+        <tr><td class="code">&lt;</td><td>Less</td><td></td></tr>
+        <tr><td class="code">&lt;=</td><td>Less or equal</td><td></td></tr>
+        <tr><td class="code">LIKE</td><td>Equal by an expression</td><td>* any string, _ one character, ? any character (0,1) </td></tr>
+    </table>
+
+    <h2>Indexes</h2>
+    <p>For accelerating the speed of searching could be used indexes on a collection.</p>
+    <p>Only simple-value elements (numbers, strings, ...) can be indexed.
+        Indexes are applied only on conditions with the equals operator =.</p>
+    <p>As usual, indexes accelerate reading but degrading speed of data modifications - use them cleverly! </p>
+
+    <h3>Create an Index for a Collection</h3>
+    <pre>
+CREATE INDEX indexed_element ON collection_name
+    </pre>
+
+    <h3>Drop an Index for a Collection</h3>
+    <pre>
+DROP INDEX indexed_element ON collection_name
+    </pre>
+
+    <h2>DUAL Collection</h2>
+    <p>DUAL collection is an immutable system "echo" collection which returns what it gets.</p>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr><th>Query</th><th>Result</th></tr>
+        <tr class="code"><td>SELECT 123 FROM dual</td><td>{ "value" : 123 }</td></tr>
+        <tr class="code"><td>SELECT 1.23 FROM dual</td><td>{ "value" : 1.23 }</td></tr>
+        <tr class="code"><td>SELECT true FROM dual</td><td>{ "value" : true }</td></tr>
+        <tr class="code"><td>SELECT "abc" FROM dual</td><td>{ "value" : "abc" }</td></tr>
+    </table>
+
+    <p>There are special element to be returned.</p>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr><th>Query</th><th>Result</th><th>Example</th></tr>
+        <tr><td class="code">SELECT * FROM dual</td><td><em>empty</em></td><td class="code">{}</td></tr>
+        <tr><td class="code">SELECT name FROM dual</td><td>name of the collection</td><td class="code">{ "name" : "DUAL" }</td></tr>
+        <tr><td class="code">SELECT random FROM dual</td><td>a random integer</td><td class="code">{ "random" : -980456651 }</td></tr>
+        <tr><td class="code">SELECT date FROM dual</td><td>datetime in format <span class="code">yyyy-mm-dd H:m:s.ms</span></td><td class="code">{ "date" : "2017-02-19 14:25:02.122" }</td></tr>
+    </table>
+
+    <h2>Client</h2>
+    <p>See <a href="client">Client</a>.</p>
+
+    <h2>Server</h2>
+    <p>Default server port is <strong>9658</strong>.</p>
+    <p>Default data folder is data, the path relative to the executing directory.</p>
+    <p>Maximum client connections the server accepts is <strong>20</strong>.</p>
+    <p>Server could be started from the command line or dynamically from a Java code.</p>
+
+    <h3>Starting from a Command Line</h3>
+    <p>After downloading binaries or compiling from the source code (see Get Started) run the server from the command-line:</p>
+    <pre>
+$ cd server-app/target/server/bin
+$ server
+    </pre>
+
+    <h4>Changing the Default Port</h4>
+    <pre>
+-p, --port &lt;port&gt;
+    </pre>
+
+    <h4>Changing the Default Data Folder</h4>
+    <pre>
+-d, --dataDir &lt;path&gt;
+    </pre>
+
+    <h4>Maximum Client Connections</h4>
+    <pre>
+-m, --maxConnections &lt;maximum&gt;
+    </pre>
+
+    <h4>Caching</h4>
+    <pre>
+-c, --cacheExpirationTime &lt;minutes&gt;
+    </pre>
+    <p>Caching is active only together with indexes. Default value is 20 minutes, zero value means no caching.</p>
+
+    <h3>Starting from a Java Code</h3>
+    <p>Copy the Maven dependency into your project:</p>
+    <pre>
+&lt;dependency&gt;
+    &lt;groupId&gt;cz.net21.ttulka.thistledb&lt;/groupId&gt;
+    &lt;artifactId&gt;thistledb-server&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+&lt;/dependency&gt;
+    </pre>
+
+    <h4>Create a server instance</h4>
+    <p>For creating a new server object use ServerBuilder:</p>
+    <pre>
+Server.ServerBuilder builder = Server.builder();
+Server server = builder.build();
+    </pre>
+    <p>Set the port:</p>
+    <pre>
+int port = 1234;
+Server server = Server.builder().port(port).build();
+    </pre>
+    <p>Set the data folder:</p>
+    <pre>
+Path dataFolder = java.nio.file.Paths.get("/data");
+Server server = Server.builder().dataFolder(dataFolder).build();
+    </pre>
+    <p>Set the cache expiration time (in minutes):</p>
+    <pre>
+int cacheExpirationTime = 0;    // zero means cache is disabled
+Server server = Server.builder().cacheExpirationTime(cacheExpirationTime).build();
+    </pre>
+    <p>Setters can be mixed as wanted:</p>
+    <pre>
+Server server = Server.builder().port(1234).cacheExpirationTime(5).build();
+    </pre>
+    <p>Maximum client connections can be changed by a setter:</p>
+    <pre>
+int maxClientConnections = 10;
+server.setMaxClientConnections(maxClientConnections);
+    </pre>
+
+    <h4>Start and stop the server</h4>
+    <pre>
+server.start();
+server.stop();
+    </pre>
+
+    <h2>Console</h2>
+    <p>Console provides a remote access to the server from a command line.</p>
+    <p>First, build it and assemble:</p>
+    <pre>
+$ mvn clean install -P localBuild
+$ mvn package appassembler:assemble --file console-app/pom.xml
+        </pre>
+    <p>And run it: </p>
+    <pre>
+$ cd console-app/target/console/bin
+$ console
+    </pre>
+    <p>Type your command/query or exit the console by typing quit.</p>
+
+    <h2>License</h2>
+    <p><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a></p>
+</article>
+
+<footer>
+    <p>Created by <a href="https://github.com/ttulka/thistledb">Tomas Tulka</a> 2017, <a
+            href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a></p>
+</footer>
+
+</body>
+</html>

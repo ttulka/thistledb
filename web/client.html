@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>ThistleDB - Documentation</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="images/favicon.png">
+</head>
+<body>
+
+<header>
+    <nav>
+        <table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td><a href="/">Get Started</a></td>
+                <td><a href="/doc">Documentation</a></td>
+                <td class="active"><a>Client</a></td>
+                <td><a href="/download">Download</a></td>
+            </tr>
+        </table>
+    </nav>
+</header>
+
+<article>
+    <h1>Client</h1>
+    <p>ThistleDB provides a Java driver to build a client from a Java application.</p>
+    <p>Client implements <a href="http://www.reactive-streams.org">Reactive Streams, Version 1.0.0</a>.</p>
+    <p>Client is not thread-safe, to ensure concurrency must be run within a synchronized context.</p>
+
+    <h2>Create the Client</h2>
+    <p>Copy the Maven dependency into your project:</p>
+    <pre>
+&lt;dependency&gt;
+    &lt;groupId&gt;cz.net21.ttulka.thistledb&lt;/groupId&gt;
+    &lt;artifactId&gt;thistledb-client&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0-SNAPSHOT&lt;/version&gt;
+&lt;/dependency&gt;
+    </pre>
+    <p>There are different constructors to create a client:</p>
+    <pre>
+import cz.net21.ttulka.thistledb.client.Client;
+// ...
+Client client = new Client();                   // default port on localhost 
+Client client = new Client(9658);               // custom port on localhost
+Client client = new Client("localhost");        // default port on a custom host
+Client client = new Client("localhost", 9658);  // custom port and host
+    </pre>
+
+    <h3>Setting Timeout for a Response</h3>
+    <p>Timeout for the client response must be greater than zero, zero means no timeout.
+        Timeout value is in milliseconds.</p>
+    <pre>
+int timeout = 1000;
+client.setTimeout(timeout);
+    </pre>
+
+    <h2>Close the Client</h2>
+    <pre>
+client.close();
+    </pre>
+    <p>Client implement AutoCloseable interface:</p>
+    <pre>
+try (Client client = new Client()) {
+    // work with the client
+}
+    </pre>
+
+    <h2>Querying</h2>
+    <p>There are two types of requests: queries and commands.</p>
+    <p><strong>Queries</strong> ask the database for data response:</p>
+    <ul>
+        <li class="code">SELECT</li>
+    </ul>
+    <p><strong>Commands</strong> ask for an executing and awaiting only one status response:</p>
+    <ul>
+        <li class="code">CREATE</li>
+        <li class="code">DROP</li>
+        <li class="code">INSERT</li>
+        <li class="code">UPDATE</li>
+        <li class="code">DELETE</li>
+        <li class="code">CREATE INDEX</li>
+        <li class="code">DROP INDEX</li>
+    </ul>
+
+    <h3>Types of Response</h3>
+    <p>Based on a request the response can be a result of query or status information.</p>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr><th>Type of response</th><th>Meaning</th><th>Example</th></tr>
+        <tr><td class="code">DATA RESULT</td><td>Next data result</td><td class="code">{"value":1}</td></tr>
+        <tr><td class="code">OKAY</td><td>Successfully executed</td><td class="code">{"status":"okay"}</td></tr>
+        <tr><td class="code">INVALID</td><td>Invalid request</td><td class="code">{"status":"invalid", "message":"Description of the problem."}</td></tr>
+        <tr><td class="code">ERROR</td><td>Error</td><td class="code">{"status":"error", "message":"Description of the error."}</td></tr>
+    </table>
+
+    <h3>Query Builder</h3>
+    <p>Besides native String-based queries a intuitive Query-Builder could be used to prepare a query.</p>
+    <p>Example:</p>
+    <pre>
+import cz.net21.ttulka.thistledb.client.Query;
+// ...
+Query insertQuery = Query.builder()
+                        .insertInto("test")
+                        .values("{\"v\":1}")
+                        .values("{\"v\":2}")
+                        .build();
+
+client.executeCommand(insertQuery, null);
+    </pre>
+    <p>The snippet above has the same meaning as following:</p>
+    <pre>
+String insertQuery = "INSERT INTO test VALUES {\"v\":1},{\"v\":2}";
+client.executeCommand(insertQuery, null);
+    </pre>
+
+    <h3>Asynchronous Methods</h3>
+    <p>Asynchronous methods are based on Reactive Streams.</p>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr><th>Method</th><th>Callback</th><th>Meaning</th></tr>
+        <tr><td class="code">executeQuery</td><td class="code">JsonPublisher</td><td>Executes a query asynchronously</td></tr>
+        <tr><td class="code">executeCommand</td><td class="code">Consumer&lt;String&gt;</td><td>Executes a command asynchronously</td></tr>
+    </table>
+    <p>There are always overloaded variants for native String-based and Query-Builder-based queries.</p>
+
+    <h4>JSON Publisher</h4>
+    <p>Class <span class="code">JsonPublisher</span> implements <span class="code">org.reactivestreams.Publisher</span>.</p>
+    <p>Besides the method for subscribing an object of class org.reactivestreams.Subscriber offers a convenient method for subscribing an object of the standard Java class Consumer:</p>
+    <pre>
+public JsonPublisher subscribe(Consumer&lt;String&gt; onNext)
+    </pre>
+    <p>This methods create a subscriber based on the gotten consumer.</p>
+
+    <h5>Serial vs Parallel</h5>
+    <p>As default runs the JSON Publisher in serial mode but it can run in parallel as well:</p>
+    <pre>
+jsonPublisher.parallel();
+    </pre>
+    <p>Publisher could be set back to the serial mode:</p>
+    <pre>
+jsonPublisher.serial();
+    </pre>
+    <p>If run in <strong>serial</strong> the order of elements always matchs the order the elements are consumed from a source.
+        If run in <strong>parallel</strong> the order of elements is unpredictable.</p>
+    <p>Examples:</p>
+    <pre>
+// Consider a collection `test` containing values from 1 to 5
+JsonPublisher publisher = client.executeQuery("SELECT value FROM test");
+
+publisher.subscribe(System.out::println);
+    </pre>
+    <p>Prints always:</p>
+    <pre>
+{"value":1}
+{"value":2}
+{"value":3}
+{"value":4}
+{"value":5}
+    </pre>
+    <p>When the same code is changed to run in parallel:</p>
+    <pre>
+publisher.parallel().subscribe(System.out::println);
+    </pre>
+    <p>The result could look like this (or similar):</p>
+    <pre>
+{"value":2}
+{"value":3}
+{"value":5}
+{"value":1}
+{"value":4}
+    </pre>
+
+    <h5>Waiting for the Publisher to be Finished</h5>
+    <p>We can wait for the publisher to be finished in the blocking mode using the method await():</p>
+    <pre>
+// Create a publisher
+JsonPublisher publisher = client.executeQuery("SELECT * FROM test");
+
+// Subscribe a consumer to the publisher
+publisher.subscribe(System.out::println);
+
+// Do some work meanwhile...
+doSomeStuff();
+
+// All work is done, let's wait for the publisher
+publisher.await();
+
+// The end
+System.exit(0);
+    </pre>
+
+    <h3>Blocking Methods</h3>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr><th>Method</th><th>Return type</th><th>Meaning</th></tr>
+        <tr><td>executeQueryBlocking</td><td>List&lt;String&gt;</td><td>Executes a query synchronously</td></tr>
+        <tr><td>executeCommandBlocking</td><td>String</td><td>Executes a command synchronously</td></tr>
+    </table>
+    <p>There are always overloaded variants for native String-based and Query-Builder-based queries.</p>
+
+    <h2>Test the connection</h2>
+    <p>Testing if the connection was successfully established by sending a simple query to the server and waiting for a response.</p>
+    <pre>
+boolean connected = client.test();
+    </pre>
+
+    <h2>License</h2>
+    <p><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a></p>
+</article>
+
+<footer>
+    <p>Created by <a href="https://github.com/ttulka/thistledb">Tomas Tulka</a> 2017, <a
+            href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a></p>
+</footer>
+
+</body>
+</html>
