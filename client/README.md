@@ -6,7 +6,7 @@ Client implements [Reactive Streams, Version 1.0.0](http://www.reactive-streams.
 
 Client is not thread-safe, to ensure concurrency must be run within a synchronized context.
 
-## Create the client 
+## Create the Client 
 
 Copy the Maven dependency into your project:
 ```xml
@@ -26,7 +26,7 @@ Client client = new Client("localhost");        // default port on a custom host
 Client client = new Client("localhost", 9658);  // custom port and host
 ```
 
-### Setting timeout for a response
+### Setting Timeout for a Response
 Timeout for the client response must be greater than zero, zero means no timeout.
 Timeout value is in milliseconds.
 ```
@@ -34,7 +34,7 @@ int timeout = 1000;
 client.setTimeout(timeout);
 ```
 
-## Close the client 
+## Close the Client 
 ```
 client.close();
 ```
@@ -151,7 +151,7 @@ The result could look like this (or similar):
 {"value":4}
 ```
 
-##### Waiting for the Publisher to be finished
+##### Waiting for the Publisher to be Finished
 We can wait for the publisher to be finished in the blocking mode using the method `await()`:
 ```
 // Create a publisher

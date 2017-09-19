@@ -1,6 +1,6 @@
-# ThistleDB - A Simple JSON Database
+# ThistleDB - Simple JSON Database
 
-A simple JSON database based on the file-access with server-client approach. 
+Simple JSON database based on the file-access with server-client approach. 
 
 With the non-blocking server and the reactive (asynchronous non-blocking) client.
 
