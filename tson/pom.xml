@@ -5,12 +5,12 @@
     <parent>
         <groupId>cz.net21.ttulka.thistledb</groupId>
         <artifactId>thistledb-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <groupId>cz.net21.ttulka.thistledb</groupId>
     <artifactId>tson</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <dependencies>
         <dependency>

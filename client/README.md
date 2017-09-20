@@ -13,7 +13,7 @@ Copy the Maven dependency into your project:
 <dependency>
     <groupId>cz.net21.ttulka.thistledb</groupId>
     <artifactId>thistledb-client</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 There are different constructors to create a client:

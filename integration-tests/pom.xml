@@ -4,7 +4,7 @@
     <parent>
         <groupId>cz.net21.ttulka.thistledb</groupId>
         <artifactId>thistledb-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <groupId>cz.net21.ttulka.thistledb</groupId>
@@ -15,13 +15,13 @@
         <dependency>
             <groupId>cz.net21.ttulka.thistledb</groupId>
             <artifactId>thistledb-server</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>cz.net21.ttulka.thistledb</groupId>
             <artifactId>thistledb-client</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
