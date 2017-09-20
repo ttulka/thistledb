@@ -19,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 public class IndexingPTest {
 
-    private static final int AMOUNT_OF_RECORDS = 10_000;
+    private static final int AMOUNT_OF_RECORDS = 100_000;
     private static final int AMOUNT_OF_ROUNDS = 100;
 
     private static final int THRESHOLD = String.valueOf(AMOUNT_OF_RECORDS).length() + 1; // how many times must be performance better to pass the test
