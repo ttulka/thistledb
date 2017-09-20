@@ -2,4 +2,4 @@ RewriteEngine on
 
 RewriteRule ^client     client.html
 RewriteRule ^doc        doc.html
-RewriteRule ^download   dowmload.html
+RewriteRule ^download   download.html
