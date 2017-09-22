@@ -1,6 +1,6 @@
 # ThistleDB - Java Client 
 
-ThistleDB provides a Java driver to build a client from a Java application.
+ThistleDB provides a **Java driver** to build a client from a Java application.
 
 Client implements [Reactive Streams, Version 1.0.0](http://www.reactive-streams.org).
 
@@ -16,7 +16,7 @@ Copy the Maven dependency into your project:
     <version>1.0.0</version>
 </dependency>
 ```
-There are different constructors to create a client:
+There are different constructors to create the client:
 ```
 import cz.net21.ttulka.thistledb.client.Client;
 // ...
@@ -46,12 +46,12 @@ try (Client client = new Client()) {
 ```
 
 ## Querying
-There are two types of requests: queries and commands.
+There are two types of requests: *queries* and *commands*.
 
 **Queries** ask the database for data response:
 - SELECT
 
-**Commands** ask for an executing and awaiting only one status response:
+**Commands** ask for an executing and await only one status response:
 - CREATE
 - DROP
 - INSERT
@@ -61,7 +61,7 @@ There are two types of requests: queries and commands.
 - DROP INDEX
 
 ### Types of Response
-Based on a request the response can be a result of query or status information.
+Based on the request a response can be a result of query or status information.
 
 | Type of response | Meaning               | Example                                                         |
 | ---------------- | --------------------- | --------------------------------------------------------------- |
@@ -71,7 +71,7 @@ Based on a request the response can be a result of query or status information.
 | ERROR            | Error                 | `{"status":"error", "message":"Description of the error."}`     |
 
 ### Query Builder
-Besides native String-based queries a intuitive Query-Builder could be used to prepare a query.
+Besides native String-based queries a intuitive *Query-Builder* could be used to prepare a query.
 
 Example:
 ```
@@ -85,7 +85,7 @@ Query insertQuery = Query.builder()
                         
 client.executeCommand(insertQuery, null);
 ```
-The snippet above has the same meaning as following:
+The snippet above has the same meaning as the following:
 ```
 String insertQuery = "INSERT INTO test VALUES {\"v\":1},{\"v\":2}";
 client.executeCommand(insertQuery, null);
@@ -120,7 +120,7 @@ Publisher could be set back to the serial mode:
 jsonPublisher.serial();
 ```
 
-If run in **serial** the order of elements always matchs the order the elements are consumed from a source.
+If run in **serial** the order of elements always matchs the order the elements are consumed from the source.
 If run in **parallel** the order of elements is unpredictable.
 
 Examples:
@@ -152,7 +152,7 @@ The result could look like this (or similar):
 ```
 
 ##### Waiting for the Publisher to be Finished
-We can wait for the publisher to be finished in the blocking mode using the method `await()`:
+It is possible to wait for the publisher to be finished in the blocking mode using the method `await()`:
 ```
 // Create a publisher
 JsonPublisher publisher = client.executeQuery("SELECT * FROM test");
@@ -179,7 +179,7 @@ System.exit(0);
 There are always overloaded variants for native String-based and Query-Builder-based queries.
 
 ## Test the connection
-Testing if the connection was successfully established by sending a simple query to the server and waiting for a response.
+Test if the connection was successfully established by sending a simple query to the server and waiting for a response.
 ```
 boolean connected = client.test();
 ```

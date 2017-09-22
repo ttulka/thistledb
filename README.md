@@ -1,8 +1,6 @@
 # ThistleDB - Simple JSON Database
 
-Simple JSON database based on the file-access with server-client approach. 
-
-With the non-blocking server and the reactive (asynchronous non-blocking) client.
+Simple JSON database based on the **file-access** and **server-client** approach with the *non-blocking* server and the *reactive* (asynchronous non-blocking) client.
 
 ## Prerequisites
 
@@ -26,7 +24,7 @@ And finally run it:
 $ cd server-app/target/server/bin
 $ server
 ```
-Type your command/query or stop the server and exit the console by typing `quit`.
+Type your command/query ending with `;` or stop the server and exit the console by typing `quit`.
 
 ### Data Structures
 ThistleDB is based on the file-access. All the data are persistent on a disk.
@@ -44,7 +42,7 @@ Documents are JSON objects in a collection.
 ##### Elements
 Elements are paths in a document.
 
-Example: `patient.name` is an element addressing a patient name in the document:
+Example (`patient.name` is an element addressing a patient name in the document):
 ```json
 {
     "patient" : {
@@ -113,7 +111,7 @@ Element is updated only when exists.
 | `LIKE`     | Equal by an expression | `*` any string, `_` one character, `?` any character (0,1) |
 
 ### Indexes 
-For accelerating the speed of searching could be used indexes on a collection.
+For accelerating the speed of searching can be used indexes on a collection.
 
 Only simple-value elements (numbers, strings, ...) can be indexed.
 Indexes are applied only on conditions with the equals operator `=`.
@@ -150,7 +148,7 @@ There are special element to be returned.
 
 ## Client
 
-ThistleDB provides a Java driver to build a client from a Java application.
+ThistleDB provides a *Java driver* to build a client from a Java application.
 
 Client implements [Reactive Streams, Version 1.0.0](http://www.reactive-streams.org).
 
@@ -203,9 +201,9 @@ Default data folder is `data`, the path relative to the executing directory.
 
 Maximum client connections the server accepts is **20**.
 
-Server could be started from the command line or dynamically from a Java code.
+Server can be started from the command-line or dynamically from a Java code.
 
-### Starting from a Command Line
+### Starting from a Command-Line
 After downloading binaries or compiling from the source code (see Get Started) run the server from the command-line:
 ```
 $ cd server-app/target/server/bin
@@ -278,7 +276,7 @@ server.stop();
 
 ## Console
 
-Console provides a remote access to the server from a command line.
+Console provides a remote access to the server from a command-line.
 
 First, build it and assemble:
 ```
@@ -290,7 +288,7 @@ And run it:
 $ cd console-app/target/console/bin
 $ console
 ```
-Type your command/query or exit the console by typing `quit`.
+Type your command/query ending with `;` or exit the console by typing `quit`.
 
 ## License
 

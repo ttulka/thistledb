@@ -26,7 +26,7 @@
 
 <article>
     <h1>Client</h1>
-    <p>ThistleDB provides a Java driver to build a client from a Java application.</p>
+    <p>ThistleDB provides a <strong>Java driver</strong> to build a client from a Java application.</p>
     <p>Client implements <a href="http://www.reactive-streams.org" target="_blank">Reactive Streams, Version 1.0.0</a>.</p>
     <p>Client is not thread-safe, to ensure concurrency must be run within a synchronized context.</p>
 
@@ -39,7 +39,7 @@
     &lt;version&gt;1.0.0&lt;/version&gt;
 &lt;/dependency&gt;
     </pre>
-    <p>There are different constructors to create a client:</p>
+    <p>There are different constructors to create the client:</p>
     <pre>
 import cz.net21.ttulka.thistledb.client.Client;
 // ...
@@ -61,7 +61,7 @@ client.setTimeout(timeout);
     <pre>
 client.close();
     </pre>
-    <p>Client implement AutoCloseable interface:</p>
+    <p>Client implements <span class="code">AutoCloseable</span> interface:</p>
     <pre>
 try (Client client = new Client()) {
     // work with the client
@@ -69,12 +69,12 @@ try (Client client = new Client()) {
     </pre>
 
     <h2>Querying</h2>
-    <p>There are two types of requests: queries and commands.</p>
+    <p>There are two types of requests: <em>queries</em> and <em>commands</em>.</p>
     <p><strong>Queries</strong> ask the database for data response:</p>
     <ul>
         <li class="code">SELECT</li>
     </ul>
-    <p><strong>Commands</strong> ask for an executing and awaiting only one status response:</p>
+    <p><strong>Commands</strong> ask for an executing and await only one status response:</p>
     <ul>
         <li class="code">CREATE</li>
         <li class="code">DROP</li>
@@ -86,7 +86,7 @@ try (Client client = new Client()) {
     </ul>
 
     <h3>Types of Response</h3>
-    <p>Based on a request the response can be a result of query or status information.</p>
+    <p>Based on the request a response can be a result of query or status information.</p>
     <table border="1" cellpadding="5" cellspacing="0">
         <tr><th>Type of response</th><th>Meaning</th><th>Example</th></tr>
         <tr><td class="code">DATA RESULT</td><td>Next data result</td><td class="code">{"value":1}</td></tr>
@@ -96,7 +96,7 @@ try (Client client = new Client()) {
     </table>
 
     <h3>Query Builder</h3>
-    <p>Besides native String-based queries a intuitive Query-Builder could be used to prepare a query.</p>
+    <p>Besides native String-based queries a intuitive <em>Query-Builder</em> could be used to prepare a query.</p>
     <p>Example:</p>
     <pre>
 import cz.net21.ttulka.thistledb.client.Query;
@@ -109,7 +109,7 @@ Query insertQuery = Query.builder()
 
 client.executeCommand(insertQuery, null);
     </pre>
-    <p>The snippet above has the same meaning as following:</p>
+    <p>The snippet above has the same meaning as the following:</p>
     <pre>
 String insertQuery = "INSERT INTO test VALUES {\"v\":1},{\"v\":2}";
 client.executeCommand(insertQuery, null);
@@ -126,7 +126,7 @@ client.executeCommand(insertQuery, null);
 
     <h4>JSON Publisher</h4>
     <p>Class <span class="code">JsonPublisher</span> implements <span class="code">org.reactivestreams.Publisher</span>.</p>
-    <p>Besides the method for subscribing an object of class org.reactivestreams.Subscriber offers a convenient method for subscribing an object of the standard Java class Consumer:</p>
+    <p>Besides the method for subscribing an object of class <span class="code">org.reactivestreams.Subscriber</span> offers a convenient method for subscribing an object of the standard Java class <span class="code">Consumer</span>:</p>
     <pre>
 public JsonPublisher subscribe(Consumer&lt;String&gt; onNext)
     </pre>
@@ -141,7 +141,7 @@ jsonPublisher.parallel();
     <pre>
 jsonPublisher.serial();
     </pre>
-    <p>If run in <strong>serial</strong> the order of elements always matchs the order the elements are consumed from a source.
+    <p>If run in <strong>serial</strong> the order of elements always matchs the order the elements are consumed from the source.
         If run in <strong>parallel</strong> the order of elements is unpredictable.</p>
     <p>Examples:</p>
     <pre>
@@ -172,7 +172,7 @@ publisher.parallel().subscribe(System.out::println);
     </pre>
 
     <h5>Waiting for the Publisher to be Finished</h5>
-    <p>We can wait for the publisher to be finished in the blocking mode using the method await():</p>
+    <p>It is possible to wait for the publisher to be finished in the blocking mode using the method <span class="code">await()</span>:</p>
     <pre>
 // Create a publisher
 JsonPublisher publisher = client.executeQuery("SELECT * FROM test");
@@ -193,13 +193,13 @@ System.exit(0);
     <h3>Blocking Methods</h3>
     <table border="1" cellpadding="5" cellspacing="0">
         <tr><th>Method</th><th>Return type</th><th>Meaning</th></tr>
-        <tr><td>executeQueryBlocking</td><td>List&lt;String&gt;</td><td>Executes a query synchronously</td></tr>
-        <tr><td>executeCommandBlocking</td><td>String</td><td>Executes a command synchronously</td></tr>
+        <tr><td class="code">executeQueryBlocking</td><td class="code">List&lt;String&gt;</td><td>Executes a query synchronously</td></tr>
+        <tr><td class="code">executeCommandBlocking</td><td class="code">String</td><td>Executes a command synchronously</td></tr>
     </table>
     <p>There are always overloaded variants for native String-based and Query-Builder-based queries.</p>
 
     <h2>Test the connection</h2>
-    <p>Testing if the connection was successfully established by sending a simple query to the server and waiting for a response.</p>
+    <p>Test if the connection was successfully established by sending a simple query to the server and waiting for a response.</p>
     <pre>
 boolean connected = client.test();
     </pre>

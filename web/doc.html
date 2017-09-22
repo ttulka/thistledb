@@ -26,8 +26,7 @@
 
 <article>
     <h1>Documentation</h1>
-    <p>Simple JSON database based on the file-access with server-client approach. </p>
-    <p>With the non-blocking server and the reactive (asynchronous non-blocking) client.</p>
+    <p>Simple JSON database based on the <b>file-access</b> and <b>server-client</b> approach with the <b>non-blocking</b> server and the <b>reactive</b> (asynchronous non-blocking) client.</p>
 
     <h2>Prerequisites</h2>
     <ul>
@@ -40,14 +39,14 @@
     <h3>Collections</h3>
     <p>Collections are separated data spaces with schema-less structures.</p>
     <p>A collection contains a set of documents.</p>
-    <p>Collection name can contain only literals, digits and underscore _. </p>
+    <p>Collection name can contain only literals, digits and underscore <span class="code">_</span>.</p>
 
     <h3>Documents</h3>
     <p>Documents are JSON objects in a collection.</p>
 
     <h4>Elements</h4>
     <p>Elements are paths in a document.</p>
-    <p>Example: patient.name is an element addressing a patient name in the document:</p>
+    <p>Example (<span class="code">patient.name</span> is an element addressing a patient name in the document):</p>
     <pre>
 {
     "patient" : {
@@ -56,7 +55,7 @@
     }
 }
     </pre>
-    <p>Name of an element can contain literals, digits, underscore _ and dash -. </p>
+    <p>Name of an element can contain literals, digits, underscore <span class="code">_</span> and dash <span class="code">-</span>.</p>
     <p>Example of valid element names:</p>
     <pre>
 name
@@ -65,7 +64,7 @@ patient-name_123
     </pre>
 
     <h4>Values</h4>
-    <p>Values could be strings, numbers, boolean literals and null.</p>
+    <p>Values could be strings, numbers, boolean literals and <span class="code">null</span>.</p>
 
     <h2>Commands and Queries</h2>
     <p>All the commands and queries are SQL-like.</p>
@@ -125,9 +124,9 @@ UPDATE collection_name SET element=value[,element=value [...]] [WHERE element op
     </table>
 
     <h2>Indexes</h2>
-    <p>For accelerating the speed of searching could be used indexes on a collection.</p>
+    <p>For accelerating the speed of searching can be used indexes on a collection.</p>
     <p>Only simple-value elements (numbers, strings, ...) can be indexed.
-        Indexes are applied only on conditions with the equals operator =.</p>
+        Indexes are applied only on conditions with the equals operator <span class="code">=</span>.</p>
     <p>As usual, indexes accelerate reading but degrading speed of data modifications - use them cleverly! </p>
 
     <h3>Create an Index for a Collection</h3>
@@ -160,15 +159,15 @@ DROP INDEX indexed_element ON collection_name
     </table>
 
     <h2>Client</h2>
-    <p>See <a href="client">Client</a>.</p>
+    <p>See the <a href="client">Client</a>.</p>
 
     <h2>Server</h2>
-    <p>Default server port is <strong>9658</strong>.</p>
-    <p>Default data folder is data, the path relative to the executing directory.</p>
-    <p>Maximum client connections the server accepts is <strong>20</strong>.</p>
-    <p>Server could be started from the command line or dynamically from a Java code.</p>
+    <p>Default server port is <strong class="code">9658</strong>.</p>
+    <p>Default data folder is <strong class="code">data</strong>, the path relative to the executing directory.</p>
+    <p>Maximum client connections the server accepts is <strong class="code">20</strong>.</p>
+    <p>Server can be started from the command-line or dynamically from a Java code.</p>
 
-    <h3>Starting from a Command Line</h3>
+    <h3>Starting from a Command-Line</h3>
     <p>After <a href="download">downloading</a> and unpacking binaries or compiling from the source code (see <a href="/">Get Started</a>) run the server from the command-line:</p>
     <pre>
 $ cd bin
@@ -207,7 +206,7 @@ $ server
     </pre>
 
     <h4>Create a server instance</h4>
-    <p>For creating a new server object use ServerBuilder:</p>
+    <p>For creating a new server object use the <span class="code">ServerBuilder</span>:</p>
     <pre>
 Server.ServerBuilder builder = Server.builder();
 Server server = builder.build();
@@ -244,13 +243,13 @@ server.stop();
     </pre>
 
     <h2>Console</h2>
-    <p>Console provides a remote access to the server from a command line.</p>
+    <p>Console provides a remote access to the server from a command-line.</p>
     <p>After <a href="download">downloading</a> and unpacking binaries run the console from the command-line:</p>
     <pre>
 $ cd bin
 $ console
     </pre>
-    <p>Type your command/query or exit the console by typing <span class="code">quit</span>.</p>
+    <p>Type your command/query ending with <span class="code">;</span> or exit the console by typing <span class="code">quit</span>.</p>
 
     <h2>License</h2>
     <p><a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License, Version 2.0</a></p>
